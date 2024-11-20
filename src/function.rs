@@ -1,6 +1,6 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, Block, CType, Identifier};
+use crate::{pretty::impl_display_via_pretty, Block, Type, Identifier};
 
 /// # Source
 ///
@@ -9,8 +9,8 @@ use crate::{pretty::impl_display_via_pretty, Block, CType, Identifier};
 pub struct Declaration {
     pub is_static: bool,
     pub name: Identifier,
-    pub parameters: Vec<(CType, Option<Identifier>)>,
-    pub return_ty: CType,
+    pub parameters: Vec<(Type, Option<Identifier>)>,
+    pub return_ty: Type,
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Declaration
@@ -58,8 +58,8 @@ impl_display_via_pretty!(Declaration, 80);
 pub struct Definition {
     pub is_static: bool,
     pub name: Identifier,
-    pub parameters: Vec<(CType, Identifier)>,
-    pub return_ty: CType,
+    pub parameters: Vec<(Type, Identifier)>,
+    pub return_ty: Type,
     pub body: Block,
 }
 
@@ -101,7 +101,10 @@ impl_display_via_pretty!(Definition, 80);
 
 #[cfg(test)]
 mod tests {
-    use crate::{CStatement, Expression};
+    use crate::{
+        operator::{BinaryOperator, BinaryOperatorKind},
+        CStatement, Expression,
+    };
 
     use super::*;
 
@@ -111,8 +114,8 @@ mod tests {
         let generated = Declaration {
             is_static: false,
             name: "foo".to_string(),
-            return_ty: CType::int(),
-            parameters: vec![(CType::int(), None), (CType::double(), None)],
+            return_ty: Type::int(),
+            parameters: vec![(Type::int(), None), (Type::double(), None)],
         }
         .to_string();
 
@@ -127,10 +130,10 @@ mod tests {
         let generated = Declaration {
             is_static: false,
             name: "foo".to_string(),
-            return_ty: CType::int(),
+            return_ty: Type::int(),
             parameters: vec![
-                (CType::int(), Some("x".to_string())),
-                (CType::double(), Some("y".to_string())),
+                (Type::int(), Some("x".to_string())),
+                (Type::double(), Some("y".to_string())),
             ],
         }
         .to_string();
@@ -146,15 +149,20 @@ mod tests {
         let generated = Definition {
             is_static: false,
             name: "add_values".to_string(),
-            return_ty: CType::int(),
+            return_ty: Type::int(),
             parameters: vec![
-                (CType::int(), "x".to_string()),
-                (CType::int(), "y".to_string()),
+                (Type::int(), "x".to_string()),
+                (Type::int(), "y".to_string()),
             ],
             body: Block {
-                statements: vec![CStatement::ReturnStatement(Some(Expression::Custom(
-                    "x + y".to_string(),
-                )))],
+                statements: vec![CStatement::ReturnStatement(Some(
+                    BinaryOperator {
+                        left: Expression::Variable("x".to_string()),
+                        operator: BinaryOperatorKind::Add,
+                        right: Expression::Variable("y".to_string()),
+                    }
+                    .into(),
+                ))],
             },
         }
         .to_string();
@@ -177,8 +185,8 @@ add_values (int x, int y)
         let generated = Definition {
             is_static: true,
             name: "foo".to_string(),
-            return_ty: CType::int(),
-            parameters: vec![(CType::int(), "x".to_string())],
+            return_ty: Type::int(),
+            parameters: vec![(Type::int(), "x".to_string())],
             body: Block {
                 statements: vec![CStatement::ReturnStatement(Some(Expression::Custom(
                     "x + 42".to_string(),

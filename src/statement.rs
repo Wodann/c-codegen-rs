@@ -1,5 +1,5 @@
 use crate::pretty::impl_display_via_pretty;
-use crate::{Block, CType, Expression, Value};
+use crate::{Block, Expression, Type, Value};
 use pretty::Pretty;
 
 /// # Source
@@ -42,21 +42,21 @@ pub enum CStatement {
     BreakStatement,
     ContinueStatement,
     ReturnStatement(Option<Expression>),
-    TypedefStatement(String, CType),
+    TypedefStatement(String, Type),
     FunctionDeclaration {
-        return_type: CType,
+        return_type: Type,
         name: String,
-        parameters: Vec<(CType, Option<String>)>,
+        parameters: Vec<(Type, Option<String>)>,
     },
     FunctionDefinition {
-        return_type: CType,
+        return_type: Type,
         name: String,
-        parameters: Vec<(CType, Option<String>)>,
+        parameters: Vec<(Type, Option<String>)>,
         body: Vec<CStatement>,
     },
     StructDeclaration {
         name: String,
-        fields: Vec<(CType, String)>,
+        fields: Vec<(Type, String)>,
     },
     EnumDeclaration {
         name: String,

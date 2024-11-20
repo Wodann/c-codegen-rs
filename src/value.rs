@@ -1,48 +1,25 @@
 use core::fmt;
 
-use crate::CType;
+use crate::Type;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum Value {
-    Array {
-        values: Vec<Value>,
-        base_type: CType,
-    },
-    Char {
-        value: char,
-        signed: bool,
-    },
-    Enum {
-        value: i32,
-        name: String,
-    },
-    Float {
-        value: f64,
-        ty: CType,
-    },
-    IntegerSigned {
-        value: i64,
-        ty: CType,
-    },
-    IntegerUnsigned {
-        value: u64,
-        ty: CType,
-    },
-    Pointer {
-        address: usize,
-        base_type: CType,
-    },
+    Array { values: Vec<Value>, base_type: Type },
+    Char { value: char, signed: bool },
+    Enum { value: i32, name: String },
+    Float { value: f64, ty: Type },
+    IntegerSigned { value: i64, ty: Type },
+    IntegerUnsigned { value: u64, ty: Type },
+    Pointer { address: usize, base_type: Type },
     String(String),
-    Struct {
-        fields: Vec<(String, Value)>,
-    },
+    Struct { fields: Vec<(String, Value)> },
 }
 
 impl Value {
     pub const fn int(value: i64) -> Self {
         Self::IntegerSigned {
             value,
-            ty: CType::int(),
+            ty: Type::int(),
         }
     }
 }

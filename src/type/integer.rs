@@ -1,10 +1,30 @@
 use core::fmt;
 
+#[derive(Clone)]
+pub struct Integer {
+    pub kind: IntegerKind,
+    pub is_signed: bool,
+}
+
+impl fmt::Display for Integer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_signed {
+            if matches!(self.kind, IntegerKind::Char) {
+                write!(f, "signed char")
+            } else {
+                write!(f, "{}", self.kind)
+            }
+        } else {
+            write!(f, "unsigned {}", self.kind)
+        }
+    }
+}
+
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Integer-Types
-#[derive(Clone, Debug)]
-pub enum IntegerType {
+#[derive(Clone)]
+pub enum IntegerKind {
     Char,
     Short,
     Int,
@@ -12,14 +32,14 @@ pub enum IntegerType {
     LongLong,
 }
 
-impl fmt::Display for IntegerType {
+impl fmt::Display for IntegerKind {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            IntegerType::Char => write!(f, "char"),
-            IntegerType::Short => write!(f, "short"),
-            IntegerType::Int => write!(f, "int"),
-            IntegerType::Long => write!(f, "long"),
-            IntegerType::LongLong => write!(f, "long long"),
+            IntegerKind::Char => write!(f, "char"),
+            IntegerKind::Short => write!(f, "short"),
+            IntegerKind::Int => write!(f, "int"),
+            IntegerKind::Long => write!(f, "long"),
+            IntegerKind::LongLong => write!(f, "long long"),
         }
     }
 }

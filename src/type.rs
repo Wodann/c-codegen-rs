@@ -1,72 +1,68 @@
 use core::fmt;
 
-mod r#integer;
+mod integer;
+mod pointer;
 mod real;
+mod scalar;
+
+use integer::Integer;
+
+use crate::macros::impl_froms;
 
 pub use self::{
-    r#integer::{IntegerType, StrongInt},
-    real::RealType,
+    integer::{IntegerKind, StrongInt},
+    pointer::Pointer,
+    real::Real,
+    scalar::Scalar,
 };
 
 /// Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Data-Types
-#[derive(Clone, Debug)]
-pub enum CType {
-    Array(Box<CType>),
+#[derive(Clone)]
+pub enum Type {
+    Array(Box<Type>),
     Char,
     Custom(String),
     Enum(String),
-    Integer { ty: IntegerType, signed: bool },
-    Pointer(Box<CType>, bool),
-    Real(RealType),
+    Integer(Integer),
+    Pointer(Pointer),
+    Real(Real),
     StrongInt(StrongInt),
     Struct(String),
     Union(String),
     Void,
 }
 
-impl CType {
+impl_froms!(Type: Integer, Pointer, Real, StrongInt);
+
+impl Type {
     pub const fn double() -> Self {
-        Self::Real(RealType::Double)
+        Self::Real(Real::Double)
     }
 
     pub const fn int() -> Self {
-        Self::Integer {
-            ty: IntegerType::Int,
-            signed: true,
-        }
+        Self::Integer(Integer {
+            kind: IntegerKind::Int,
+            is_signed: true,
+        })
     }
 }
 
-impl fmt::Display for CType {
+impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            CType::Array(base) => write!(f, "{}[]", base),
-            CType::Char => {
-                write!(f, "signed char")
-            }
-            CType::Custom(name) => write!(f, "{}", name),
-            CType::Enum(name) => write!(f, "enum {}", name),
-            CType::Integer { ty, signed } => {
-                if *signed {
-                    write!(f, "{}", ty)
-                } else {
-                    write!(f, "unsigned {}", ty)
-                }
-            }
-            CType::Pointer(base, is_const) => {
-                if *is_const {
-                    write!(f, "const {}*", base)
-                } else {
-                    write!(f, "{}*", base)
-                }
-            }
-            CType::Real(ty) => write!(f, "{}", ty),
-            CType::StrongInt(ty) => write!(f, "{}", ty),
-            CType::Struct(name) => write!(f, "struct {}", name),
-            CType::Union(name) => write!(f, "union {}", name),
-            CType::Void => write!(f, "void"),
+            Type::Array(base) => write!(f, "{}[]", base),
+            Type::Char => write!(f, "char"),
+            Type::Custom(name) => write!(f, "{}", name),
+            Type::Enum(name) => write!(f, "enum {}", name),
+            Type::Integer(integer) => write!(f, "{integer}"),
+            Type::Pointer(pointer) => write!(f, "{pointer}"),
+            Type::Real(ty) => write!(f, "{}", ty),
+            Type::StrongInt(ty) => write!(f, "{}", ty),
+            Type::Struct(name) => write!(f, "struct {}", name),
+            Type::Union(name) => write!(f, "union {}", name),
+            Type::Void => write!(f, "void"),
         }
     }
 }

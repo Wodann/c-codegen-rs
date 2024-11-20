@@ -24,7 +24,7 @@ impl fmt::Display for StorageClass {
 
 #[cfg(test)]
 mod tests {
-    use crate::{expression::Assignment, variable, CType, Expression, Value};
+    use crate::{operator, variable, Type, Expression, Value};
 
     use super::*;
 
@@ -34,7 +34,7 @@ mod tests {
     fn with_storage_class_extern() -> anyhow::Result<()> {
         let generated = variable::Declaration {
             storage_class: Some(StorageClass::Extern),
-            ty: CType::int(),
+            ty: Type::int(),
             initializers: vec![variable::Initializer::Nil {
                 variable_name: "numberOfClients".to_string(),
             }],
@@ -45,8 +45,8 @@ mod tests {
 
         let generated = variable::Declaration {
             storage_class: None,
-            ty: CType::int(),
-            initializers: vec![variable::Initializer::Assignment(Assignment {
+            ty: Type::int(),
+            initializers: vec![variable::Initializer::Assignment(operator::Assignment {
                 variable_name: "numberOfClients".to_string(),
                 expression: Expression::Value(Value::int(0)),
             })],

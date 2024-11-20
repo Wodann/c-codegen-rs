@@ -1,20 +1,17 @@
 use pretty::Pretty;
 
-use crate::{
-    expression::Assignment, pretty::impl_display_via_pretty, CType, Expression, Identifier,
-    StorageClass,
-};
+use crate::{operator, pretty::impl_display_via_pretty, Type, Identifier, StorageClass};
 
 #[derive(Clone)]
 pub enum Initializer {
     Nil { variable_name: Identifier },
-    Assignment(Assignment),
+    Assignment(operator::Assignment),
 }
 
 #[derive(Clone)]
 pub struct Declaration {
     pub storage_class: Option<StorageClass>,
-    pub ty: CType,
+    pub ty: Type,
     pub initializers: Vec<Initializer>,
 }
 
@@ -58,7 +55,7 @@ impl_display_via_pretty!(Declaration, 80);
 
 #[cfg(test)]
 mod tests {
-    use crate::Value;
+    use crate::{Expression, Value};
 
     use super::*;
 
@@ -66,12 +63,12 @@ mod tests {
     fn multiple_initializers() -> anyhow::Result<()> {
         let generated = Declaration {
             storage_class: None,
-            ty: CType::int(),
+            ty: Type::int(),
             initializers: vec![
                 Initializer::Nil {
                     variable_name: "x".to_string(),
                 },
-                Initializer::Assignment(Assignment {
+                Initializer::Assignment(operator::Assignment {
                     variable_name: "y".to_string(),
                     expression: Expression::Value(Value::int(5)),
                 }),
