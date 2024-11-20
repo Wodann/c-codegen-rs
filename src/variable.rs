@@ -1,64 +1,85 @@
-// Propose a Rust implementation representing an in-memory description of C global variables based on this specification:
-//
-// # Global Variables in C
+use pretty::Pretty;
 
-// Global variables are variables declared at file scope (outside any function). Understanding the distinction between declaration and definition, as well as initialization rules, is crucial for correct code generation.
+use crate::{
+    expression::Assignment, pretty::impl_display_via_pretty, CType, Expression, Identifier,
+    StorageClass,
+};
 
-// ## Declaration vs Definition
-
-// ### Declaration
-// A declaration introduces an identifier and its type without allocating storage:
-// ```c
-// extern int counter;        // declares counter without defining it
-// extern float pi;          // declares pi without defining it
-// ```
-
-// ### Definition
-// A definition declares an identifier and also allocates storage:
-// ```c
-// int counter = 0;          // defines and initializes counter
-// float pi = 3.14159f;      // defines and initializes pi
-// int uninitialized_var;    // defines with implicit initialization to 0
-// ```
-
-// ## Storage Classes
-
-// ### External Linkage (default)
-// Variables with external linkage are accessible from other translation units:
-// ```c
-// int global_var = 42;      // external linkage by default
-// extern int global_var;    // declaration for use in other files
-// ```
-
-// ### Static (Internal Linkage)
-// Static variables are only accessible within their translation unit:
-// ```c
-// static int file_var = 10; // internal linkage
-// ```
-
-use core::fmt;
-use std::fmt::Write;
-
-use crate::{CType, CValue, StorageClass};
-
-pub struct Declaration {
-    pub name: String,
-    pub ty: CType,
-    pub initializer: Option<CValue>,
-    pub storage_class: Option<StorageClass>,
+#[derive(Clone)]
+pub enum Initializer {
+    Nil { variable_name: Identifier },
+    Assignment(Assignment),
 }
 
-impl fmt::Display for Declaration {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(storage_class) = &self.storage_class {
-            write!(f, "{} ", storage_class)?;
-        }
+#[derive(Clone)]
+pub struct Declaration {
+    pub storage_class: Option<StorageClass>,
+    pub ty: CType,
+    pub initializers: Vec<Initializer>,
+}
 
-        write!(f, "{} {}", self.ty, self.name)?;
-        if let Some(initializer) = &self.initializer {
-            write!(f, " = {}", initializer)?;
+// Implement Pretty for Declaration
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Declaration
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        let builder = if let Some(storage_class) = self.storage_class {
+            allocator
+                .text(storage_class.to_string())
+                .append(allocator.space())
+        } else {
+            allocator.nil()
+        };
+
+        builder
+            .append(allocator.text(self.ty.to_string()))
+            .append(allocator.space())
+            .append(
+                allocator.intersperse(
+                    self.initializers
+                        .into_iter()
+                        .map(|definition| match definition {
+                            Initializer::Nil {
+                                variable_name: variable,
+                            } => allocator.text(variable),
+                            Initializer::Assignment(assignment) => assignment.pretty(allocator),
+                        }),
+                    allocator.text(",").append(allocator.space()),
+                ),
+            )
+            .append(allocator.text(";"))
+    }
+}
+
+impl_display_via_pretty!(Declaration, 80);
+
+#[cfg(test)]
+mod tests {
+    use crate::Value;
+
+    use super::*;
+
+    #[test]
+    fn multiple_initializers() -> anyhow::Result<()> {
+        let generated = Declaration {
+            storage_class: None,
+            ty: CType::int(),
+            initializers: vec![
+                Initializer::Nil {
+                    variable_name: "x".to_string(),
+                },
+                Initializer::Assignment(Assignment {
+                    variable_name: "y".to_string(),
+                    expression: Expression::Value(Value::int(5)),
+                }),
+            ],
         }
-        f.write_char(';')?;
+        .to_string();
+
+        assert_eq!(generated, "int x, y = 5;");
 
         Ok(())
     }

@@ -3,6 +3,7 @@ use core::fmt;
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Storage-Class-Specifiers
+#[derive(Clone)]
 pub enum StorageClass {
     Auto,
     Extern,
@@ -23,7 +24,7 @@ impl fmt::Display for StorageClass {
 
 #[cfg(test)]
 mod tests {
-    use crate::{variable, CType, CValue};
+    use crate::{expression::Assignment, variable, CType, Expression, Value};
 
     use super::*;
 
@@ -32,20 +33,23 @@ mod tests {
     #[test]
     fn with_storage_class_extern() -> anyhow::Result<()> {
         let generated = variable::Declaration {
-            name: "numberOfClients".to_string(),
-            ty: CType::int(),
-            initializer: None,
             storage_class: Some(StorageClass::Extern),
+            ty: CType::int(),
+            initializers: vec![variable::Initializer::Nil {
+                variable_name: "numberOfClients".to_string(),
+            }],
         }
         .to_string();
 
         assert_eq!(generated, "extern int numberOfClients;");
 
         let generated = variable::Declaration {
-            name: "numberOfClients".to_string(),
-            ty: CType::int(),
-            initializer: Some(CValue::int(0)),
             storage_class: None,
+            ty: CType::int(),
+            initializers: vec![variable::Initializer::Assignment(Assignment {
+                variable_name: "numberOfClients".to_string(),
+                expression: Expression::Value(Value::int(0)),
+            })],
         }
         .to_string();
 

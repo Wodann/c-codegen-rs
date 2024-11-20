@@ -1,15 +1,21 @@
+mod operators;
+
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, Identifier};
+pub use self::operators::{Assignment, CompoundAssignment};
+use crate::{pretty::impl_display_via_pretty, Identifier, Value};
 
 #[derive(Clone)]
 pub enum Expression {
+    Assignment(Box<Assignment>),
+    CompoundAssignment(Box<CompoundAssignment>),
     // https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Calling-Functions
     FunctionCall {
         name: Identifier,
         arguments: Vec<Box<Expression>>,
     },
     Custom(String),
+    Value(Value),
 }
 
 // Implementing Pretty for Expression
@@ -21,6 +27,8 @@ where
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         match self {
+            Expression::Assignment(assignment) => assignment.pretty(allocator),
+            Expression::CompoundAssignment(assignment) => assignment.pretty(allocator),
             Expression::FunctionCall { name, arguments } => allocator
                 .text(name)
                 .append(allocator.space())
@@ -31,6 +39,7 @@ where
                 ))
                 .append(allocator.text(")")),
             Expression::Custom(s) => allocator.text(s),
+            Expression::Value(value) => allocator.text(value.to_string()),
         }
     }
 }

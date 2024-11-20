@@ -171,7 +171,7 @@ add_values (int x, int y)
         Ok(())
     }
 
-    //
+    // Source: https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Static-Functions
     #[test]
     fn static_function() -> anyhow::Result<()> {
         let generated = Definition {

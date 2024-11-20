@@ -3,9 +3,9 @@ use core::fmt;
 use crate::CType;
 
 #[derive(Clone, Debug)]
-pub enum CValue {
+pub enum Value {
     Array {
-        values: Vec<CValue>,
+        values: Vec<Value>,
         base_type: CType,
     },
     Char {
@@ -34,11 +34,11 @@ pub enum CValue {
     },
     String(String),
     Struct {
-        fields: Vec<(String, CValue)>,
+        fields: Vec<(String, Value)>,
     },
 }
 
-impl CValue {
+impl Value {
     pub const fn int(value: i64) -> Self {
         Self::IntegerSigned {
             value,
@@ -47,10 +47,10 @@ impl CValue {
     }
 }
 
-impl fmt::Display for CValue {
+impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            CValue::Array { values, base_type } => {
+            Value::Array { values, base_type } => {
                 let vals = values
                     .iter()
                     .map(|v| format!("{}", v))
@@ -58,18 +58,18 @@ impl fmt::Display for CValue {
                     .join(", ");
                 write!(f, "{}[] {{ {} }}", base_type, vals)
             }
-            CValue::Char { value, signed } => {
+            Value::Char { value, signed } => {
                 write!(f, "{value}")
             }
-            CValue::Enum { value, name } => write!(f, "enum {} = {}", name, value),
-            CValue::Float { value, ty } => write!(f, "{value}"),
-            CValue::IntegerSigned { value, ty } => write!(f, "{value}"),
-            CValue::IntegerUnsigned { value, ty } => write!(f, "{value}"),
-            CValue::Pointer { address, base_type } => {
+            Value::Enum { value, name } => write!(f, "enum {} = {}", name, value),
+            Value::Float { value, ty } => write!(f, "{value}"),
+            Value::IntegerSigned { value, ty } => write!(f, "{value}"),
+            Value::IntegerUnsigned { value, ty } => write!(f, "{value}"),
+            Value::Pointer { address, base_type } => {
                 write!(f, "{}* at 0x{:x}", base_type, address)
             }
-            CValue::String(val) => write!(f, "\"{}\"", val),
-            CValue::Struct { fields } => {
+            Value::String(val) => write!(f, "\"{}\"", val),
+            Value::Struct { fields } => {
                 let field_str = fields
                     .iter()
                     .map(|(name, value)| format!("{}: {}", name, value))

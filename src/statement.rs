@@ -1,5 +1,5 @@
 use crate::pretty::impl_display_via_pretty;
-use crate::{Block, CType, CValue, Expression};
+use crate::{Block, CType, Expression, Value};
 use pretty::Pretty;
 
 /// # Source
@@ -13,26 +13,26 @@ pub enum CStatement {
     },
     Expression(Expression),
     IfStatement {
-        condition: CValue,
+        condition: Value,
         then_block: Vec<CStatement>,
         else_block: Option<Vec<CStatement>>,
     },
     SwitchStatement {
-        expression: CValue,
-        cases: Vec<(CValue, Vec<CStatement>)>,
+        expression: Value,
+        cases: Vec<(Value, Vec<CStatement>)>,
         default: Option<Vec<CStatement>>,
     },
     WhileStatement {
-        condition: CValue,
+        condition: Value,
         body: Vec<CStatement>,
     },
     DoStatement {
         body: Vec<CStatement>,
-        condition: CValue,
+        condition: Value,
     },
     ForStatement {
         init: Option<Box<CStatement>>,
-        condition: CValue,
+        condition: Value,
         step: Option<Box<CStatement>>,
         body: Vec<CStatement>,
     },
@@ -60,7 +60,7 @@ pub enum CStatement {
     },
     EnumDeclaration {
         name: String,
-        variants: Vec<(String, Option<CValue>)>,
+        variants: Vec<(String, Option<Value>)>,
     },
     IncludeStatement(String),
     MacroDefinition {

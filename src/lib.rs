@@ -11,7 +11,7 @@ pub mod variable;
 
 pub use self::{
     block::Block, expression::Expression, file::CFileBuilder, r#type::CType, statement::CStatement,
-    storage_class::StorageClass, value::CValue,
+    storage_class::StorageClass, value::Value,
 };
 
 pub type Identifier = String;
