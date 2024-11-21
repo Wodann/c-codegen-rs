@@ -1,5 +1,5 @@
 use crate::pretty::impl_display_via_pretty;
-use crate::{Block, Expression, Type, Value};
+use crate::{Block, Expression, Identifier, Type, Value};
 use pretty::Pretty;
 
 /// # Source
@@ -8,7 +8,7 @@ use pretty::Pretty;
 #[derive(Clone)]
 pub enum CStatement {
     Label {
-        identifier: String,
+        identifier: Identifier,
         statement: Box<CStatement>,
     },
     Expression(Expression),
@@ -38,33 +38,33 @@ pub enum CStatement {
     },
     Block(Block),
     NullStatement,
-    GotoStatement(String),
+    GotoStatement(Identifier),
     BreakStatement,
     ContinueStatement,
     ReturnStatement(Option<Expression>),
-    TypedefStatement(String, Type),
+    TypedefStatement(Identifier, Type),
     FunctionDeclaration {
         return_type: Type,
-        name: String,
-        parameters: Vec<(Type, Option<String>)>,
+        name: Identifier,
+        parameters: Vec<(Type, Option<Identifier>)>,
     },
     FunctionDefinition {
         return_type: Type,
-        name: String,
-        parameters: Vec<(Type, Option<String>)>,
+        name: Identifier,
+        parameters: Vec<(Type, Option<Identifier>)>,
         body: Vec<CStatement>,
     },
     StructDeclaration {
-        name: String,
-        fields: Vec<(Type, String)>,
+        name: Identifier,
+        fields: Vec<(Type, Identifier)>,
     },
     EnumDeclaration {
-        name: String,
-        variants: Vec<(String, Option<Value>)>,
+        name: Identifier,
+        variants: Vec<(Identifier, Option<Value>)>,
     },
     IncludeStatement(String),
     MacroDefinition {
-        name: String,
+        name: Identifier,
         body: String,
     },
 }

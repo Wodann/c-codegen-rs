@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 anyhow = { version = "1.0.93", default-features = false, features = ["std"] }
 pretty = { version = "0.12.3", default-features = false }
+thiserror = { version = "2.0.3", default-features = false, features = ["std"] }

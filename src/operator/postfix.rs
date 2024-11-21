@@ -1,11 +1,11 @@
-use crate::{pretty::impl_display_via_pretty, Identifier};
+use crate::{pretty::impl_display_via_pretty, Expression};
 use pretty::Pretty;
 use std::fmt;
 
 /// Represents postfix increment (x++) and decrement (x--) operations
 #[derive(Clone)]
 pub struct PostfixOperator {
-    pub variable: Identifier,
+    pub operand: Expression,
     pub operator: PostfixOperatorKind,
 }
 
@@ -16,8 +16,8 @@ where
     AllocatorT::Doc: Clone,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        allocator
-            .text(self.variable)
+        self.operand
+            .pretty(allocator)
             .append(self.operator.to_string())
     }
 }
@@ -41,7 +41,7 @@ impl fmt::Display for PostfixOperatorKind {
 
 #[cfg(test)]
 mod tests {
-    use crate::CStatement;
+    use crate::{CStatement, Identifier};
 
     use super::*;
 
@@ -49,7 +49,7 @@ mod tests {
     fn increment_decrement() -> anyhow::Result<()> {
         let increment = CStatement::Expression(
             PostfixOperator {
-                variable: "x".to_string(),
+                operand: Expression::Variable(Identifier::new("x")?),
                 operator: PostfixOperatorKind::Increment,
             }
             .into(),
@@ -60,7 +60,7 @@ mod tests {
 
         let decrement = CStatement::Expression(
             PostfixOperator {
-                variable: "y".to_string(),
+                operand: Expression::Variable(Identifier::new("y")?),
                 operator: PostfixOperatorKind::Decrement,
             }
             .into(),

@@ -1,6 +1,6 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, Block, Type, Identifier};
+use crate::{pretty::impl_display_via_pretty, Block, Identifier, Type};
 
 /// # Source
 ///
@@ -103,7 +103,7 @@ impl_display_via_pretty!(Definition, 80);
 mod tests {
     use crate::{
         operator::{BinaryOperator, BinaryOperatorKind},
-        CStatement, Expression,
+        CStatement, Expression, Value,
     };
 
     use super::*;
@@ -113,7 +113,7 @@ mod tests {
     fn declaration_with_two_parameters() -> anyhow::Result<()> {
         let generated = Declaration {
             is_static: false,
-            name: "foo".to_string(),
+            name: Identifier::new("foo")?,
             return_ty: Type::int(),
             parameters: vec![(Type::int(), None), (Type::double(), None)],
         }
@@ -129,11 +129,11 @@ mod tests {
     fn declaration_with_parameter_name() -> anyhow::Result<()> {
         let generated = Declaration {
             is_static: false,
-            name: "foo".to_string(),
+            name: Identifier::new("foo")?,
             return_ty: Type::int(),
             parameters: vec![
-                (Type::int(), Some("x".to_string())),
-                (Type::double(), Some("y".to_string())),
+                (Type::int(), Some(Identifier::new("x")?)),
+                (Type::double(), Some(Identifier::new("y")?)),
             ],
         }
         .to_string();
@@ -148,18 +148,18 @@ mod tests {
     fn definition_with_integer_sum() -> anyhow::Result<()> {
         let generated = Definition {
             is_static: false,
-            name: "add_values".to_string(),
+            name: Identifier::new("add_values")?,
             return_ty: Type::int(),
             parameters: vec![
-                (Type::int(), "x".to_string()),
-                (Type::int(), "y".to_string()),
+                (Type::int(), Identifier::new("x")?),
+                (Type::int(), Identifier::new("y")?),
             ],
             body: Block {
                 statements: vec![CStatement::ReturnStatement(Some(
                     BinaryOperator {
-                        left: Expression::Variable("x".to_string()),
+                        left: Expression::Variable(Identifier::new("x")?),
                         operator: BinaryOperatorKind::Add,
-                        right: Expression::Variable("y".to_string()),
+                        right: Expression::Variable(Identifier::new("y")?),
                     }
                     .into(),
                 ))],
@@ -184,13 +184,18 @@ add_values (int x, int y)
     fn static_function() -> anyhow::Result<()> {
         let generated = Definition {
             is_static: true,
-            name: "foo".to_string(),
+            name: Identifier::new("foo")?,
             return_ty: Type::int(),
-            parameters: vec![(Type::int(), "x".to_string())],
+            parameters: vec![(Type::int(), Identifier::new("x")?)],
             body: Block {
-                statements: vec![CStatement::ReturnStatement(Some(Expression::Custom(
-                    "x + 42".to_string(),
-                )))],
+                statements: vec![CStatement::ReturnStatement(Some(
+                    BinaryOperator {
+                        left: Expression::Variable(Identifier::new("x")?),
+                        operator: BinaryOperatorKind::Add,
+                        right: Value::int(42).into(),
+                    }
+                    .into(),
+                ))],
             },
         }
         .to_string();

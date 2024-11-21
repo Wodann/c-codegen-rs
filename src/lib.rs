@@ -2,6 +2,7 @@ mod block;
 mod expression;
 mod file;
 pub mod function;
+mod identifier;
 mod macros;
 pub mod operator;
 pub mod pretty;
@@ -12,8 +13,6 @@ pub mod value;
 pub mod variable;
 
 pub use self::{
-    block::Block, expression::Expression, file::CFileBuilder, r#type::Type, statement::CStatement,
-    storage_class::StorageClass, value::Value,
+    block::Block, expression::Expression, file::CFileBuilder, identifier::Identifier, r#type::Type,
+    statement::CStatement, storage_class::StorageClass, value::Value,
 };
-
-pub type Identifier = String;

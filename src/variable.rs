@@ -1,9 +1,9 @@
 use pretty::Pretty;
 
-use crate::{operator, pretty::impl_display_via_pretty, Type, Identifier, StorageClass};
+use crate::{operator, pretty::impl_display_via_pretty, Identifier, StorageClass, Type};
 
 #[derive(Clone)]
-pub enum Initializer {
+pub enum Definitions {
     Nil { variable_name: Identifier },
     Assignment(operator::Assignment),
 }
@@ -12,7 +12,7 @@ pub enum Initializer {
 pub struct Declaration {
     pub storage_class: Option<StorageClass>,
     pub ty: Type,
-    pub initializers: Vec<Initializer>,
+    pub definitions: Vec<Definitions>,
 }
 
 // Implement Pretty for Declaration
@@ -36,13 +36,13 @@ where
             .append(allocator.space())
             .append(
                 allocator.intersperse(
-                    self.initializers
+                    self.definitions
                         .into_iter()
                         .map(|definition| match definition {
-                            Initializer::Nil {
+                            Definitions::Nil {
                                 variable_name: variable,
                             } => allocator.text(variable),
-                            Initializer::Assignment(assignment) => assignment.pretty(allocator),
+                            Definitions::Assignment(assignment) => assignment.pretty(allocator),
                         }),
                     allocator.text(",").append(allocator.space()),
                 ),
@@ -64,13 +64,13 @@ mod tests {
         let generated = Declaration {
             storage_class: None,
             ty: Type::int(),
-            initializers: vec![
-                Initializer::Nil {
-                    variable_name: "x".to_string(),
+            definitions: vec![
+                Definitions::Nil {
+                    variable_name: Identifier::new("x")?,
                 },
-                Initializer::Assignment(operator::Assignment {
-                    variable_name: "y".to_string(),
-                    expression: Expression::Value(Value::int(5)),
+                Definitions::Assignment(operator::Assignment {
+                    left: Expression::Variable(Identifier::new("y")?),
+                    right: Expression::Value(Value::int(5)),
                 }),
             ],
         }

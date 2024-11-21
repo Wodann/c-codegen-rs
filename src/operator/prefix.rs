@@ -1,4 +1,4 @@
-use crate::{pretty::impl_display_via_pretty, Identifier};
+use crate::{pretty::impl_display_via_pretty, Expression};
 use pretty::Pretty;
 use std::fmt;
 
@@ -11,7 +11,7 @@ use std::fmt;
 /// - indirection (*x)
 #[derive(Clone)]
 pub struct PrefixOperator {
-    pub variable: Identifier,
+    pub operand: Expression,
     pub operator: PrefixOperatorKind,
 }
 
@@ -24,7 +24,7 @@ where
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         allocator
             .text(self.operator.to_string())
-            .append(self.variable)
+            .append(self.operand.pretty(allocator))
     }
 }
 
@@ -55,7 +55,7 @@ impl fmt::Display for PrefixOperatorKind {
 
 #[cfg(test)]
 mod tests {
-    use crate::CStatement;
+    use crate::{CStatement, Identifier};
 
     use super::*;
 
@@ -63,7 +63,7 @@ mod tests {
     fn increment_decrement() -> anyhow::Result<()> {
         let increment = CStatement::Expression(
             PrefixOperator {
-                variable: "x".to_string(),
+                operand: Expression::Variable(Identifier::new("x")?),
                 operator: PrefixOperatorKind::Increment,
             }
             .into(),
@@ -74,7 +74,7 @@ mod tests {
 
         let decrement = CStatement::Expression(
             PrefixOperator {
-                variable: "y".to_string(),
+                operand: Expression::Variable(Identifier::new("y")?),
                 operator: PrefixOperatorKind::Decrement,
             }
             .into(),
@@ -90,7 +90,7 @@ mod tests {
     fn positive_negative() -> anyhow::Result<()> {
         let positive = CStatement::Expression(
             PrefixOperator {
-                variable: "x".to_string(),
+                operand: Expression::Variable(Identifier::new("x")?),
                 operator: PrefixOperatorKind::Positive,
             }
             .into(),
@@ -101,7 +101,7 @@ mod tests {
 
         let negative = CStatement::Expression(
             PrefixOperator {
-                variable: "y".to_string(),
+                operand: Expression::Variable(Identifier::new("y")?),
                 operator: PrefixOperatorKind::Negative,
             }
             .into(),
@@ -117,7 +117,7 @@ mod tests {
     fn pointer() -> anyhow::Result<()> {
         let address = CStatement::Expression(
             PrefixOperator {
-                variable: "x".to_string(),
+                operand: Expression::Variable(Identifier::new("x")?),
                 operator: PrefixOperatorKind::Address,
             }
             .into(),
@@ -128,7 +128,7 @@ mod tests {
 
         let indirection = CStatement::Expression(
             PrefixOperator {
-                variable: "ptr".to_string(),
+                operand: Expression::Variable(Identifier::new("ptr")?),
                 operator: PrefixOperatorKind::Indirection,
             }
             .into(),

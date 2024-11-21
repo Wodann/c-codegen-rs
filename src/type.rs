@@ -23,7 +23,6 @@ pub use self::{
 pub enum Type {
     Array(Box<Type>),
     Char,
-    Custom(String),
     Enum(String),
     Integer(Integer),
     Pointer(Pointer),
@@ -54,7 +53,6 @@ impl fmt::Display for Type {
         match self {
             Type::Array(base) => write!(f, "{}[]", base),
             Type::Char => write!(f, "char"),
-            Type::Custom(name) => write!(f, "{}", name),
             Type::Enum(name) => write!(f, "enum {}", name),
             Type::Integer(integer) => write!(f, "{integer}"),
             Type::Pointer(pointer) => write!(f, "{pointer}"),

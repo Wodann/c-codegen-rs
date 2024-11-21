@@ -26,7 +26,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::CStatement;
+    use crate::{CStatement, Identifier};
 
     use super::*;
 
@@ -35,7 +35,7 @@ mod tests {
         let cast = CStatement::Expression(
             Cast {
                 new_ty: Scalar::int(),
-                expression: Expression::Variable("x".to_string()),
+                expression: Expression::Variable(Identifier::new("x")?),
             }
             .into(),
         )

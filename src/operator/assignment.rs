@@ -1,4 +1,4 @@
-use crate::{pretty::impl_display_via_pretty, Expression, Identifier};
+use crate::{pretty::impl_display_via_pretty, Expression};
 use pretty::Pretty;
 
 /// # Source
@@ -6,8 +6,8 @@ use pretty::Pretty;
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Assignment-Operators
 #[derive(Clone)]
 pub struct Assignment {
-    pub variable_name: Identifier,
-    pub expression: Expression,
+    pub left: Expression, // This should be an l-value
+    pub right: Expression,
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Assignment
@@ -17,12 +17,12 @@ where
     AllocatorT::Doc: Clone,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        allocator
-            .text(self.variable_name)
+        self.left
+            .pretty(allocator)
             .append(allocator.space())
             .append(allocator.text("="))
             .append(allocator.space())
-            .append(self.expression.pretty(allocator))
+            .append(self.right.pretty(allocator))
     }
 }
 
