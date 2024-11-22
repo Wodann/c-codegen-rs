@@ -1,5 +1,6 @@
 use core::fmt;
 
+pub mod enumeration;
 mod integer;
 mod pointer;
 mod real;

@@ -47,3 +47,5 @@ enum fruit {banana, apple, blueberry, mango};
 banana = 15;  /* You can’t do this! */
 
 Enumerations are useful in conjunction with the switch statement, because the compiler can warn you if you have failed to handle one of the enumeration values. Using the example above, if your code handles banana, apple and mango only but not blueberry, GCC can generate a warning. 
+
+TODO: Check whether you can assign a value upon definition
