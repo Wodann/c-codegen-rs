@@ -1,18 +1,45 @@
 use pretty::Pretty;
 
-use crate::{operator, pretty::impl_display_via_pretty, Identifier, StorageClass, Type};
+use crate::{
+    non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Expression, Identifier,
+    StorageClass, Type,
+};
 
 #[derive(Clone)]
-pub enum Definitions {
-    Nil { variable_name: Identifier },
-    Assignment(operator::Assignment),
+pub struct Definition {
+    pub storage_class: Option<StorageClass>,
+    pub ty: Type,
+    pub identifiers: NonEmptyVec<Identifier>,
 }
+
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Definition
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        pretty_variable_type(self.storage_class, self.ty, allocator)
+            .append(allocator.space())
+            .append(
+                allocator.intersperse(
+                    self.identifiers
+                        .into_iter()
+                        .map(|identifier| allocator.text(identifier)),
+                    allocator.text(",").append(allocator.space()),
+                ),
+            )
+            .append(allocator.text(";"))
+    }
+}
+
+impl_display_via_pretty!(Definition, 80);
 
 #[derive(Clone)]
 pub struct Declaration {
     pub storage_class: Option<StorageClass>,
     pub ty: Type,
-    pub definitions: Vec<Definitions>,
+    pub variables: NonEmptyVec<(Identifier, Option<Expression>)>,
 }
 
 // Implement Pretty for Declaration
@@ -23,60 +50,70 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let builder = if let Some(storage_class) = self.storage_class {
-            allocator
-                .text(storage_class.to_string())
-                .append(allocator.space())
-        } else {
-            allocator.nil()
-        };
-
-        builder
-            .append(allocator.text(self.ty.to_string()))
+        pretty_variable_type(self.storage_class, self.ty, allocator)
             .append(allocator.space())
-            .append(
-                allocator.intersperse(
-                    self.definitions
-                        .into_iter()
-                        .map(|definition| match definition {
-                            Definitions::Nil {
-                                variable_name: variable,
-                            } => allocator.text(variable),
-                            Definitions::Assignment(assignment) => assignment.pretty(allocator),
-                        }),
-                    allocator.text(",").append(allocator.space()),
-                ),
-            )
+            .append(allocator.intersperse(
+                self.variables.into_iter().map(|(identifier, initializer)| {
+                    let mut builder = allocator.text(identifier);
+
+                    if let Some(initializer) = initializer {
+                        builder = builder
+                            .append(allocator.space())
+                            .append(allocator.text("="))
+                            .append(allocator.space())
+                            .append(initializer.pretty(allocator));
+                    }
+
+                    builder
+                }),
+                allocator.text(",").append(allocator.space()),
+            ))
             .append(allocator.text(";"))
     }
 }
 
 impl_display_via_pretty!(Declaration, 80);
 
+fn pretty_variable_type<'a, AllocatorT, AnnotationT>(
+    storage_class: Option<StorageClass>,
+    ty: Type,
+    allocator: &'a AllocatorT,
+) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT>
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    let builder = if let Some(storage_class) = storage_class {
+        allocator
+            .text(storage_class.to_string())
+            .append(allocator.space())
+    } else {
+        allocator.nil()
+    };
+
+    builder.append(allocator.text(ty.to_string()))
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{Expression, Value};
+    use crate::Value;
 
     use super::*;
 
     #[test]
-    fn multiple_initializers() -> anyhow::Result<()> {
-        let generated = Declaration {
+    fn initializers() -> anyhow::Result<()> {
+        let multiple = Declaration {
             storage_class: None,
             ty: Type::int(),
-            definitions: vec![
-                Definitions::Nil {
-                    variable_name: Identifier::new("x")?,
-                },
-                Definitions::Assignment(operator::Assignment {
-                    left: Expression::Variable(Identifier::new("y")?),
-                    right: Expression::Value(Value::int(5)),
-                }),
-            ],
+            variables: vec![
+                (Identifier::new("x")?, None),
+                (Identifier::new("y")?, Some(Value::int(5).into())),
+            ]
+            .try_into()?,
         }
         .to_string();
-
-        assert_eq!(generated, "int x, y = 5;");
+        assert_eq!(multiple, "int x, y = 5;");
 
         Ok(())
     }

@@ -141,8 +141,7 @@ my_rectangle.top_left.y = 5;
 my_rectangle.bottom_right.x = 10;
 my_rectangle.bottom_right.y = 0;
 
-Next: Size of Structures, Previous: Accessing Structure Members, Up: Structures   [Contents][Index]
-2.4.4 Bit Fields
+## 2.4.4 Bit Fields
 
 You can create structures with integer members of nonstandard sizes, called bit fields. You do this by specifying an integer (int, char, long int, etc.) member as usual, and inserting a colon and the number of bits that the member should occupy in between the member’s name and the semicolon.
 

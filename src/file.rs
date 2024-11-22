@@ -1,19 +1,13 @@
 use core::fmt;
 use std::io;
 
-use crate::{function, r#type::enumeration, variable};
+use crate::{function, r#type, variable};
 
 enum FileLevelStatement {
-    EnumDefinition(enumeration::Definition),
     FunctionDeclaration(function::Declaration),
     FunctionDefinition(function::Definition),
+    TypeDefinition(r#type::Definition),
     Variable(variable::Declaration),
-}
-
-impl From<enumeration::Definition> for FileLevelStatement {
-    fn from(value: enumeration::Definition) -> Self {
-        FileLevelStatement::EnumDefinition(value)
-    }
 }
 
 impl From<function::Declaration> for FileLevelStatement {
@@ -28,6 +22,12 @@ impl From<function::Definition> for FileLevelStatement {
     }
 }
 
+impl From<r#type::Definition> for FileLevelStatement {
+    fn from(value: r#type::Definition) -> Self {
+        FileLevelStatement::TypeDefinition(value)
+    }
+}
+
 impl From<variable::Declaration> for FileLevelStatement {
     fn from(value: variable::Declaration) -> Self {
         FileLevelStatement::Variable(value)
@@ -37,9 +37,9 @@ impl From<variable::Declaration> for FileLevelStatement {
 impl fmt::Display for FileLevelStatement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            FileLevelStatement::EnumDefinition(definition) => write!(f, "{definition}"),
             FileLevelStatement::FunctionDeclaration(declaration) => write!(f, "{declaration}"),
             FileLevelStatement::FunctionDefinition(definition) => write!(f, "{definition}"),
+            FileLevelStatement::TypeDefinition(definition) => write!(f, "{definition}"),
             FileLevelStatement::Variable(declaration) => write!(f, "{declaration}"),
         }
     }

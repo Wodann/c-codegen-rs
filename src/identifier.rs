@@ -13,7 +13,7 @@ pub enum Error {
 }
 
 #[repr(transparent)]
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub struct Identifier(String);
 
 impl Identifier {

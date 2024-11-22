@@ -7,6 +7,7 @@ use crate::{
         PostfixOperator, PrefixOperator, SizeOf,
     },
     pretty::impl_display_via_pretty,
+    r#type::InitializerList,
     Identifier, Value,
 };
 
@@ -22,6 +23,7 @@ pub enum Expression {
         name: Identifier,
         arguments: Vec<Box<Expression>>,
     },
+    InitializerList(Box<InitializerList>),
     Parentheses(Box<Expression>),
     PostfixOperator(Box<PostfixOperator>),
     PrefixOperator(Box<PrefixOperator>),
@@ -37,6 +39,7 @@ impl_froms!(Expression:
     box Cast,
     box CommaOperator,
     box CompoundAssignment,
+    box InitializerList,
     box PostfixOperator,
     box PrefixOperator,
     box SizeOf,
@@ -66,6 +69,7 @@ where
                     allocator.text(",").append(allocator.space()),
                 ))
                 .append(allocator.text(")")),
+            Expression::InitializerList(initializer_list) => initializer_list.pretty(allocator),
             Expression::Parentheses(expr) => allocator
                 .text("(")
                 .append(allocator.space())
