@@ -1,11 +1,15 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, Expression, Identifier};
+use crate::{non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Expression, Identifier};
 
 #[derive(Clone)]
-pub struct Definition {
-    pub name: Option<Identifier>,
-    pub values: Vec<(Identifier, Option<Expression>)>,
+pub enum Definition {
+    Complete {
+        name: Option<Identifier>,
+        values: NonEmptyVec<(Identifier, Option<Expression>)>,
+    },
+    /// An incomplete enumeration type, only useable as pointer type.
+    Incomplete { name: Identifier },
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Definition
@@ -17,33 +21,40 @@ where
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         let builder = allocator.text("enum").append(allocator.space());
 
-        let builder = if let Some(name) = self.name {
-            builder
+        match self {
+            Definition::Complete { name, values } => {
+                let builder = if let Some(name) = name {
+                    builder
+                        .append(allocator.text(name.to_string()))
+                        .append(allocator.space())
+                } else {
+                    builder
+                };
+
+                builder
+                    .append(allocator.text("{"))
+                    .append(allocator.intersperse(
+                        values.into_iter().map(|(identifier, value)| {
+                            let builder = allocator.text(identifier.to_string());
+
+                            if let Some(value) = value {
+                                builder
+                                    .append(allocator.space())
+                                    .append(allocator.text("="))
+                                    .append(allocator.space())
+                                    .append(value.pretty(allocator))
+                            } else {
+                                builder
+                            }
+                        }),
+                        allocator.text(",").append(allocator.space()),
+                    ))
+                    .append(allocator.text("}"))
+            }
+            Definition::Incomplete { name } => builder
                 .append(allocator.text(name.to_string()))
-                .append(allocator.space())
-        } else {
-            builder
-        };
-
-        builder
-            .append(allocator.text("{"))
-            .append(allocator.intersperse(
-                self.values.into_iter().map(|(identifier, value)| {
-                    let builder = allocator.text(identifier.to_string());
-
-                    if let Some(value) = value {
-                        builder
-                            .append(allocator.space())
-                            .append(allocator.text("="))
-                            .append(allocator.space())
-                            .append(value.pretty(allocator))
-                    } else {
-                        builder
-                    }
-                }),
-                allocator.text(",").append(allocator.space()),
-            ))
-            .append(allocator.text("}"))
+                .append(allocator.text(";")),
+        }
     }
 }
 
@@ -101,27 +112,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn definitions() -> anyhow::Result<()> {
-        let named = Definition {
+    fn complete_definitions() -> anyhow::Result<()> {
+        let named = Definition::Complete {
             name: Some(Identifier::new("fruit")?),
             values: vec![
                 (Identifier::new("grape")?, None),
                 (Identifier::new("cherry")?, None),
                 (Identifier::new("lemon")?, None),
                 (Identifier::new("kiwi")?, None),
-            ],
+            ]
+            .try_into()?,
         }
         .to_string();
         assert_eq!(named, "enum fruit {grape, cherry, lemon, kiwi}");
 
-        let specified_value = Definition {
+        let specified_value = Definition::Complete {
             name: Some(Identifier::new("more_fruit")?),
             values: vec![
                 (Identifier::new("banana")?, Some(Value::int(-17).into())),
                 (Identifier::new("apple")?, None),
                 (Identifier::new("blueberry")?, None),
                 (Identifier::new("mango")?, None),
-            ],
+            ]
+            .try_into()?,
         }
         .to_string();
         assert_eq!(
@@ -129,7 +142,7 @@ mod tests {
             "enum more_fruit {banana = -17, apple, blueberry, mango}"
         );
 
-        let specified_expression = Definition {
+        let specified_expression = Definition::Complete {
             name: Some(Identifier::new("yet_more_fruit")?),
             values: vec![
                 (Identifier::new("kumquat")?, None),
@@ -146,7 +159,8 @@ mod tests {
                         .into(),
                     ),
                 ),
-            ],
+            ]
+            .try_into()?,
         }
         .to_string();
         assert_eq!(
@@ -158,16 +172,28 @@ mod tests {
     }
 
     #[test]
+    fn incomplete_definition() -> anyhow::Result<()> {
+        let incomplete = Definition::Incomplete {
+            name: Identifier::new("fruit")?,
+        }
+        .to_string();
+        assert_eq!(incomplete, "enum fruit;");
+
+        Ok(())
+    }
+
+    #[test]
     fn declarations() -> anyhow::Result<()> {
         let inline = Declaration::Inline {
-            definition: Definition {
+            definition: Definition::Complete {
                 name: Some(Identifier::new("fruit")?),
                 values: vec![
                     (Identifier::new("banana")?, None),
                     (Identifier::new("apple")?, None),
                     (Identifier::new("blueberry")?, None),
                     (Identifier::new("mango")?, None),
-                ],
+                ]
+                .try_into()?,
             },
             variable_name: Identifier::new("my_fruit")?,
         }

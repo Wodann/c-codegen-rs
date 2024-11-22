@@ -4,6 +4,7 @@ mod file;
 pub mod function;
 mod identifier;
 mod macros;
+pub mod non_empty_vec;
 pub mod operator;
 pub mod pretty;
 mod statement;
