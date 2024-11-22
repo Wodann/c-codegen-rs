@@ -129,12 +129,12 @@ mod tests {
     }
 
     #[test]
-    fn incomplete_definition() -> anyhow::Result<()> {
-        let incomplete = Definition::from(Enum::Tag {
+    fn tag_definition() -> anyhow::Result<()> {
+        let tag = Definition::from(Enum::Tag {
             name: Identifier::new("fruit")?,
         })
         .to_string();
-        assert_eq!(incomplete, "enum fruit;");
+        assert_eq!(tag, "enum fruit;");
 
         Ok(())
     }
@@ -162,7 +162,7 @@ mod tests {
             "enum fruit {banana, apple, blueberry, mango} my_fruit;"
         );
 
-        let incomplete = variable::Declaration {
+        let tag = variable::Declaration {
             storage_class: None,
             ty: Enum::Tag {
                 name: Identifier::new("fruit")?,
@@ -171,7 +171,7 @@ mod tests {
             variables: vec![(Identifier::new("my_fruit")?, None)].try_into()?,
         }
         .to_string();
-        assert_eq!(incomplete, "enum fruit my_fruit;");
+        assert_eq!(tag, "enum fruit my_fruit;");
 
         Ok(())
     }

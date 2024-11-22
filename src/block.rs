@@ -1,10 +1,10 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, CStatement};
+use crate::{pretty::impl_display_via_pretty, Statement};
 
 #[derive(Clone)]
 pub struct Block {
-    pub statements: Vec<CStatement>,
+    pub statements: Vec<Statement>,
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Block

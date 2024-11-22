@@ -1,25 +1,35 @@
 use core::fmt;
 
-use crate::Type;
+use crate::{
+    r#type::{IntegerKind, Real},
+    Type,
+};
 
 #[derive(Clone)]
 pub enum Value {
     Array { values: Vec<Value>, base_type: Type },
     Char { value: char, signed: bool },
     Enum { value: i32, name: String },
-    Float { value: f64, ty: Type },
-    IntegerSigned { value: i64, ty: Type },
-    IntegerUnsigned { value: u64, ty: Type },
+    IntegerSigned { value: i64, kind: IntegerKind },
+    IntegerUnsigned { value: u64, kind: IntegerKind },
     Pointer { address: usize, base_type: Type },
+    Real { value: f64, kind: Real },
     String(String),
     Struct { fields: Vec<(String, Value)> },
 }
 
 impl Value {
+    pub const fn float(value: f64) -> Self {
+        Self::Real {
+            value,
+            kind: Real::Float,
+        }
+    }
+
     pub const fn int(value: i64) -> Self {
         Self::IntegerSigned {
             value,
-            ty: Type::int(),
+            kind: IntegerKind::Int,
         }
     }
 }
@@ -39,9 +49,9 @@ impl fmt::Display for Value {
                 write!(f, "{value}")
             }
             Value::Enum { value, name } => write!(f, "enum {} = {}", name, value),
-            Value::Float { value, ty } => write!(f, "{value}"),
-            Value::IntegerSigned { value, ty } => write!(f, "{value}"),
-            Value::IntegerUnsigned { value, ty } => write!(f, "{value}"),
+            Value::Real { value, kind: ty } => write!(f, "{value}"),
+            Value::IntegerSigned { value, kind: ty } => write!(f, "{value}"),
+            Value::IntegerUnsigned { value, kind: ty } => write!(f, "{value}"),
             Value::Pointer { address, base_type } => {
                 write!(f, "{}* at 0x{:x}", base_type, address)
             }

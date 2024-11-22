@@ -3,15 +3,18 @@ use core::fmt;
 pub mod enumeration;
 mod initializer_list;
 mod integer;
+pub mod member;
 mod pointer;
 mod real;
 mod scalar;
 pub mod structure;
+pub mod union;
 
 use enumeration::Enum;
 use integer::Integer;
 use pretty::Pretty;
 use structure::Struct;
+use union::Union;
 
 use crate::{macros::impl_froms, pretty::impl_display_via_pretty};
 
@@ -36,13 +39,17 @@ pub enum Type {
     Real(Real),
     StrongInt(StrongInt),
     Struct(Struct),
-    Union(String),
+    Union(Union),
     Void,
 }
 
-impl_froms!(Type: Enum, Integer, Pointer, Real, Struct, StrongInt);
+impl_froms!(Type: Enum, Integer, Pointer, Real, Struct, StrongInt, Union);
 
 impl Type {
+    pub const fn float() -> Self {
+        Self::Real(Real::Float)
+    }
+
     pub const fn double() -> Self {
         Self::Real(Real::Double)
     }
@@ -71,9 +78,9 @@ impl fmt::Display for Type {
             Type::Integer(integer) => write!(f, "{integer}"),
             Type::Pointer(pointer) => write!(f, "{pointer}"),
             Type::Real(ty) => write!(f, "{}", ty),
-            Type::StrongInt(ty) => write!(f, "{}", ty),
+            Type::StrongInt(integer) => write!(f, "{integer}"),
             Type::Struct(structure) => write!(f, "{structure}"),
-            Type::Union(name) => write!(f, "union {}", name),
+            Type::Union(union) => write!(f, "{union}"),
             Type::Void => write!(f, "void"),
         }
     }
@@ -83,9 +90,10 @@ impl fmt::Display for Type {
 pub enum Definition {
     Enum(Enum),
     Struct(Struct),
+    Union(Union),
 }
 
-impl_froms!(Definition: Enum, Struct);
+impl_froms!(Definition: Enum, Struct, Union);
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Definition
 where
@@ -97,6 +105,7 @@ where
         let builder = match self {
             Definition::Enum(enumeration) => enumeration.pretty(allocator),
             Definition::Struct(structure) => structure.pretty(allocator),
+            Definition::Union(union) => union.pretty(allocator),
         };
 
         builder.append(allocator.text(";"))

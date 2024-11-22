@@ -1,6 +1,30 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, Block, Identifier, Type};
+use crate::{pretty::impl_display_via_pretty, Block, Expression, Identifier, Type};
+
+#[derive(Clone)]
+pub struct FunctionCall {
+    pub name: Identifier,
+    pub arguments: Vec<Expression>,
+}
+
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for FunctionCall
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        allocator
+            .text(self.name)
+            .append(allocator.text("("))
+            .append(allocator.intersperse(
+                self.arguments.into_iter().map(|arg| arg.pretty(allocator)),
+                allocator.text(",").append(allocator.space()),
+            ))
+            .append(allocator.text(")"))
+    }
+}
 
 /// # Source
 ///
@@ -103,7 +127,7 @@ impl_display_via_pretty!(Definition, 80);
 mod tests {
     use crate::{
         operator::{BinaryOperator, BinaryOperatorKind},
-        CStatement, Expression, Value,
+        Statement, Expression, Value,
     };
 
     use super::*;
@@ -155,7 +179,7 @@ mod tests {
                 (Type::int(), Identifier::new("y")?),
             ],
             body: Block {
-                statements: vec![CStatement::ReturnStatement(Some(
+                statements: vec![Statement::ReturnStatement(Some(
                     BinaryOperator {
                         left: Expression::Variable(Identifier::new("x")?),
                         operator: BinaryOperatorKind::Add,
@@ -188,7 +212,7 @@ add_values (int x, int y)
             return_ty: Type::int(),
             parameters: vec![(Type::int(), Identifier::new("x")?)],
             body: Block {
-                statements: vec![CStatement::ReturnStatement(Some(
+                statements: vec![Statement::ReturnStatement(Some(
                     BinaryOperator {
                         left: Expression::Variable(Identifier::new("x")?),
                         operator: BinaryOperatorKind::Add,

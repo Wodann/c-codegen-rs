@@ -7,9 +7,9 @@ use std::fmt;
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Assignment-Operators
 #[derive(Clone)]
 pub struct CompoundAssignment {
-    pub variable: Identifier,
+    pub left: Expression,
     pub operator: CompoundAssignmentOperator,
-    pub expression: Expression,
+    pub right: Expression,
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for CompoundAssignment
@@ -19,12 +19,12 @@ where
     AllocatorT::Doc: Clone,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        allocator
-            .text(self.variable)
+        self.left
+            .pretty(allocator)
             .append(allocator.space())
             .append(allocator.text(self.operator.to_string()))
             .append(allocator.space())
-            .append(self.expression.pretty(allocator))
+            .append(self.right.pretty(allocator))
     }
 }
 

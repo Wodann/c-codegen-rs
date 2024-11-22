@@ -78,11 +78,11 @@ impl fmt::Display for BinaryOperatorKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{CStatement, Identifier};
+    use crate::{Statement, Identifier};
 
     #[test]
     fn arithmetic() -> anyhow::Result<()> {
-        let addition = CStatement::Expression(
+        let addition = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Add,
@@ -93,7 +93,7 @@ mod tests {
         .to_string();
         assert_eq!(addition, "x + y;");
 
-        let subtraction = CStatement::Expression(
+        let subtraction = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Sub,
@@ -104,7 +104,7 @@ mod tests {
         .to_string();
         assert_eq!(subtraction, "x - y;");
 
-        let multiplication = CStatement::Expression(
+        let multiplication = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Mul,
@@ -115,7 +115,7 @@ mod tests {
         .to_string();
         assert_eq!(multiplication, "x * y;");
 
-        let division = CStatement::Expression(
+        let division = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Div,
@@ -126,7 +126,7 @@ mod tests {
         .to_string();
         assert_eq!(division, "x / y;");
 
-        let modulo = CStatement::Expression(
+        let modulo = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Mod,
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn comparison() -> anyhow::Result<()> {
-        let equal_to = CStatement::Expression(
+        let equal_to = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Eq,
@@ -153,7 +153,7 @@ mod tests {
         .to_string();
         assert_eq!(equal_to, "x == y;");
 
-        let not_equal_to = CStatement::Expression(
+        let not_equal_to = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Ne,
@@ -164,7 +164,7 @@ mod tests {
         .to_string();
         assert_eq!(not_equal_to, "x != y;");
 
-        let less_than = CStatement::Expression(
+        let less_than = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Lt,
@@ -175,7 +175,7 @@ mod tests {
         .to_string();
         assert_eq!(less_than, "x < y;");
 
-        let less_than_or_equal = CStatement::Expression(
+        let less_than_or_equal = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Le,
@@ -186,7 +186,7 @@ mod tests {
         .to_string();
         assert_eq!(less_than_or_equal, "x <= y;");
 
-        let greater_than = CStatement::Expression(
+        let greater_than = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Gt,
@@ -197,7 +197,7 @@ mod tests {
         .to_string();
         assert_eq!(greater_than, "x > y;");
 
-        let greater_than_or_equal = CStatement::Expression(
+        let greater_than_or_equal = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Ge,
@@ -213,7 +213,7 @@ mod tests {
 
     #[test]
     fn logical() -> anyhow::Result<()> {
-        let logical_and = CStatement::Expression(
+        let logical_and = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::And,
@@ -224,7 +224,7 @@ mod tests {
         .to_string();
         assert_eq!(logical_and, "x && y;");
 
-        let logical_or = CStatement::Expression(
+        let logical_or = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Or,
@@ -240,7 +240,7 @@ mod tests {
 
     #[test]
     fn bit_shifting() -> anyhow::Result<()> {
-        let left_shift = CStatement::Expression(
+        let left_shift = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::LShift,
@@ -251,7 +251,7 @@ mod tests {
         .to_string();
         assert_eq!(left_shift, "x << y;");
 
-        let right_shift = CStatement::Expression(
+        let right_shift = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::RShift,
@@ -267,7 +267,7 @@ mod tests {
 
     #[test]
     fn bitwise_logical() -> anyhow::Result<()> {
-        let bitwise_and = CStatement::Expression(
+        let bitwise_and = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::BitAnd,
@@ -278,7 +278,7 @@ mod tests {
         .to_string();
         assert_eq!(bitwise_and, "x & y;");
 
-        let bitwise_or = CStatement::Expression(
+        let bitwise_or = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::BitOr,
@@ -289,7 +289,7 @@ mod tests {
         .to_string();
         assert_eq!(bitwise_or, "x | y;");
 
-        let bitwise_xor = CStatement::Expression(
+        let bitwise_xor = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::BitXor,

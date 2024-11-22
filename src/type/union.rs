@@ -5,26 +5,26 @@ use crate::{non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Identif
 use super::member;
 
 #[derive(Clone)]
-pub enum Struct {
+pub enum Union {
     Definition {
         name: Option<Identifier>,
         member_groups: NonEmptyVec<member::Group>,
     },
-    /// An incomplete structure type, only useable as pointer type. Requires a complete definiton elsewhere.
+    /// An incomplete union type, only useable as pointer type. Requires a complete definiton elsewhere.
     Tag { name: Identifier },
 }
 
-impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Struct
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Union
 where
     AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
     AllocatorT::Doc: Clone,
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let builder = allocator.text("struct").append(allocator.space());
+        let builder = allocator.text("union").append(allocator.space());
 
         match self {
-            Struct::Definition {
+            Union::Definition {
                 name,
                 member_groups,
             } => {
@@ -50,16 +50,15 @@ where
                     .append(allocator.hardline())
                     .append(allocator.text("}"))
             }
-            Struct::Tag { name } => builder.append(allocator.text(name.to_string())),
+            Union::Tag { name } => builder.append(allocator.text(name.to_string())),
         }
     }
 }
 
-impl_display_via_pretty!(Struct, 80);
+impl_display_via_pretty!(Union, 80);
 
 #[cfg(test)]
 mod tests {
-
     use crate::{
         r#type::{Definition, InitializerList},
         variable, Type, Value,
@@ -69,17 +68,17 @@ mod tests {
 
     #[test]
     fn complete_definitions() -> anyhow::Result<()> {
-        let single_line = Definition::from(Struct::Definition {
-            name: Some(Identifier::new("point")?),
+        let single_line = Definition::from(Union::Definition {
+            name: Some(Identifier::new("numbers")?),
             member_groups: vec![member::Group {
                 ty: Type::int(),
                 members: vec![
                     Member {
-                        name: Identifier::new("x")?,
+                        name: Identifier::new("i")?,
                         bit_field_size: None,
                     },
                     Member {
-                        name: Identifier::new("y")?,
+                        name: Identifier::new("j")?,
                         bit_field_size: None,
                     },
                 ]
@@ -90,26 +89,26 @@ mod tests {
         .to_string();
         assert_eq!(
             single_line,
-            r#"struct point {
-  int x, y;
+            r#"union numbers {
+  int i, j;
 };"#
         );
 
-        let multi_line = Definition::from(Struct::Definition {
-            name: Some(Identifier::new("point")?),
+        let multi_line = Definition::from(Union::Definition {
+            name: Some(Identifier::new("numbers")?),
             member_groups: vec![
                 member::Group {
                     ty: Type::int(),
                     members: vec![Member {
-                        name: Identifier::new("x")?,
+                        name: Identifier::new("i")?,
                         bit_field_size: None,
                     }]
                     .try_into()?,
                 },
                 member::Group {
-                    ty: Type::int(),
+                    ty: Type::float(),
                     members: vec![Member {
-                        name: Identifier::new("y")?,
+                        name: Identifier::new("f")?,
                         bit_field_size: None,
                     }]
                     .try_into()?,
@@ -120,9 +119,9 @@ mod tests {
         .to_string();
         assert_eq!(
             multi_line,
-            r#"struct point {
-  int x;
-  int y;
+            r#"union numbers {
+  int i;
+  float f;
 };"#
         );
 
@@ -131,11 +130,11 @@ mod tests {
 
     #[test]
     fn incomplete_definition() -> anyhow::Result<()> {
-        let generated = Definition::from(Struct::Tag {
-            name: Identifier::new("point")?,
+        let generated = Definition::from(Union::Tag {
+            name: Identifier::new("numbers")?,
         })
         .to_string();
-        assert_eq!(generated, "struct point;");
+        assert_eq!(generated, "union numbers;");
 
         Ok(())
     }
@@ -145,21 +144,21 @@ mod tests {
         // Test inline declaration
         let inline = variable::Declaration {
             storage_class: None,
-            ty: Struct::Definition {
-                name: Some(Identifier::new("point")?),
+            ty: Union::Definition {
+                name: Some(Identifier::new("numbers")?),
                 member_groups: vec![
                     member::Group {
                         ty: Type::int(),
                         members: vec![Member {
-                            name: Identifier::new("x")?,
+                            name: Identifier::new("i")?,
                             bit_field_size: None,
                         }]
                         .try_into()?,
                     },
                     member::Group {
-                        ty: Type::int(),
+                        ty: Type::float(),
                         members: vec![Member {
-                            name: Identifier::new("y")?,
+                            name: Identifier::new("f")?,
                             bit_field_size: None,
                         }]
                         .try_into()?,
@@ -169,30 +168,34 @@ mod tests {
             }
             .into(),
             variables: vec![
-                (Identifier::new("first_point")?, None),
-                (Identifier::new("second_point")?, None),
+                (Identifier::new("first_number")?, None),
+                (Identifier::new("second_number")?, None),
             ]
             .try_into()?,
         }
         .to_string();
         assert_eq!(
             inline,
-            r#"struct point {
-  int x;
-  int y;
-} first_point, second_point;"#
+            r#"union numbers {
+  int i;
+  float f;
+} first_number, second_number;"#
         );
 
         let tag = variable::Declaration {
             storage_class: None,
-            ty: Struct::Tag {
-                name: Identifier::new("point")?,
+            ty: Union::Tag {
+                name: Identifier::new("numbers")?,
             }
             .into(),
-            variables: vec![(Identifier::new("my_point")?, None)].try_into()?,
+            variables: vec![
+                (Identifier::new("first_number")?, None),
+                (Identifier::new("second_number")?, None),
+            ]
+            .try_into()?,
         }
         .to_string();
-        assert_eq!(tag, "struct point my_point;");
+        assert_eq!(tag, "union numbers first_number, second_number;");
 
         Ok(())
     }
@@ -201,85 +204,56 @@ mod tests {
     fn initializers() -> anyhow::Result<()> {
         let ordered = variable::Declaration {
             storage_class: None,
-            ty: Struct::Tag {
-                name: Identifier::new("point")?,
+            ty: Union::Tag {
+                name: Identifier::new("numbers")?,
             }
             .into(),
             variables: vec![(
-                Identifier::new("first_point")?,
-                Some(
-                    InitializerList::Ordered(vec![Value::int(5).into(), Value::int(10).into()])
-                        .into(),
-                ),
+                Identifier::new("first_number")?,
+                Some(InitializerList::Ordered(vec![Value::int(5).into()]).into()),
             )]
             .try_into()?,
         }
         .to_string();
-        assert_eq!(ordered, "struct point first_point = { 5, 10 };");
+        assert_eq!(ordered, "union numbers first_number = { 5 };");
 
         let named = variable::Declaration {
             storage_class: None,
-            ty: Struct::Tag {
-                name: Identifier::new("point")?,
+            ty: Union::Tag {
+                name: Identifier::new("numbers")?,
             }
             .into(),
             variables: vec![(
-                Identifier::new("first_point")?,
+                Identifier::new("first_number")?,
                 Some(
-                    InitializerList::Named(vec![
-                        (Identifier::new("y")?, Value::int(10).into()),
-                        (Identifier::new("x")?, Value::int(5).into()),
-                    ])
+                    InitializerList::Named(vec![(
+                        Identifier::new("f")?,
+                        Value::float(3.14159).into(),
+                    )])
                     .into(),
                 ),
             )]
             .try_into()?,
         }
         .to_string();
-        assert_eq!(named, "struct point first_point = { .y = 10, .x = 5 };");
-
-        let nested = variable::Declaration {
-            storage_class: None,
-            ty: Struct::Tag {
-                name: Identifier::new("rectangle")?,
-            }
-            .into(),
-            variables: vec![(
-                Identifier::new("my_rectangle")?,
-                Some(
-                    InitializerList::Ordered(vec![
-                        InitializerList::Ordered(vec![Value::int(0).into(), Value::int(5).into()])
-                            .into(),
-                        InitializerList::Ordered(vec![Value::int(10).into(), Value::int(0).into()])
-                            .into(),
-                    ])
-                    .into(),
-                ),
-            )]
-            .try_into()?,
-        }
-        .to_string();
-        assert_eq!(
-            nested,
-            "struct rectangle my_rectangle = { { 0, 5 }, { 10, 0 } };"
-        );
+        assert_eq!(named, "union numbers first_number = { .f = 3.14159 };");
 
         Ok(())
     }
 
     #[test]
     fn bit_fields() -> anyhow::Result<()> {
-        let single_line = Definition::from(Struct::Definition {
-            name: Some(Identifier::new("card")?),
+        let single_line = Definition::from(Union::Definition {
+            name: Some(Identifier::new("numbers")?),
             member_groups: vec![member::Group {
                 ty: Type::unsigned_int(),
                 members: vec![
                     Member {
-                        name: Identifier::new("suit")?,
+                        name: Identifier::new("i2")?,
                         bit_field_size: Some(2),
                     },
                     Member {
-                        name: Identifier::new("face_value")?,
+                        name: Identifier::new("i4")?,
                         bit_field_size: Some(4),
                     },
                 ]
@@ -290,26 +264,26 @@ mod tests {
         .to_string();
         assert_eq!(
             single_line,
-            r#"struct card {
-  unsigned int suit : 2, face_value : 4;
+            r#"union numbers {
+  unsigned int i2 : 2, i4 : 4;
 };"#
         );
 
-        let multi_line = Definition::from(Struct::Definition {
-            name: Some(Identifier::new("card")?),
+        let multi_line = Definition::from(Union::Definition {
+            name: Some(Identifier::new("numbers")?),
             member_groups: vec![
                 member::Group {
                     ty: Type::unsigned_int(),
                     members: vec![Member {
-                        name: Identifier::new("suit")?,
+                        name: Identifier::new("ui")?,
                         bit_field_size: Some(2),
                     }]
                     .try_into()?,
                 },
                 member::Group {
-                    ty: Type::unsigned_int(),
+                    ty: Type::int(),
                     members: vec![Member {
-                        name: Identifier::new("face_value")?,
+                        name: Identifier::new("i")?,
                         bit_field_size: Some(4),
                     }]
                     .try_into()?,
@@ -320,9 +294,9 @@ mod tests {
         .to_string();
         assert_eq!(
             multi_line,
-            r#"struct card {
-  unsigned int suit : 2;
-  unsigned int face_value : 4;
+            r#"union numbers {
+  unsigned int ui : 2;
+  int i : 4;
 };"#
         );
 

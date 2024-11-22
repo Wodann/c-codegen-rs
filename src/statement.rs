@@ -6,35 +6,35 @@ use pretty::Pretty;
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Statements
 #[derive(Clone)]
-pub enum CStatement {
+pub enum Statement {
     Label {
         identifier: Identifier,
-        statement: Box<CStatement>,
+        statement: Box<Statement>,
     },
     Expression(Expression),
     IfStatement {
         condition: Value,
-        then_block: Vec<CStatement>,
-        else_block: Option<Vec<CStatement>>,
+        then_block: Vec<Statement>,
+        else_block: Option<Vec<Statement>>,
     },
     SwitchStatement {
         expression: Value,
-        cases: Vec<(Value, Vec<CStatement>)>,
-        default: Option<Vec<CStatement>>,
+        cases: Vec<(Value, Vec<Statement>)>,
+        default: Option<Vec<Statement>>,
     },
     WhileStatement {
         condition: Value,
-        body: Vec<CStatement>,
+        body: Vec<Statement>,
     },
     DoStatement {
-        body: Vec<CStatement>,
+        body: Vec<Statement>,
         condition: Value,
     },
     ForStatement {
-        init: Option<Box<CStatement>>,
+        init: Option<Box<Statement>>,
         condition: Value,
-        step: Option<Box<CStatement>>,
-        body: Vec<CStatement>,
+        step: Option<Box<Statement>>,
+        body: Vec<Statement>,
     },
     Block(Block),
     NullStatement,
@@ -52,7 +52,7 @@ pub enum CStatement {
         return_type: Type,
         name: Identifier,
         parameters: Vec<(Type, Option<Identifier>)>,
-        body: Vec<CStatement>,
+        body: Vec<Statement>,
     },
     StructDeclaration {
         name: Identifier,
@@ -69,7 +69,7 @@ pub enum CStatement {
     },
 }
 
-impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for CStatement
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Statement
 where
     AnnotationT: Clone + 'a,
     AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
@@ -77,7 +77,7 @@ where
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         match self {
-            CStatement::Label {
+            Statement::Label {
                 identifier,
                 statement,
             } => allocator
@@ -85,10 +85,10 @@ where
                 .append(allocator.text(":"))
                 .append(allocator.hardline())
                 .append(statement.pretty(allocator)),
-            CStatement::Expression(expression) => {
+            Statement::Expression(expression) => {
                 expression.pretty(allocator).append(allocator.text(";"))
             }
-            CStatement::IfStatement {
+            Statement::IfStatement {
                 condition,
                 then_block,
                 else_block,
@@ -123,7 +123,7 @@ where
 
                 doc.nest(2)
             }
-            CStatement::SwitchStatement {
+            Statement::SwitchStatement {
                 expression,
                 cases,
                 default,
@@ -165,7 +165,7 @@ where
 
                 doc.append(allocator.text("}")).nest(2)
             }
-            CStatement::WhileStatement { condition, body } => {
+            Statement::WhileStatement { condition, body } => {
                 let mut doc = allocator
                     .text("while (")
                     .append(condition.to_string())
@@ -180,7 +180,7 @@ where
 
                 doc.append(allocator.text("}")).nest(2)
             }
-            CStatement::DoStatement { body, condition } => {
+            Statement::DoStatement { body, condition } => {
                 let mut doc = allocator.text("do {").append(allocator.hardline());
 
                 for stmt in body {
@@ -194,7 +194,7 @@ where
                     .append(allocator.text(");"))
                     .nest(2)
             }
-            CStatement::ForStatement {
+            Statement::ForStatement {
                 init,
                 condition,
                 step,
@@ -229,15 +229,15 @@ where
 
                 doc.append(allocator.text("}")).nest(2)
             }
-            CStatement::Block(block) => block.pretty(allocator),
-            CStatement::NullStatement => allocator.text(";"),
-            CStatement::GotoStatement(label) => allocator
+            Statement::Block(block) => block.pretty(allocator),
+            Statement::NullStatement => allocator.text(";"),
+            Statement::GotoStatement(label) => allocator
                 .text("goto ")
                 .append(allocator.text(label))
                 .append(allocator.text(";")),
-            CStatement::BreakStatement => allocator.text("break;"),
-            CStatement::ContinueStatement => allocator.text("continue;"),
-            CStatement::ReturnStatement(expression) => {
+            Statement::BreakStatement => allocator.text("break;"),
+            Statement::ContinueStatement => allocator.text("continue;"),
+            Statement::ReturnStatement(expression) => {
                 let mut doc = allocator.text("return");
                 if let Some(expression) = expression {
                     doc = doc
@@ -246,13 +246,13 @@ where
                 }
                 doc.append(allocator.text(";"))
             }
-            CStatement::TypedefStatement(name, ty) => allocator
+            Statement::TypedefStatement(name, ty) => allocator
                 .text("typedef ")
                 .append(allocator.text(format!("{}", ty)))
                 .append(allocator.text(" "))
                 .append(allocator.text(name))
                 .append(allocator.text(";")),
-            CStatement::FunctionDeclaration {
+            Statement::FunctionDeclaration {
                 return_type,
                 name,
                 parameters,
@@ -268,7 +268,7 @@ where
 
                 allocator.text(format!("{} {}({});", return_type, name, param_str))
             }
-            CStatement::FunctionDefinition {
+            Statement::FunctionDefinition {
                 return_type,
                 name,
                 parameters,
@@ -295,7 +295,7 @@ where
 
                 doc.append(allocator.text("}")).nest(2)
             }
-            CStatement::StructDeclaration { name, fields } => {
+            Statement::StructDeclaration { name, fields } => {
                 let mut doc = allocator
                     .text(format!("struct {} {{", name))
                     .append(allocator.hardline());
@@ -308,7 +308,7 @@ where
 
                 doc.append(allocator.text("};")).nest(2)
             }
-            CStatement::EnumDeclaration { name, variants } => {
+            Statement::EnumDeclaration { name, variants } => {
                 let mut doc = allocator
                     .text(format!("enum {} {{", name))
                     .append(allocator.hardline());
@@ -326,14 +326,14 @@ where
 
                 doc.append(allocator.text("};")).nest(2)
             }
-            CStatement::IncludeStatement(header_file) => {
+            Statement::IncludeStatement(header_file) => {
                 allocator.text(format!("#include <{}>", header_file))
             }
-            CStatement::MacroDefinition { name, body } => {
+            Statement::MacroDefinition { name, body } => {
                 allocator.text(format!("#define {} {}", name, body))
             }
         }
     }
 }
 
-impl_display_via_pretty!(CStatement, 80);
+impl_display_via_pretty!(Statement, 80);

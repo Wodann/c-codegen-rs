@@ -15,5 +15,5 @@ pub mod variable;
 
 pub use self::{
     block::Block, expression::Expression, file::CFileBuilder, identifier::Identifier, r#type::Type,
-    statement::CStatement, storage_class::StorageClass, value::Value,
+    statement::Statement, storage_class::StorageClass, value::Value,
 };

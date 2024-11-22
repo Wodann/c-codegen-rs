@@ -1,13 +1,17 @@
 use pretty::Pretty;
 
 use crate::{
+    function::FunctionCall,
     macros::impl_froms,
     operator::{
         ArraySubscript, Assignment, BinaryOperator, Cast, CommaOperator, CompoundAssignment,
         PostfixOperator, PrefixOperator, SizeOf,
     },
     pretty::impl_display_via_pretty,
-    r#type::InitializerList,
+    r#type::{
+        member::{IndirectMemberAccess, MemberAccess},
+        InitializerList,
+    },
     Identifier, Value,
 };
 
@@ -19,11 +23,10 @@ pub enum Expression {
     Cast(Box<Cast>),
     CommaOperator(Box<CommaOperator>),
     CompoundAssignment(Box<CompoundAssignment>),
-    FunctionCall {
-        name: Identifier,
-        arguments: Vec<Box<Expression>>,
-    },
-    InitializerList(Box<InitializerList>),
+    FunctionCall(FunctionCall),
+    IndirectMemberAccess(Box<IndirectMemberAccess>),
+    InitializerList(InitializerList),
+    MemberAccess(MemberAccess),
     Parentheses(Box<Expression>),
     PostfixOperator(Box<PostfixOperator>),
     PrefixOperator(Box<PrefixOperator>),
@@ -39,7 +42,10 @@ impl_froms!(Expression:
     box Cast,
     box CommaOperator,
     box CompoundAssignment,
-    box InitializerList,
+    FunctionCall,
+    box IndirectMemberAccess,
+    InitializerList,
+    MemberAccess,
     box PostfixOperator,
     box PrefixOperator,
     box SizeOf,
@@ -60,16 +66,10 @@ where
             Expression::Cast(cast) => cast.pretty(allocator),
             Expression::CommaOperator(comma) => comma.pretty(allocator),
             Expression::CompoundAssignment(assignment) => assignment.pretty(allocator),
-            Expression::FunctionCall { name, arguments } => allocator
-                .text(name)
-                .append(allocator.space())
-                .append(allocator.text("("))
-                .append(allocator.intersperse(
-                    arguments.into_iter().map(|arg| arg.pretty(allocator)),
-                    allocator.text(",").append(allocator.space()),
-                ))
-                .append(allocator.text(")")),
+            Expression::FunctionCall(function_call) => function_call.pretty(allocator),
+            Expression::IndirectMemberAccess(member_access) => member_access.pretty(allocator),
             Expression::InitializerList(initializer_list) => initializer_list.pretty(allocator),
+            Expression::MemberAccess(member_access) => member_access.pretty(allocator),
             Expression::Parentheses(expr) => allocator
                 .text("(")
                 .append(allocator.space())
@@ -91,7 +91,7 @@ impl_display_via_pretty!(Expression, 80);
 mod tests {
     use crate::{
         operator::{BinaryOperator, BinaryOperatorKind},
-        CStatement,
+        Statement,
     };
 
     use super::*;
@@ -99,13 +99,16 @@ mod tests {
     // Source: https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Calling-Functions
     #[test]
     fn function_call() -> anyhow::Result<()> {
-        let generated = CStatement::Expression(Expression::FunctionCall {
-            name: Identifier::new("foo")?,
-            arguments: vec![Box::new(Value::int(5).into())],
-        })
+        let generated = Statement::Expression(
+            FunctionCall {
+                name: Identifier::new("foo")?,
+                arguments: vec![Value::int(5).into()],
+            }
+            .into(),
+        )
         .to_string();
 
-        assert_eq!(generated, "foo (5);");
+        assert_eq!(generated, "foo(5);");
 
         Ok(())
     }
@@ -154,7 +157,7 @@ mod tests {
             .into(),
         ));
 
-        let generated = CStatement::Expression(expr).to_string();
+        let generated = Statement::Expression(expr).to_string();
         assert_eq!(generated, "( 2 * ( ( 3 + 10 ) - ( 2 * 6 ) ) );");
 
         Ok(())

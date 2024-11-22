@@ -33,19 +33,19 @@ impl_display_via_pretty!(SizeOf, 80);
 
 #[cfg(test)]
 mod test {
-    use crate::{CStatement, Identifier};
+    use crate::{Identifier, Statement};
 
     use super::*;
 
     #[test]
     fn sizeof_operator() -> anyhow::Result<()> {
         // Test sizeof with a type
-        let sizeof_type = CStatement::Expression(SizeOf::Type(Type::int()).into()).to_string();
+        let sizeof_type = Statement::Expression(SizeOf::Type(Type::int()).into()).to_string();
 
         assert_eq!(sizeof_type, "sizeof (int);");
 
         // Test sizeof with an expression
-        let sizeof_expr = CStatement::Expression(
+        let sizeof_expr = Statement::Expression(
             SizeOf::Expression(Expression::Variable(Identifier::new("x")?)).into(),
         )
         .to_string();

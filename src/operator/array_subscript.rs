@@ -27,13 +27,15 @@ where
 mod tests {
     use super::*;
     use crate::{
-        operator::BinaryOperator, operator::BinaryOperatorKind, CStatement, Identifier, Value,
+        function::FunctionCall,
+        operator::{BinaryOperator, BinaryOperatorKind},
+        Statement, Identifier, Value,
     };
 
     #[test]
     fn basic() -> anyhow::Result<()> {
         let array_access =
-            CStatement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
+            Statement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
                 array: Expression::Variable(Identifier::new("my_array")?),
                 index: Value::int(0).into(),
             })));
@@ -46,18 +48,19 @@ mod tests {
     fn complex() -> anyhow::Result<()> {
         // Test with a function call as the array expression: get_array()[0]
         let function_array_access =
-            CStatement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
-                array: Expression::FunctionCall {
+            Statement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
+                array: FunctionCall {
                     name: Identifier::new("get_array")?,
                     arguments: vec![],
-                },
+                }
+                .into(),
                 index: Value::int(0).into(),
             })));
-        assert_eq!(function_array_access.to_string(), "get_array ()[0];");
+        assert_eq!(function_array_access.to_string(), "get_array()[0];");
 
         // Test with a complex index expression: arr[i + j * 2]
         let complex_index_access =
-            CStatement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
+            Statement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
                 array: Expression::Variable(Identifier::new("arr")?),
                 index: Expression::BinaryOperator(Box::new(BinaryOperator {
                     left: Expression::Variable(Identifier::new("i")?),

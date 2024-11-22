@@ -23,11 +23,11 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{CStatement, Expression, Identifier, Value};
+    use crate::{Statement, Expression, Identifier, Value};
 
     #[test]
     fn assignment() -> anyhow::Result<()> {
-        let assignment = CStatement::Expression(
+        let assignment = Statement::Expression(
             Assignment {
                 left: Expression::Variable(Identifier::new("x")?),
                 right: Value::int(42).into(),
@@ -36,11 +36,11 @@ mod tests {
         );
         assert_eq!(assignment.to_string(), "x = 42;");
 
-        let compound_assignment = CStatement::Expression(
+        let compound_assignment = Statement::Expression(
             CompoundAssignment {
-                variable: Identifier::new("x")?,
+                left: Expression::Variable(Identifier::new("x")?),
                 operator: CompoundAssignmentOperator::Add,
-                expression: Expression::Variable(Identifier::new("y")?),
+                right: Expression::Variable(Identifier::new("y")?),
             }
             .into(),
         );
@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn increment_decrement() -> anyhow::Result<()> {
-        let prefix_inc = CStatement::Expression(
+        let prefix_inc = Statement::Expression(
             PrefixOperator {
                 operand: Expression::Variable(Identifier::new("x")?),
                 operator: PrefixOperatorKind::Increment,
@@ -60,7 +60,7 @@ mod tests {
         );
         assert_eq!(prefix_inc.to_string(), "++x;");
 
-        let postfix_dec = CStatement::Expression(
+        let postfix_dec = Statement::Expression(
             PostfixOperator {
                 operand: Expression::Variable(Identifier::new("y")?),
                 operator: PostfixOperatorKind::Decrement,
@@ -74,7 +74,7 @@ mod tests {
 
     #[test]
     fn binary_operations() -> anyhow::Result<()> {
-        let add = CStatement::Expression(
+        let add = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
                 operator: BinaryOperatorKind::Add,
@@ -84,7 +84,7 @@ mod tests {
         );
         assert_eq!(add.to_string(), "x + y;");
 
-        let mul = CStatement::Expression(
+        let mul = Statement::Expression(
             BinaryOperator {
                 left: Expression::Variable(Identifier::new("a")?),
                 operator: BinaryOperatorKind::Mul,
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn prefix_unary() -> anyhow::Result<()> {
-        let pos = CStatement::Expression(
+        let pos = Statement::Expression(
             PrefixOperator {
                 operand: Expression::Variable(Identifier::new("x")?),
                 operator: PrefixOperatorKind::Positive,
@@ -108,7 +108,7 @@ mod tests {
         );
         assert_eq!(pos.to_string(), "+x;");
 
-        let neg = CStatement::Expression(
+        let neg = Statement::Expression(
             PrefixOperator {
                 operand: Expression::Variable(Identifier::new("y")?),
                 operator: PrefixOperatorKind::Negative,

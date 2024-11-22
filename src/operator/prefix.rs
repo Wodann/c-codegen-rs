@@ -55,13 +55,13 @@ impl fmt::Display for PrefixOperatorKind {
 
 #[cfg(test)]
 mod tests {
-    use crate::{CStatement, Identifier};
+    use crate::{Statement, Identifier};
 
     use super::*;
 
     #[test]
     fn increment_decrement() -> anyhow::Result<()> {
-        let increment = CStatement::Expression(
+        let increment = Statement::Expression(
             PrefixOperator {
                 operand: Expression::Variable(Identifier::new("x")?),
                 operator: PrefixOperatorKind::Increment,
@@ -72,7 +72,7 @@ mod tests {
 
         assert_eq!(increment, "++x;");
 
-        let decrement = CStatement::Expression(
+        let decrement = Statement::Expression(
             PrefixOperator {
                 operand: Expression::Variable(Identifier::new("y")?),
                 operator: PrefixOperatorKind::Decrement,
@@ -88,7 +88,7 @@ mod tests {
 
     #[test]
     fn positive_negative() -> anyhow::Result<()> {
-        let positive = CStatement::Expression(
+        let positive = Statement::Expression(
             PrefixOperator {
                 operand: Expression::Variable(Identifier::new("x")?),
                 operator: PrefixOperatorKind::Positive,
@@ -99,7 +99,7 @@ mod tests {
 
         assert_eq!(positive, "+x;");
 
-        let negative = CStatement::Expression(
+        let negative = Statement::Expression(
             PrefixOperator {
                 operand: Expression::Variable(Identifier::new("y")?),
                 operator: PrefixOperatorKind::Negative,
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn pointer() -> anyhow::Result<()> {
-        let address = CStatement::Expression(
+        let address = Statement::Expression(
             PrefixOperator {
                 operand: Expression::Variable(Identifier::new("x")?),
                 operator: PrefixOperatorKind::Address,
@@ -126,7 +126,7 @@ mod tests {
 
         assert_eq!(address, "&x;");
 
-        let indirection = CStatement::Expression(
+        let indirection = Statement::Expression(
             PrefixOperator {
                 operand: Expression::Variable(Identifier::new("ptr")?),
                 operator: PrefixOperatorKind::Indirection,

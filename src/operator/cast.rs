@@ -26,13 +26,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{CStatement, Identifier};
+    use crate::{Statement, Identifier};
 
     use super::*;
 
     #[test]
     fn cast() -> anyhow::Result<()> {
-        let cast = CStatement::Expression(
+        let cast = Statement::Expression(
             Cast {
                 new_ty: Scalar::int(),
                 expression: Expression::Variable(Identifier::new("x")?),
