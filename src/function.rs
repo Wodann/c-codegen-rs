@@ -116,7 +116,7 @@ where
                 allocator.text(",").append(allocator.space()),
             ))
             .append(allocator.text(")"))
-            .append(allocator.hardline())
+            .append(allocator.space())
             .append(self.body.pretty(allocator))
     }
 }
@@ -127,7 +127,7 @@ impl_display_via_pretty!(Definition, 80);
 mod tests {
     use crate::{
         operator::{BinaryOperator, BinaryOperatorKind},
-        Statement, Expression, Value,
+        Expression, Statement, Value,
     };
 
     use super::*;
@@ -179,7 +179,7 @@ mod tests {
                 (Type::int(), Identifier::new("y")?),
             ],
             body: Block {
-                statements: vec![Statement::ReturnStatement(Some(
+                statements: vec![Statement::Return(Some(
                     BinaryOperator {
                         left: Expression::Variable(Identifier::new("x")?),
                         operator: BinaryOperatorKind::Add,
@@ -194,8 +194,7 @@ mod tests {
         assert_eq!(
             generated,
             r#"int
-add_values (int x, int y)
-{
+add_values (int x, int y) {
   return x + y;
 }"#
         );
@@ -212,7 +211,7 @@ add_values (int x, int y)
             return_ty: Type::int(),
             parameters: vec![(Type::int(), Identifier::new("x")?)],
             body: Block {
-                statements: vec![Statement::ReturnStatement(Some(
+                statements: vec![Statement::Return(Some(
                     BinaryOperator {
                         left: Expression::Variable(Identifier::new("x")?),
                         operator: BinaryOperatorKind::Add,
@@ -227,8 +226,7 @@ add_values (int x, int y)
         assert_eq!(
             generated,
             r#"static int
-foo (int x)
-{
+foo (int x) {
   return x + 42;
 }"#
         );

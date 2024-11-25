@@ -1,48 +1,33 @@
-use crate::pretty::impl_display_via_pretty;
-use crate::{Block, Expression, Identifier, Type, Value};
+mod control_flow;
+mod label;
+
 use pretty::Pretty;
+
+pub use self::control_flow::{Do, For, If, Switch, While};
+pub use self::label::Label;
+use crate::{
+    macros::impl_froms, pretty::impl_display_via_pretty, Block, Expression, Identifier, Type, Value,
+};
 
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Statements
 #[derive(Clone)]
 pub enum Statement {
-    Label {
-        identifier: Identifier,
-        statement: Box<Statement>,
-    },
     Expression(Expression),
-    IfStatement {
-        condition: Value,
-        then_block: Vec<Statement>,
-        else_block: Option<Vec<Statement>>,
-    },
-    SwitchStatement {
-        expression: Value,
-        cases: Vec<(Value, Vec<Statement>)>,
-        default: Option<Vec<Statement>>,
-    },
-    WhileStatement {
-        condition: Value,
-        body: Vec<Statement>,
-    },
-    DoStatement {
-        body: Vec<Statement>,
-        condition: Value,
-    },
-    ForStatement {
-        init: Option<Box<Statement>>,
-        condition: Value,
-        step: Option<Box<Statement>>,
-        body: Vec<Statement>,
-    },
+    Label(Box<Label>),
+    If(Box<If>),
+    Switch(Box<Switch>),
+    While(Box<While>),
+    Do(Box<Do>),
+    For(Box<For>),
     Block(Block),
-    NullStatement,
-    GotoStatement(Identifier),
-    BreakStatement,
-    ContinueStatement,
-    ReturnStatement(Option<Expression>),
-    TypedefStatement(Identifier, Type),
+    Null,
+    Goto(Identifier),
+    Break,
+    Continue,
+    Return(Option<Expression>),
+    Typedef(Identifier, Type),
     FunctionDeclaration {
         return_type: Type,
         name: Identifier,
@@ -62,12 +47,24 @@ pub enum Statement {
         name: Identifier,
         variants: Vec<(Identifier, Option<Value>)>,
     },
-    IncludeStatement(String),
+    Include(String),
     MacroDefinition {
         name: Identifier,
         body: String,
     },
 }
+
+impl Statement {
+    pub fn has_custom_indentation(&self) -> bool {
+        matches!(self, Statement::Label(_))
+    }
+
+    pub fn is_block(&self) -> bool {
+        matches!(self, Statement::Block(_))
+    }
+}
+
+impl_froms!(Statement: Block, Expression, box Label);
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Statement
 where
@@ -77,167 +74,24 @@ where
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         match self {
-            Statement::Label {
-                identifier,
-                statement,
-            } => allocator
-                .text(identifier)
-                .append(allocator.text(":"))
-                .append(allocator.hardline())
-                .append(statement.pretty(allocator)),
+            Statement::Label(label) => label.pretty(allocator),
             Statement::Expression(expression) => {
                 expression.pretty(allocator).append(allocator.text(";"))
             }
-            Statement::IfStatement {
-                condition,
-                then_block,
-                else_block,
-            } => {
-                let mut doc = allocator
-                    .text("if (")
-                    .append(condition.to_string())
-                    .append(allocator.text(") {"))
-                    .append(allocator.hardline());
-
-                for stmt in then_block {
-                    doc = doc
-                        .append(stmt.pretty(allocator))
-                        .append(allocator.hardline());
-                }
-
-                doc = doc.append(allocator.text("}"));
-
-                if let Some(else_block) = else_block {
-                    doc = doc
-                        .append(allocator.text(" else {"))
-                        .append(allocator.hardline());
-
-                    for stmt in else_block {
-                        doc = doc
-                            .append(stmt.pretty(allocator))
-                            .append(allocator.hardline());
-                    }
-
-                    doc = doc.append(allocator.text("}"));
-                }
-
-                doc.nest(2)
-            }
-            Statement::SwitchStatement {
-                expression,
-                cases,
-                default,
-            } => {
-                let mut doc = allocator
-                    .text("switch (")
-                    .append(expression.to_string())
-                    .append(allocator.text(") {"))
-                    .append(allocator.hardline());
-
-                for (case, block) in cases {
-                    doc = doc
-                        .append(allocator.text("case "))
-                        .append(case.to_string())
-                        .append(allocator.text(":"))
-                        .append(allocator.hardline());
-
-                    for stmt in block {
-                        doc = doc
-                            .append(stmt.pretty(allocator))
-                            .append(allocator.hardline());
-                    }
-                    doc = doc
-                        .append(allocator.text("break;"))
-                        .append(allocator.hardline());
-                }
-
-                if let Some(block) = default {
-                    doc = doc
-                        .append(allocator.text("default:"))
-                        .append(allocator.hardline());
-
-                    for stmt in block {
-                        doc = doc
-                            .append(stmt.pretty(allocator))
-                            .append(allocator.hardline());
-                    }
-                }
-
-                doc.append(allocator.text("}")).nest(2)
-            }
-            Statement::WhileStatement { condition, body } => {
-                let mut doc = allocator
-                    .text("while (")
-                    .append(condition.to_string())
-                    .append(allocator.text(") {"))
-                    .append(allocator.hardline());
-
-                for stmt in body {
-                    doc = doc
-                        .append(stmt.pretty(allocator))
-                        .append(allocator.hardline());
-                }
-
-                doc.append(allocator.text("}")).nest(2)
-            }
-            Statement::DoStatement { body, condition } => {
-                let mut doc = allocator.text("do {").append(allocator.hardline());
-
-                for stmt in body {
-                    doc = doc
-                        .append(stmt.pretty(allocator))
-                        .append(allocator.hardline());
-                }
-
-                doc.append(allocator.text("} while ("))
-                    .append(condition.to_string())
-                    .append(allocator.text(");"))
-                    .nest(2)
-            }
-            Statement::ForStatement {
-                init,
-                condition,
-                step,
-                body,
-            } => {
-                let mut doc = allocator.text("for (");
-
-                if let Some(init) = init {
-                    doc = doc.append(init.pretty(allocator));
-                } else {
-                    doc = doc.append(allocator.text(";"));
-                }
-
-                doc = doc
-                    .append(allocator.text(" "))
-                    .append(condition.to_string())
-                    .append(allocator.text("; "));
-
-                if let Some(step) = step {
-                    doc = doc.append(step.pretty(allocator));
-                }
-
-                doc = doc
-                    .append(allocator.text(") {"))
-                    .append(allocator.hardline());
-
-                for stmt in body {
-                    doc = doc
-                        .append(stmt.pretty(allocator))
-                        .append(allocator.hardline());
-                }
-
-                doc.append(allocator.text("}")).nest(2)
-            }
+            Statement::If(if_stmt) => if_stmt.pretty(allocator),
+            Statement::Switch(switch_stmt) => switch_stmt.pretty(allocator),
+            Statement::While(while_stmt) => while_stmt.pretty(allocator),
+            Statement::Do(do_stmt) => do_stmt.pretty(allocator),
+            Statement::For(for_stmt) => for_stmt.pretty(allocator),
             Statement::Block(block) => block.pretty(allocator),
-            Statement::NullStatement => allocator.text(";"),
-            Statement::GotoStatement(label) => allocator
+            Statement::Null => allocator.text(";"),
+            Statement::Goto(label) => allocator
                 .text("goto ")
                 .append(allocator.text(label))
                 .append(allocator.text(";")),
-            Statement::BreakStatement => allocator.text("break;"),
-            Statement::ContinueStatement => allocator.text("continue;"),
-            Statement::ReturnStatement(expression) => {
+            Statement::Break => allocator.text("break;"),
+            Statement::Continue => allocator.text("continue;"),
+            Statement::Return(expression) => {
                 let mut doc = allocator.text("return");
                 if let Some(expression) = expression {
                     doc = doc
@@ -246,7 +100,7 @@ where
                 }
                 doc.append(allocator.text(";"))
             }
-            Statement::TypedefStatement(name, ty) => allocator
+            Statement::Typedef(name, ty) => allocator
                 .text("typedef ")
                 .append(allocator.text(format!("{}", ty)))
                 .append(allocator.text(" "))
@@ -326,7 +180,7 @@ where
 
                 doc.append(allocator.text("};")).nest(2)
             }
-            Statement::IncludeStatement(header_file) => {
+            Statement::Include(header_file) => {
                 allocator.text(format!("#include <{}>", header_file))
             }
             Statement::MacroDefinition { name, body } => {
