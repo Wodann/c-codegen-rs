@@ -23,7 +23,7 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Statement, Expression, Identifier, Value};
+    use crate::{Expression, Identifier, Statement, Value};
 
     #[test]
     fn assignment() -> anyhow::Result<()> {

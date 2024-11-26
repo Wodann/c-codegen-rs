@@ -59,6 +59,8 @@ impl_display_via_pretty!(Union, 80);
 
 #[cfg(test)]
 mod tests {
+    use core::f64;
+
     use crate::{
         r#type::{Definition, InitializerList},
         variable, Type, Value,
@@ -228,7 +230,7 @@ mod tests {
                 Some(
                     InitializerList::Named(vec![(
                         Identifier::new("f")?,
-                        Value::float(3.14159).into(),
+                        Value::float(f64::consts::PI).into(),
                     )])
                     .into(),
                 ),
@@ -236,7 +238,10 @@ mod tests {
             .try_into()?,
         }
         .to_string();
-        assert_eq!(named, "union numbers first_number = { .f = 3.14159 };");
+        assert_eq!(
+            named,
+            "union numbers first_number = { .f = 3.141592653589793 };"
+        );
 
         Ok(())
     }

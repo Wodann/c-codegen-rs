@@ -40,16 +40,23 @@ where
             builder = builder
                 .append(allocator.text("else"))
                 .append({
-                    let is_block = else_statement.is_block();
+                    enum Kind {
+                        Block,
+                        If,
+                        Other,
+                    }
 
-                    let else_statement = allocator
-                        .hardline()
-                        .append(else_statement.pretty(allocator));
+                    let kind = match else_statement {
+                        Statement::If(_) => Kind::If,
+                        Statement::Block(_) => Kind::Block,
+                        _ => Kind::Other,
+                    };
 
-                    if is_block {
-                        else_statement
-                    } else {
-                        else_statement.nest(2)
+                    let else_statement = else_statement.pretty(allocator);
+                    match kind {
+                        Kind::Block => allocator.hardline().append(else_statement),
+                        Kind::If => allocator.space().append(else_statement),
+                        Kind::Other => allocator.hardline().append(else_statement).nest(2),
                     }
                 })
                 .append(allocator.hardline());
@@ -61,8 +68,8 @@ where
 
 #[derive(Clone)]
 pub struct Switch {
-    pub expression: Value,
-    pub cases: Vec<(Value, Vec<Statement>)>,
+    pub condition: Expression,
+    pub cases: Vec<(Expression, Vec<Statement>)>,
     pub default: Option<Vec<Statement>>,
 }
 
@@ -73,42 +80,56 @@ where
     AllocatorT::Doc: Clone,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let mut doc = allocator
-            .text("switch (")
-            .append(self.expression.to_string())
-            .append(allocator.text(") {"))
-            .append(allocator.hardline());
+        let switch_statement = allocator
+            .text("switch")
+            .append(allocator.space())
+            .append(allocator.text("("))
+            .append(self.condition.pretty(allocator))
+            .append(allocator.text(")"))
+            .nest(2);
 
-        for (case, block) in self.cases {
-            doc = doc
-                .append(allocator.text("case "))
-                .append(case.to_string())
-                .append(allocator.text(":"))
-                .append(allocator.hardline());
+        let mut cases = allocator.nil();
+        for (case, statements) in self.cases {
+            let case = allocator
+                .hardline()
+                .append(allocator.text("case"))
+                .append(allocator.space())
+                .append(case.pretty(allocator))
+                .append(allocator.text(":"));
 
-            for stmt in block {
-                doc = doc
-                    .append(stmt.pretty(allocator))
-                    .append(allocator.hardline());
+            let mut body = allocator.nil();
+            for statement in statements {
+                body = body
+                    .append(allocator.hardline())
+                    .append(statement.pretty(allocator));
             }
-            doc = doc
-                .append(allocator.text("break;"))
-                .append(allocator.hardline());
+
+            cases = cases.append(case.append(body.nest(2)));
         }
 
-        if let Some(block) = self.default {
-            doc = doc
-                .append(allocator.text("default:"))
-                .append(allocator.hardline());
+        if let Some(default) = self.default {
+            let case = allocator.hardline().append(allocator.text("default:"));
 
-            for stmt in block {
-                doc = doc
-                    .append(stmt.pretty(allocator))
-                    .append(allocator.hardline());
+            let mut body = allocator.nil();
+            for statement in default {
+                body = body
+                    .append(allocator.hardline())
+                    .append(statement.pretty(allocator));
             }
+
+            cases = cases.append(case.append(body.nest(2)));
         }
 
-        doc.append(allocator.text("}")).nest(2)
+        switch_statement
+            .append(
+                allocator
+                    .hardline()
+                    .append(allocator.text("{"))
+                    .append(cases.nest(2))
+                    .append(allocator.hardline())
+                    .append(allocator.text("}")),
+            )
+            .nest(2)
     }
 }
 
@@ -261,6 +282,55 @@ else
 "#
         );
 
+        let else_if_stmt = If {
+            condition: BinaryOperator {
+                left: Expression::Variable(Identifier::new("x")?),
+                operator: BinaryOperatorKind::Eq,
+                right: Value::int(10).into(),
+            }
+            .into(),
+            then_statement: Expression::FunctionCall(FunctionCall {
+                name: Identifier::new("puts")?,
+                arguments: vec![Value::String("x is 10".to_string()).into()],
+            })
+            .into(),
+            else_statement: Some(
+                If {
+                    condition: BinaryOperator {
+                        left: Expression::Variable(Identifier::new("x")?),
+                        operator: BinaryOperatorKind::Gt,
+                        right: Value::int(10).into(),
+                    }
+                    .into(),
+                    then_statement: Expression::FunctionCall(FunctionCall {
+                        name: Identifier::new("puts")?,
+                        arguments: vec![Value::String("x is greater than 10".to_string()).into()],
+                    })
+                    .into(),
+                    else_statement: Some(
+                        Expression::FunctionCall(FunctionCall {
+                            name: Identifier::new("puts")?,
+                            arguments: vec![Value::String("x is less than 10".to_string()).into()],
+                        })
+                        .into(),
+                    ),
+                }
+                .into(),
+            ),
+        };
+        // TODO: Fix extra newline
+        assert_eq!(
+            else_if_stmt.to_string(),
+            r#"if (x == 10)
+  puts("x is 10");
+else if (x > 10)
+  puts("x is greater than 10");
+else
+  puts("x is less than 10");
+
+"#
+        );
+
         let with_blocks = If {
             condition: BinaryOperator {
                 left: Expression::Variable(Identifier::new("x")?),
@@ -303,34 +373,101 @@ else
         Ok(())
     }
 
-    //     #[test]
-    //     fn switch_statement() -> anyhow::Result<()> {
-    //         let switch_stmt = Switch {
-    //             expression: Value::int(1),
-    //             cases: vec![(
-    //                 Value::int(1),
-    //                 vec![Statement::Expression(Expression::Variable(
-    //                     Identifier::new("x")?,
-    //                 ))],
-    //             )],
-    //             default: Some(vec![Statement::Expression(Expression::Variable(
-    //                 Identifier::new("y")?,
-    //             ))]),
-    //         };
+    #[test]
+    fn switch_statement() -> anyhow::Result<()> {
+        let switch_stmt = Switch {
+            condition: Expression::Variable(Identifier::new("x")?),
+            cases: vec![
+                (
+                    Value::int(0).into(),
+                    vec![Expression::FunctionCall(FunctionCall {
+                        name: Identifier::new("puts")?,
+                        arguments: vec![Value::String("x is 0".to_string()).into()],
+                    })
+                    .into()],
+                ),
+                (
+                    Value::int(1).into(),
+                    vec![Expression::FunctionCall(FunctionCall {
+                        name: Identifier::new("puts")?,
+                        arguments: vec![Value::String("x is 1".to_string()).into()],
+                    })
+                    .into()],
+                ),
+            ],
+            default: Some(vec![Expression::FunctionCall(FunctionCall {
+                name: Identifier::new("puts")?,
+                arguments: vec![Value::String("x is something else".to_string()).into()],
+            })
+            .into()]),
+        };
 
-    //         assert_eq!(
-    //             switch_stmt.to_string(),
-    //             r#"switch (1) {
-    //   case 1:
-    //     x;
-    //     break;
-    //   default:
-    //     y;
-    // }"#
-    //         );
+        assert_eq!(
+            switch_stmt.to_string(),
+            r#"switch (x)
+  {
+    case 0:
+      puts("x is 0");
+    case 1:
+      puts("x is 1");
+    default:
+      puts("x is something else");
+  }"#
+        );
 
-    //         Ok(())
-    //     }
+        let empty_case = Switch {
+            condition: Expression::Variable(Identifier::new("x")?),
+            cases: vec![
+                (Value::int(0).into(), Vec::new()),
+                (
+                    Value::int(1).into(),
+                    vec![Expression::FunctionCall(FunctionCall {
+                        name: Identifier::new("puts")?,
+                        arguments: vec![Value::String("x is 0 or x is 1".to_string()).into()],
+                    })
+                    .into()],
+                ),
+            ],
+            default: Some(vec![Expression::FunctionCall(FunctionCall {
+                name: Identifier::new("puts")?,
+                arguments: vec![Value::String("x is something else".to_string()).into()],
+            })
+            .into()]),
+        };
+
+        assert_eq!(
+            empty_case.to_string(),
+            r#"switch (x)
+  {
+    case 0:
+    case 1:
+      puts("x is 0 or x is 1");
+    default:
+      puts("x is something else");
+  }"#
+        );
+
+        let default_only = Switch {
+            condition: Expression::Variable(Identifier::new("x")?),
+            cases: Vec::new(),
+            default: Some(vec![Expression::FunctionCall(FunctionCall {
+                name: Identifier::new("puts")?,
+                arguments: vec![Value::String("x is something else".to_string()).into()],
+            })
+            .into()]),
+        };
+
+        assert_eq!(
+            default_only.to_string(),
+            r#"switch (x)
+  {
+    default:
+      puts("x is something else");
+  }"#
+        );
+
+        Ok(())
+    }
 
     //     #[test]
     //     fn while_statement() -> anyhow::Result<()> {

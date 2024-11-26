@@ -3,7 +3,7 @@ use std::io;
 
 use crate::{function, r#type, variable};
 
-enum FileLevelStatement {
+pub enum FileLevelStatement {
     FunctionDeclaration(function::Declaration),
     FunctionDefinition(function::Definition),
     TypeDefinition(r#type::Definition),

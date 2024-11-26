@@ -51,22 +51,4 @@ x is something else
 
 This is often not desired. Including a break statement at the end of each case redirects program flow to after the switch statement.
 
-As a GNU C extension, you can also specify a range of consecutive integer values in a single case label, like this:
-
-case low ... high:
-
-This has the same effect as the corresponding number of individual case labels, one for each integer value from low to high, inclusive.
-
-This feature is especially useful for ranges of ASCII character codes:
-
-case 'A' ... 'Z':
-
-Be careful to include spaces around the ...; otherwise it may be parsed incorrectly when you use it with integer values. For example, write this:
-
-case 1 ... 5:
-
-instead of this:
-
-case 1...5:
-
 It is common to use a switch statement to handle various possible values of errno. In this case a portable program should watch out for the possibility that two macros for errno values in fact have the same value, for example EWOULDBLOCK and EAGAIN. 

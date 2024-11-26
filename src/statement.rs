@@ -64,7 +64,7 @@ impl Statement {
     }
 }
 
-impl_froms!(Statement: Block, Expression, box Label);
+impl_froms!(Statement: Block, Expression, box If, box Label);
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Statement
 where

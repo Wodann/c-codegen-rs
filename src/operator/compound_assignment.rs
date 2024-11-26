@@ -1,4 +1,4 @@
-use crate::{pretty::impl_display_via_pretty, Expression, Identifier};
+use crate::{pretty::impl_display_via_pretty, Expression};
 use pretty::Pretty;
 use std::fmt;
 

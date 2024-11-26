@@ -29,7 +29,7 @@ mod tests {
     use crate::{
         function::FunctionCall,
         operator::{BinaryOperator, BinaryOperatorKind},
-        Statement, Identifier, Value,
+        Identifier, Statement, Value,
     };
 
     #[test]
