@@ -12,11 +12,12 @@ use crate::{
         member::{IndirectMemberAccess, MemberAccess},
         InitializerList,
     },
-    Identifier, Value,
+    Identifier, Type, Value,
 };
 
 #[derive(Clone)]
 pub enum Expression {
+    AlignOf(Type),
     ArraySubscript(Box<ArraySubscript>),
     Assignment(Box<Assignment>),
     BinaryOperator(Box<BinaryOperator>),
@@ -60,6 +61,9 @@ where
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         match self {
+            Expression::AlignOf(ty) => allocator
+                .text("_Alignof")
+                .append(allocator.text(ty.to_string()).parens()),
             Expression::ArraySubscript(array_subscript) => array_subscript.pretty(allocator),
             Expression::Assignment(assignment) => assignment.pretty(allocator),
             Expression::BinaryOperator(operation) => operation.pretty(allocator),
@@ -70,12 +74,7 @@ where
             Expression::IndirectMemberAccess(member_access) => member_access.pretty(allocator),
             Expression::InitializerList(initializer_list) => initializer_list.pretty(allocator),
             Expression::MemberAccess(member_access) => member_access.pretty(allocator),
-            Expression::Parentheses(expr) => allocator
-                .text("(")
-                .append(allocator.space())
-                .append(expr.pretty(allocator))
-                .append(allocator.space())
-                .append(allocator.text(")")),
+            Expression::Parentheses(expr) => expr.pretty(allocator).parens(),
             Expression::PrefixOperator(operation) => operation.pretty(allocator),
             Expression::PostfixOperator(operation) => operation.pretty(allocator),
             Expression::SizeOf(sizeof) => sizeof.pretty(allocator),
@@ -95,6 +94,14 @@ mod tests {
     };
 
     use super::*;
+
+    #[test]
+    fn alignof() -> anyhow::Result<()> {
+        let generated = Statement::Expression(Expression::AlignOf(Type::int())).to_string();
+        assert_eq!(generated, "_Alignof(int);");
+
+        Ok(())
+    }
 
     // Source: https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Calling-Functions
     #[test]
@@ -147,7 +154,7 @@ mod tests {
             .into(),
         ));
 
-        // Final expression: ( 2 * ( ( 3 + 10 ) - ( 2 * 6 ) ) )
+        // Final expression: (2 * ((3 + 10) - (2 * 6)))
         let expr = Expression::Parentheses(Box::new(
             BinaryOperator {
                 left: Value::int(2).into(),
@@ -158,7 +165,7 @@ mod tests {
         ));
 
         let generated = Statement::Expression(expr).to_string();
-        assert_eq!(generated, "( 2 * ( ( 3 + 10 ) - ( 2 * 6 ) ) );");
+        assert_eq!(generated, "(2 * ((3 + 10) - (2 * 6)));");
 
         Ok(())
     }

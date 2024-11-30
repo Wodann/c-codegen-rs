@@ -62,7 +62,7 @@ mod tests {
 
     use crate::{
         r#type::{Definition, InitializerList},
-        variable, Type, Value,
+        variable, Statement, Type, Value,
     };
 
     use super::{member::Member, *};
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn declarations() -> anyhow::Result<()> {
         // Test inline declaration
-        let inline = variable::Declaration {
+        let inline = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Struct::Definition {
                 name: Some(Identifier::new("point")?),
@@ -173,7 +173,7 @@ mod tests {
                 (Identifier::new("second_point")?, None),
             ]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(
             inline,
@@ -183,14 +183,14 @@ mod tests {
 } first_point, second_point;"#
         );
 
-        let tag = variable::Declaration {
+        let tag = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Struct::Tag {
                 name: Identifier::new("point")?,
             }
             .into(),
             variables: vec![(Identifier::new("my_point")?, None)].try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(tag, "struct point my_point;");
 
@@ -199,7 +199,7 @@ mod tests {
 
     #[test]
     fn initializers() -> anyhow::Result<()> {
-        let ordered = variable::Declaration {
+        let ordered = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Struct::Tag {
                 name: Identifier::new("point")?,
@@ -213,11 +213,11 @@ mod tests {
                 ),
             )]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(ordered, "struct point first_point = { 5, 10 };");
 
-        let named = variable::Declaration {
+        let named = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Struct::Tag {
                 name: Identifier::new("point")?,
@@ -234,11 +234,11 @@ mod tests {
                 ),
             )]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(named, "struct point first_point = { .y = 10, .x = 5 };");
 
-        let nested = variable::Declaration {
+        let nested = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Struct::Tag {
                 name: Identifier::new("rectangle")?,
@@ -257,7 +257,7 @@ mod tests {
                 ),
             )]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(
             nested,

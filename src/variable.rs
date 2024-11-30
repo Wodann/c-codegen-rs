@@ -68,7 +68,6 @@ where
                 }),
                 allocator.text(",").append(allocator.space()),
             ))
-            .append(allocator.text(";"))
     }
 }
 
@@ -97,13 +96,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::Value;
+    use crate::{Statement, Value};
 
     use super::*;
 
     #[test]
     fn initializers() -> anyhow::Result<()> {
-        let multiple = Declaration {
+        let multiple = Statement::from(Declaration {
             storage_class: None,
             ty: Type::int(),
             variables: vec![
@@ -111,7 +110,7 @@ mod tests {
                 (Identifier::new("y")?, Some(Value::int(5).into())),
             ]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(multiple, "int x, y = 5;");
 

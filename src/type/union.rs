@@ -63,7 +63,7 @@ mod tests {
 
     use crate::{
         r#type::{Definition, InitializerList},
-        variable, Type, Value,
+        variable, Statement, Type, Value,
     };
 
     use super::{member::Member, *};
@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn declarations() -> anyhow::Result<()> {
         // Test inline declaration
-        let inline = variable::Declaration {
+        let inline = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Union::Definition {
                 name: Some(Identifier::new("numbers")?),
@@ -174,7 +174,7 @@ mod tests {
                 (Identifier::new("second_number")?, None),
             ]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(
             inline,
@@ -184,7 +184,7 @@ mod tests {
 } first_number, second_number;"#
         );
 
-        let tag = variable::Declaration {
+        let tag = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Union::Tag {
                 name: Identifier::new("numbers")?,
@@ -195,7 +195,7 @@ mod tests {
                 (Identifier::new("second_number")?, None),
             ]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(tag, "union numbers first_number, second_number;");
 
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn initializers() -> anyhow::Result<()> {
-        let ordered = variable::Declaration {
+        let ordered = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Union::Tag {
                 name: Identifier::new("numbers")?,
@@ -215,11 +215,11 @@ mod tests {
                 Some(InitializerList::Ordered(vec![Value::int(5).into()]).into()),
             )]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(ordered, "union numbers first_number = { 5 };");
 
-        let named = variable::Declaration {
+        let named = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Union::Tag {
                 name: Identifier::new("numbers")?,
@@ -236,7 +236,7 @@ mod tests {
                 ),
             )]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(
             named,

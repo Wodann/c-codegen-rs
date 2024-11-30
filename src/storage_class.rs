@@ -24,7 +24,7 @@ impl fmt::Display for StorageClass {
 
 #[cfg(test)]
 mod tests {
-    use crate::{variable, Identifier, Type, Value};
+    use crate::{variable, Identifier, Statement, Type, Value};
 
     use super::*;
 
@@ -32,16 +32,16 @@ mod tests {
     // https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Storage-Class-Specifiers
     #[test]
     fn with_storage_class_extern() -> anyhow::Result<()> {
-        let generated = variable::Declaration {
+        let generated = Statement::from(variable::Declaration {
             storage_class: Some(StorageClass::Extern),
             ty: Type::int(),
             variables: vec![(Identifier::new("numberOfClients")?, None)].try_into()?,
-        }
+        })
         .to_string();
 
         assert_eq!(generated, "extern int numberOfClients;");
 
-        let generated = variable::Declaration {
+        let generated = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Type::int(),
             variables: vec![(
@@ -49,7 +49,7 @@ mod tests {
                 Some(Value::int(0).into()),
             )]
             .try_into()?,
-        }
+        })
         .to_string();
 
         assert_eq!(generated, "int numberOfClients = 0;");

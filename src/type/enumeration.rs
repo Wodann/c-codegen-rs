@@ -63,7 +63,7 @@ mod tests {
     use crate::{
         operator::{BinaryOperator, BinaryOperatorKind},
         r#type::Definition,
-        variable, Value,
+        variable, Statement, Value,
     };
 
     use super::*;
@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn declarations() -> anyhow::Result<()> {
-        let inline = variable::Declaration {
+        let inline = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Enum::Definition {
                 name: Some(Identifier::new("fruit")?),
@@ -155,21 +155,21 @@ mod tests {
             }
             .into(),
             variables: vec![(Identifier::new("my_fruit")?, None)].try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(
             inline,
             "enum fruit {banana, apple, blueberry, mango} my_fruit;"
         );
 
-        let tag = variable::Declaration {
+        let tag = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Enum::Tag {
                 name: Identifier::new("fruit")?,
             }
             .into(),
             variables: vec![(Identifier::new("my_fruit")?, None)].try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(tag, "enum fruit my_fruit;");
 
@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn initializers() -> anyhow::Result<()> {
-        let generated = variable::Declaration {
+        let generated = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Enum::Definition {
                 name: Some(Identifier::new("fruit")?),
@@ -196,7 +196,7 @@ mod tests {
                 Some(Expression::Variable(Identifier::new("apple")?)),
             )]
             .try_into()?,
-        }
+        })
         .to_string();
         assert_eq!(
             generated,

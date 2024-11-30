@@ -5,6 +5,7 @@ use pretty::Pretty;
 
 pub use self::control_flow::{Do, For, If, Switch, While};
 pub use self::label::Label;
+use crate::variable::Declaration;
 use crate::{
     macros::impl_froms, pretty::impl_display_via_pretty, Block, Expression, Identifier, Type, Value,
 };
@@ -28,6 +29,7 @@ pub enum Statement {
     Continue,
     Return(Option<Expression>),
     Typedef(Identifier, Type),
+    Declaration(Declaration),
     FunctionDeclaration {
         return_type: Type,
         name: Identifier,
@@ -64,7 +66,7 @@ impl Statement {
     }
 }
 
-impl_froms!(Statement: Block, Expression, box If, box Label);
+impl_froms!(Statement: Block, Declaration, Expression, box If, box Label);
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Statement
 where
@@ -99,6 +101,9 @@ where
                         .append(expression.pretty(allocator));
                 }
                 doc.append(allocator.text(";"))
+            }
+            Statement::Declaration(declaration) => {
+                declaration.pretty(allocator).append(allocator.text(";"))
             }
             Statement::Typedef(name, ty) => allocator
                 .text("typedef ")
