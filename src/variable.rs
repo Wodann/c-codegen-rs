@@ -19,13 +19,16 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        pretty_variable_type(self.storage_class, self.ty, allocator)
+        let base_type = self.ty.base_type();
+        let dimensions = self.ty.pretty_dimensions(allocator);
+
+        pretty_variable_type(self.storage_class, base_type, allocator)
             .append(allocator.space())
             .append(
                 allocator.intersperse(
                     self.identifiers
                         .into_iter()
-                        .map(|identifier| allocator.text(identifier)),
+                        .map(|identifier| allocator.text(identifier).append(dimensions.clone())),
                     allocator.text(",").append(allocator.space()),
                 ),
             )
@@ -35,6 +38,13 @@ where
 
 impl_display_via_pretty!(Definition, 80);
 
+/// Variable declaration
+///
+/// Unsupported C language features:
+///
+/// ```c
+/// int test = 1, test2[2] = {1, 2};
+/// ```
 #[derive(Clone)]
 pub struct Declaration {
     pub storage_class: Option<StorageClass>,
@@ -50,11 +60,14 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        pretty_variable_type(self.storage_class, self.ty, allocator)
+        let base_type = self.ty.base_type();
+        let dimensions = self.ty.pretty_dimensions(allocator);
+
+        pretty_variable_type(self.storage_class, base_type, allocator)
             .append(allocator.space())
             .append(allocator.intersperse(
                 self.variables.into_iter().map(|(identifier, initializer)| {
-                    let mut builder = allocator.text(identifier);
+                    let mut builder = allocator.text(identifier).append(dimensions.clone());
 
                     if let Some(initializer) = initializer {
                         builder = builder

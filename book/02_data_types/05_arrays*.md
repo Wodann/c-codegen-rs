@@ -17,29 +17,6 @@ int my_array[10];
 
 For standard C code, the number of elements in an array must be positive.
 
-As a GNU extension, the number of elements can be as small as zero. Zero-length arrays are useful as the last element of a structure which is really a header for a variable-length object:
-
-struct line
-{
-  int length;
-  char contents[0];
-};
-
-{
-  struct line *this_line = (struct line *)
-    malloc (sizeof (struct line) + this_length);
-  this_line -> length = this_length;
-}
-
-Another GNU extension allows you to declare an array size using variables, rather than only constants. For example, here is a function definition that declares an array using its parameter as the number of elements:
-
-int
-my_function (int number)
-{
-  int my_array[number];
-  …;
-}
-
 ## 2.5.2 Initializing Arrays
 
 You can initialize the elements in an array when you declare it by listing the initializing values, separated by commas, in a set of braces. Here is an example:
@@ -99,7 +76,7 @@ point_array[0].x = 3;
 
 You can make multidimensional arrays, or “arrays of arrays”. You do this by adding an extra set of brackets and array lengths for every additional dimension you want your array to have. For example, here is a declaration for a two-dimensional array that holds five elements in each dimension (a two-element array consisting of five-element arrays):
 
-int two_dimensions[2][5] { {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10} };
+int two_dimensions[2][5] = { {1, 2, 3, 4, 5}, {6, 7, 8, 9, 10} };
 
 Multidimensional array elements are accessed by specifying the desired index of both dimensions:
 

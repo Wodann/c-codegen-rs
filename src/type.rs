@@ -1,5 +1,6 @@
 use core::fmt;
 
+mod array;
 pub mod enumeration;
 mod initializer_list;
 mod integer;
@@ -19,6 +20,7 @@ use union::Union;
 use crate::{macros::impl_froms, pretty::impl_display_via_pretty};
 
 pub use self::{
+    array::Array,
     initializer_list::InitializerList,
     integer::{IntegerKind, StrongInt},
     pointer::Pointer,
@@ -31,7 +33,7 @@ pub use self::{
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Data-Types
 #[derive(Clone)]
 pub enum Type {
-    Array(Box<Type>),
+    Array(Array),
     Char,
     Enum(Enum),
     Integer(Integer),
@@ -44,7 +46,7 @@ pub enum Type {
     Void,
 }
 
-impl_froms!(Type: Enum, Integer, Pointer, Real, Struct, StrongInt, Union);
+impl_froms!(Type: Array, Enum, Integer, Pointer, Real, Struct, StrongInt, Union);
 
 impl Type {
     pub const fn float() -> Self {
@@ -62,31 +64,69 @@ impl Type {
         })
     }
 
+    pub const fn unsigned_char() -> Self {
+        Self::Integer(Integer {
+            kind: IntegerKind::Char,
+            is_signed: false,
+        })
+    }
+
     pub const fn unsigned_int() -> Self {
         Self::Integer(Integer {
             kind: IntegerKind::Int,
             is_signed: false,
         })
     }
-}
 
-impl fmt::Display for Type {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    pub fn base_type(&self) -> Type {
         match self {
-            Type::Array(base) => write!(f, "{}[]", base),
-            Type::Char => write!(f, "char"),
-            Type::Enum(enumeration) => write!(f, "{enumeration}"),
-            Type::Integer(integer) => write!(f, "{integer}"),
-            Type::Pointer(pointer) => write!(f, "{pointer}"),
-            Type::Real(ty) => write!(f, "{}", ty),
-            Type::Size => write!(f, "size_t"),
-            Type::StrongInt(integer) => write!(f, "{integer}"),
-            Type::Struct(structure) => write!(f, "{structure}"),
-            Type::Union(union) => write!(f, "{union}"),
-            Type::Void => write!(f, "void"),
+            Type::Array(array) => array.base_type(),
+            ty => ty.clone(),
+        }
+    }
+
+    /// Pretty prints the dimensions of the array type, if it is an array.
+    pub(crate) fn pretty_dimensions<'a, AllocatorT, AnnotationT>(
+        &self,
+        allocator: &'a AllocatorT,
+    ) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT>
+    where
+        AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+        AllocatorT::Doc: Clone,
+        AnnotationT: Clone + 'a,
+    {
+        if let Type::Array(array) = self {
+            array.pretty_dimensions(allocator)
+        } else {
+            allocator.nil()
         }
     }
 }
+
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Type
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        match self {
+            Type::Array(array) => array.pretty(allocator),
+            Type::Char => allocator.text("char"),
+            Type::Enum(enumeration) => enumeration.pretty(allocator),
+            Type::Integer(integer) => allocator.text(integer.to_string()),
+            Type::Pointer(pointer) => allocator.text(pointer.to_string()),
+            Type::Real(ty) => allocator.text(ty.to_string()),
+            Type::Size => allocator.text("size_t"),
+            Type::StrongInt(integer) => allocator.text(integer.to_string()),
+            Type::Struct(structure) => structure.pretty(allocator),
+            Type::Union(union) => union.pretty(allocator),
+            Type::Void => allocator.text("void"),
+        }
+    }
+}
+
+impl_display_via_pretty!(Type, 80);
 
 #[derive(Clone)]
 pub enum Definition {

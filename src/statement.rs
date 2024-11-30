@@ -5,6 +5,7 @@ mod r#if;
 mod label;
 mod r#return;
 mod switch;
+mod typedef;
 mod r#while;
 
 use pretty::Pretty;
@@ -18,10 +19,11 @@ pub use self::{
     r#return::Return,
     r#while::While,
     switch::Switch,
+    typedef::Typedef,
 };
 use crate::{
     macros::impl_froms, pretty::impl_display_via_pretty, Block, Expression, Identifier, Type,
-    Value, VariableDeclaration,
+    Value, VariableDeclaration, VariableDefinition,
 };
 
 /// # Source
@@ -42,7 +44,8 @@ pub enum Statement {
     Break,
     Continue,
     Return(Return),
-    Typedef(Identifier, Type),
+    Typedef(Typedef),
+    VariableDefinition(VariableDefinition),
     VariableDeclaration(VariableDeclaration),
     FunctionDeclaration {
         return_type: Type,
@@ -80,7 +83,7 @@ impl Statement {
     }
 }
 
-impl_froms!(Statement: Block, box Do, Expression, box For, box If, box Label, Goto, Return, VariableDeclaration);
+impl_froms!(Statement: Block, box Do, Expression, box For, box If, box Label, Goto, Return, Typedef, VariableDeclaration, VariableDefinition);
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Statement
 where
@@ -108,12 +111,8 @@ where
             Statement::VariableDeclaration(declaration) => {
                 declaration.pretty(allocator).append(allocator.text(";"))
             }
-            Statement::Typedef(name, ty) => allocator
-                .text("typedef ")
-                .append(allocator.text(format!("{}", ty)))
-                .append(allocator.space())
-                .append(allocator.text(name))
-                .append(allocator.text(";")),
+            Statement::VariableDefinition(definition) => definition.pretty(allocator),
+            Statement::Typedef(typedef) => typedef.pretty(allocator),
             Statement::FunctionDeclaration {
                 return_type,
                 name,
