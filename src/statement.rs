@@ -1,13 +1,25 @@
-mod control_flow;
+mod r#do;
+mod r#for;
+mod goto;
+mod r#if;
 mod label;
+mod switch;
+mod r#while;
 
 use pretty::Pretty;
 
-pub use self::control_flow::{Do, For, If, Switch, While};
-pub use self::label::Label;
-use crate::variable::Declaration;
+pub use self::{
+    goto::Goto,
+    label::Label,
+    r#do::Do,
+    r#for::{For, ForDeclaration},
+    r#if::If,
+    r#while::While,
+    switch::Switch,
+};
 use crate::{
-    macros::impl_froms, pretty::impl_display_via_pretty, Block, Expression, Identifier, Type, Value,
+    macros::impl_froms, pretty::impl_display_via_pretty, Block, Expression, Identifier, Type,
+    Value, VariableDeclaration,
 };
 
 /// # Source
@@ -24,12 +36,12 @@ pub enum Statement {
     For(Box<For>),
     Block(Block),
     Null,
-    Goto(Identifier),
+    Goto(Goto),
     Break,
     Continue,
     Return(Option<Expression>),
     Typedef(Identifier, Type),
-    Declaration(Declaration),
+    VariableDeclaration(VariableDeclaration),
     FunctionDeclaration {
         return_type: Type,
         name: Identifier,
@@ -66,7 +78,7 @@ impl Statement {
     }
 }
 
-impl_froms!(Statement: Block, Declaration, Expression, box If, box Label);
+impl_froms!(Statement: Block, Expression, box If, box Label, Goto, VariableDeclaration);
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Statement
 where
@@ -87,10 +99,7 @@ where
             Statement::For(for_stmt) => for_stmt.pretty(allocator),
             Statement::Block(block) => block.pretty(allocator),
             Statement::Null => allocator.text(";"),
-            Statement::Goto(label) => allocator
-                .text("goto ")
-                .append(allocator.text(label))
-                .append(allocator.text(";")),
+            Statement::Goto(goto) => goto.pretty(allocator),
             Statement::Break => allocator.text("break;"),
             Statement::Continue => allocator.text("continue;"),
             Statement::Return(expression) => {
@@ -102,7 +111,7 @@ where
                 }
                 doc.append(allocator.text(";"))
             }
-            Statement::Declaration(declaration) => {
+            Statement::VariableDeclaration(declaration) => {
                 declaration.pretty(allocator).append(allocator.text(";"))
             }
             Statement::Typedef(name, ty) => allocator

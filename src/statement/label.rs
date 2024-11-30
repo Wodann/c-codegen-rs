@@ -6,8 +6,8 @@ use super::{impl_display_via_pretty, Statement};
 
 #[derive(Clone)]
 pub struct Label {
-    identifier: Identifier,
-    statement: Statement,
+    pub identifier: Identifier,
+    pub statement: Option<Statement>,
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Label
@@ -28,14 +28,18 @@ where
                 .into_doc()
         });
 
-        // Don't add a newline before a label, as it will be added by the label itself to guarantee the correct indentation
-        let builder = if !matches!(self.statement, Statement::Label(_)) {
-            label.append(allocator.hardline())
+        if let Some(statement) = self.statement {
+            // Don't add a newline before a label, as it will be added by the label itself to guarantee the correct indentation
+            let builder = if !matches!(statement, Statement::Label(_)) {
+                label.append(allocator.hardline())
+            } else {
+                label
+            };
+
+            builder.append(statement.pretty(allocator))
         } else {
             label
-        };
-
-        builder.append(self.statement.clone().pretty(allocator))
+        }
     }
 }
 
@@ -48,25 +52,144 @@ mod tests {
 
     #[test]
     fn generation() -> anyhow::Result<()> {
-        let indentation = function::Definition {
+        let generated = function::Definition {
             is_static: false,
             name: Identifier::new("main")?,
             parameters: Vec::new(),
             return_ty: Type::Void,
             body: Block {
-                statements: vec![Statement::from(Label {
+                statements: vec![Label {
                     identifier: Identifier::new("loop_start")?,
-                    statement: Statement::Expression(Value::int(42).into()),
-                })],
+                    statement: Some(Statement::Expression(Value::int(42).into())),
+                }
+                .into()],
             },
         }
         .to_string();
         assert_eq!(
-            indentation,
+            generated,
             r#"void
 main () {
 loop_start:
   42;
+}"#
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn inside_block() -> anyhow::Result<()> {
+        let generated = function::Definition {
+            is_static: false,
+            name: Identifier::new("main")?,
+            parameters: Vec::new(),
+            return_ty: Type::Void,
+            body: Block {
+                statements: vec![Block {
+                    statements: vec![Label {
+                        identifier: Identifier::new("loop_start")?,
+                        statement: Some(Statement::Expression(Value::int(42).into())),
+                    }
+                    .into()],
+                }
+                .into()],
+            },
+        }
+        .to_string();
+        assert_eq!(
+            generated,
+            r#"void
+main () {
+  {
+loop_start:
+    42;
+  }
+}"#
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn double_label() -> anyhow::Result<()> {
+        let generated = function::Definition {
+            is_static: false,
+            name: Identifier::new("main")?,
+            parameters: Vec::new(),
+            return_ty: Type::Void,
+            body: Block {
+                statements: vec![Block {
+                    statements: vec![
+                        Label {
+                            identifier: Identifier::new("loop_start")?,
+                            statement: None,
+                        }
+                        .into(),
+                        Label {
+                            identifier: Identifier::new("loop_start2")?,
+                            statement: None,
+                        }
+                        .into(),
+                        Statement::Expression(Value::int(42).into()),
+                    ],
+                }
+                .into()],
+            },
+        }
+        .to_string();
+        assert_eq!(
+            generated,
+            r#"void
+main () {
+  {
+loop_start:
+loop_start2:
+    42;
+  }
+}"#
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn nested_labels() -> anyhow::Result<()> {
+        let generated = function::Definition {
+            is_static: false,
+            name: Identifier::new("main")?,
+            parameters: Vec::new(),
+            return_ty: Type::Void,
+            body: Block {
+                statements: vec![Block {
+                    statements: vec![
+                        Label {
+                            identifier: Identifier::new("loop_start")?,
+                            statement: Some(
+                                Label {
+                                    identifier: Identifier::new("loop_start2")?,
+                                    statement: None,
+                                }
+                                .into(),
+                            ),
+                        }
+                        .into(),
+                        Statement::Expression(Value::int(42).into()),
+                    ],
+                }
+                .into()],
+            },
+        }
+        .to_string();
+        assert_eq!(
+            generated,
+            r#"void
+main () {
+  {
+loop_start:
+loop_start2:
+    42;
+  }
 }"#
         );
 
