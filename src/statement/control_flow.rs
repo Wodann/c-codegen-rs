@@ -135,8 +135,8 @@ where
 
 #[derive(Clone)]
 pub struct While {
-    pub condition: Value,
-    pub body: Vec<Statement>,
+    pub condition: Expression,
+    pub body: Statement,
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for While
@@ -146,26 +146,28 @@ where
     AllocatorT::Doc: Clone,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let mut doc = allocator
-            .text("while (")
-            .append(self.condition.to_string())
-            .append(allocator.text(") {"))
+        let while_condition = allocator
+            .text("while")
+            .append(allocator.space())
+            .append("(")
+            .append(self.condition.pretty(allocator))
+            .append(allocator.text(")"))
             .append(allocator.hardline());
 
-        for stmt in self.body {
-            doc = doc
-                .append(stmt.pretty(allocator))
-                .append(allocator.hardline());
-        }
+        let body = if matches!(self.body, Statement::Block(_)) {
+            self.body.pretty(allocator)
+        } else {
+            self.body.pretty(allocator).indent(2)
+        };
 
-        doc.append(allocator.text("}")).nest(2)
+        while_condition.append(body)
     }
 }
 
 #[derive(Clone)]
 pub struct Do {
-    pub body: Vec<Statement>,
-    pub condition: Value,
+    pub body: Statement,
+    pub condition: Expression,
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Do
@@ -175,18 +177,21 @@ where
     AllocatorT::Doc: Clone,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let mut doc = allocator.text("do {").append(allocator.hardline());
+        let body = if matches!(self.body, Statement::Block(_)) {
+            self.body.pretty(allocator)
+        } else {
+            self.body.pretty(allocator).indent(2)
+        };
 
-        for stmt in self.body {
-            doc = doc
-                .append(stmt.pretty(allocator))
-                .append(allocator.hardline());
-        }
-
-        doc.append(allocator.text("} while ("))
-            .append(self.condition.to_string())
-            .append(allocator.text(");"))
-            .nest(2)
+        allocator
+            .text("do")
+            .append(allocator.hardline())
+            .append(body)
+            .append(allocator.hardline())
+            .append(allocator.text("while"))
+            .append(allocator.space())
+            .append(self.condition.pretty(allocator).parens())
+            .append(allocator.text(";"))
     }
 }
 
@@ -244,6 +249,8 @@ impl_display_via_pretty!(For, 80);
 
 #[cfg(test)]
 mod tests {
+    use std::vec;
+
     use super::*;
     use crate::{
         function::FunctionCall,
@@ -469,43 +476,87 @@ else
         Ok(())
     }
 
-    //     #[test]
-    //     fn while_statement() -> anyhow::Result<()> {
-    //         let while_stmt = While {
-    //             condition: Value::int(1),
-    //             body: vec![Statement::Expression(Expression::Variable(
-    //                 Identifier::new("x")?,
-    //             ))],
-    //         };
+    #[test]
+    fn while_statement() -> anyhow::Result<()> {
+        let single_statement = While {
+            condition: Value::int(1).into(),
+            body: Expression::Variable(Identifier::new("x")?).into(),
+        };
+        assert_eq!(
+            single_statement.to_string(),
+            r#"while (1)
+  x;"#
+        );
 
-    //         assert_eq!(
-    //             while_stmt.to_string(),
-    //             r#"while (1) {
-    //   x;
-    // }"#
-    //         );
+        let block = While {
+            condition: Value::int(1).into(),
+            body: Block {
+                statements: vec![Expression::Variable(Identifier::new("x")?).into()],
+            }
+            .into(),
+        };
+        assert_eq!(
+            block.to_string(),
+            r#"while (1)
+{
+  x;
+}"#
+        );
 
-    //         Ok(())
-    //     }
+        let block_in_block = While {
+            condition: Value::int(1).into(),
+            body: Block {
+                statements: vec![Block {
+                    statements: vec![Expression::Variable(Identifier::new("x")?).into()],
+                }
+                .into()],
+            }
+            .into(),
+        };
+        assert_eq!(
+            block_in_block.to_string(),
+            r#"while (1)
+{
+  {
+    x;
+  }
+}"#
+        );
 
-    //     #[test]
-    //     fn do_statement() -> anyhow::Result<()> {
-    //         let do_stmt = Do {
-    //             body: vec![Statement::Expression(Expression::Variable(
-    //                 Identifier::new("x")?,
-    //             ))],
-    //             condition: Value::int(1),
-    //         };
+        Ok(())
+    }
 
-    //         assert_eq!(
-    //             do_stmt.to_string(),
-    //             r#"do {
-    //   x;
-    // } while (1);"#
-    //         );
+    #[test]
+    fn do_statement() -> anyhow::Result<()> {
+        let single_statement = Do {
+            body: Expression::Variable(Identifier::new("x")?).into(),
+            condition: Value::int(1).into(),
+        };
+        assert_eq!(
+            single_statement.to_string(),
+            r#"do
+  x;
+while (1);"#
+        );
 
-    //         Ok(())
-    //     }
+        let block = Do {
+            body: Block {
+                statements: vec![Expression::Variable(Identifier::new("x")?).into()],
+            }
+            .into(),
+            condition: Value::int(1).into(),
+        };
+        assert_eq!(
+            block.to_string(),
+            r#"do
+{
+  x;
+}
+while (1);"#
+        );
+
+        Ok(())
+    }
 
     //     #[test]
     //     fn for_statement() -> anyhow::Result<()> {
