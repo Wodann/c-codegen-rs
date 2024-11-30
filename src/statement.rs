@@ -3,6 +3,7 @@ mod r#for;
 mod goto;
 mod r#if;
 mod label;
+mod r#return;
 mod switch;
 mod r#while;
 
@@ -14,6 +15,7 @@ pub use self::{
     r#do::Do,
     r#for::{For, ForDeclaration},
     r#if::If,
+    r#return::Return,
     r#while::While,
     switch::Switch,
 };
@@ -39,7 +41,7 @@ pub enum Statement {
     Goto(Goto),
     Break,
     Continue,
-    Return(Option<Expression>),
+    Return(Return),
     Typedef(Identifier, Type),
     VariableDeclaration(VariableDeclaration),
     FunctionDeclaration {
@@ -78,7 +80,7 @@ impl Statement {
     }
 }
 
-impl_froms!(Statement: Block, Expression, box If, box Label, Goto, VariableDeclaration);
+impl_froms!(Statement: Block, box Do, Expression, box For, box If, box Label, Goto, Return, VariableDeclaration);
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Statement
 where
@@ -102,22 +104,14 @@ where
             Statement::Goto(goto) => goto.pretty(allocator),
             Statement::Break => allocator.text("break;"),
             Statement::Continue => allocator.text("continue;"),
-            Statement::Return(expression) => {
-                let mut doc = allocator.text("return");
-                if let Some(expression) = expression {
-                    doc = doc
-                        .append(allocator.text(" "))
-                        .append(expression.pretty(allocator));
-                }
-                doc.append(allocator.text(";"))
-            }
+            Statement::Return(statement) => statement.pretty(allocator),
             Statement::VariableDeclaration(declaration) => {
                 declaration.pretty(allocator).append(allocator.text(";"))
             }
             Statement::Typedef(name, ty) => allocator
                 .text("typedef ")
                 .append(allocator.text(format!("{}", ty)))
-                .append(allocator.text(" "))
+                .append(allocator.space())
                 .append(allocator.text(name))
                 .append(allocator.text(";")),
             Statement::FunctionDeclaration {

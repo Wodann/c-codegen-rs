@@ -127,7 +127,8 @@ impl_display_via_pretty!(Definition, 80);
 mod tests {
     use crate::{
         operator::{BinaryOperator, BinaryOperatorKind},
-        Expression, Statement, Value,
+        statement::Return,
+        Expression, Value,
     };
 
     use super::*;
@@ -179,14 +180,17 @@ mod tests {
                 (Type::int(), Identifier::new("y")?),
             ],
             body: Block {
-                statements: vec![Statement::Return(Some(
-                    BinaryOperator {
-                        left: Expression::Variable(Identifier::new("x")?),
-                        operator: BinaryOperatorKind::Add,
-                        right: Expression::Variable(Identifier::new("y")?),
-                    }
-                    .into(),
-                ))],
+                statements: vec![Return {
+                    expression: Some(
+                        BinaryOperator {
+                            left: Expression::Variable(Identifier::new("x")?),
+                            operator: BinaryOperatorKind::Add,
+                            right: Expression::Variable(Identifier::new("y")?),
+                        }
+                        .into(),
+                    ),
+                }
+                .into()],
             },
         }
         .to_string();
@@ -211,14 +215,17 @@ add_values (int x, int y) {
             return_ty: Type::int(),
             parameters: vec![(Type::int(), Identifier::new("x")?)],
             body: Block {
-                statements: vec![Statement::Return(Some(
-                    BinaryOperator {
-                        left: Expression::Variable(Identifier::new("x")?),
-                        operator: BinaryOperatorKind::Add,
-                        right: Value::int(42).into(),
-                    }
-                    .into(),
-                ))],
+                statements: vec![Return {
+                    expression: Some(
+                        BinaryOperator {
+                            left: Expression::Variable(Identifier::new("x")?),
+                            operator: BinaryOperatorKind::Add,
+                            right: Value::int(42).into(),
+                        }
+                        .into(),
+                    ),
+                }
+                .into()],
             },
         }
         .to_string();
