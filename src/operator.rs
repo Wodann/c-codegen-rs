@@ -4,6 +4,7 @@ mod binary;
 mod cast;
 mod comma;
 mod compound_assignment;
+mod conditional;
 mod postfix;
 mod prefix;
 mod sizeof;
@@ -15,6 +16,7 @@ pub use self::{
     cast::Cast,
     comma::CommaOperator,
     compound_assignment::{CompoundAssignment, CompoundAssignmentOperator},
+    conditional::Conditional,
     postfix::{PostfixOperator, PostfixOperatorKind},
     prefix::{PrefixOperator, PrefixOperatorKind},
     sizeof::SizeOf,
@@ -23,13 +25,13 @@ pub use self::{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Expression, Identifier, Statement, Value};
+    use crate::{Statement, Value, Variable};
 
     #[test]
     fn assignment() -> anyhow::Result<()> {
         let assignment = Statement::Expression(
             Assignment {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 right: Value::int(42).into(),
             }
             .into(),
@@ -38,9 +40,9 @@ mod tests {
 
         let compound_assignment = Statement::Expression(
             CompoundAssignment {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: CompoundAssignmentOperator::Add,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         );
@@ -53,7 +55,7 @@ mod tests {
     fn increment_decrement() -> anyhow::Result<()> {
         let prefix_inc = Statement::Expression(
             PrefixOperator {
-                operand: Expression::Variable(Identifier::new("x")?),
+                operand: Variable::new("x")?.into(),
                 operator: PrefixOperatorKind::Increment,
             }
             .into(),
@@ -62,7 +64,7 @@ mod tests {
 
         let postfix_dec = Statement::Expression(
             PostfixOperator {
-                operand: Expression::Variable(Identifier::new("y")?),
+                operand: Variable::new("y")?.into(),
                 operator: PostfixOperatorKind::Decrement,
             }
             .into(),
@@ -76,9 +78,9 @@ mod tests {
     fn binary_operations() -> anyhow::Result<()> {
         let add = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Add,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         );
@@ -86,9 +88,9 @@ mod tests {
 
         let mul = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("a")?),
+                left: Variable::new("a")?.into(),
                 operator: BinaryOperatorKind::Mul,
-                right: Expression::Variable(Identifier::new("b")?),
+                right: Variable::new("b")?.into(),
             }
             .into(),
         );
@@ -101,7 +103,7 @@ mod tests {
     fn prefix_unary() -> anyhow::Result<()> {
         let pos = Statement::Expression(
             PrefixOperator {
-                operand: Expression::Variable(Identifier::new("x")?),
+                operand: Variable::new("x")?.into(),
                 operator: PrefixOperatorKind::Positive,
             }
             .into(),
@@ -110,7 +112,7 @@ mod tests {
 
         let neg = Statement::Expression(
             PrefixOperator {
-                operand: Expression::Variable(Identifier::new("y")?),
+                operand: Variable::new("y")?.into(),
                 operator: PrefixOperatorKind::Negative,
             }
             .into(),

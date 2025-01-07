@@ -1,5 +1,3 @@
-use core::fmt;
-
 mod array;
 pub mod enumeration;
 mod initializer_list;

@@ -5,6 +5,8 @@ use crate::{
     StorageClass, Type,
 };
 
+pub type Variable = Identifier;
+
 #[derive(Clone)]
 pub struct Definition {
     pub storage_class: Option<StorageClass>,

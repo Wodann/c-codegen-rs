@@ -29,7 +29,7 @@ mod tests {
         operator::{
             Assignment, BinaryOperator, BinaryOperatorKind, PostfixOperator, PostfixOperatorKind,
         },
-        Identifier,
+        Variable,
     };
 
     #[test]
@@ -37,16 +37,16 @@ mod tests {
         // Test case from book: x++, y = x * x
         let generated = Expression::from(CommaOperator {
             left: PostfixOperator {
-                operand: Expression::Variable(Identifier::new("x")?),
+                operand: Variable::new("x")?.into(),
                 operator: PostfixOperatorKind::Increment,
             }
             .into(),
             right: Assignment {
-                left: Expression::Variable(Identifier::new("y")?),
+                left: Variable::new("y")?.into(),
                 right: BinaryOperator {
-                    left: Expression::Variable(Identifier::new("x")?),
+                    left: Variable::new("x")?.into(),
                     operator: BinaryOperatorKind::Mul,
-                    right: Expression::Variable(Identifier::new("x")?),
+                    right: Variable::new("x")?.into(),
                 }
                 .into(),
             }

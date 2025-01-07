@@ -1,7 +1,5 @@
-use crate::{pretty::impl_display_via_pretty, variable::Declaration, Expression, Statement};
+use crate::{pretty::impl_display_via_pretty, Expression, Statement};
 use pretty::Pretty;
-
-use super::impl_froms;
 
 #[derive(Clone)]
 pub struct Do {
@@ -41,12 +39,12 @@ mod tests {
     use std::vec;
 
     use super::*;
-    use crate::{Block, Expression, Identifier, Value};
+    use crate::{Block, Expression, Value, Variable};
 
     #[test]
     fn do_statement() -> anyhow::Result<()> {
         let single_statement = Do {
-            body: Expression::Variable(Identifier::new("x")?).into(),
+            body: Expression::Variable(Variable::new("x")?).into(),
             condition: Value::int(1).into(),
         };
         assert_eq!(
@@ -58,7 +56,7 @@ while (1);"#
 
         let block = Do {
             body: Block {
-                statements: vec![Expression::Variable(Identifier::new("x")?).into()],
+                statements: vec![Expression::Variable(Variable::new("x")?).into()],
             }
             .into(),
             condition: Value::int(1).into(),

@@ -41,7 +41,7 @@ impl fmt::Display for PostfixOperatorKind {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Statement, Identifier};
+    use crate::{Statement, Variable};
 
     use super::*;
 
@@ -49,7 +49,7 @@ mod tests {
     fn increment_decrement() -> anyhow::Result<()> {
         let increment = Statement::Expression(
             PostfixOperator {
-                operand: Expression::Variable(Identifier::new("x")?),
+                operand: Variable::new("x")?.into(),
                 operator: PostfixOperatorKind::Increment,
             }
             .into(),
@@ -60,7 +60,7 @@ mod tests {
 
         let decrement = Statement::Expression(
             PostfixOperator {
-                operand: Expression::Variable(Identifier::new("y")?),
+                operand: Variable::new("y")?.into(),
                 operator: PostfixOperatorKind::Decrement,
             }
             .into(),

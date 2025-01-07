@@ -90,16 +90,16 @@ mod tests {
             Assignment, BinaryOperator, BinaryOperatorKind, CommaOperator, CompoundAssignment,
             CompoundAssignmentOperator, PrefixOperator, PrefixOperatorKind,
         },
-        Block, Expression, Identifier, Type, Value,
+        Block, Expression, Identifier, Type, Value, Variable,
     };
 
     #[test]
     fn single_statement() -> anyhow::Result<()> {
         let generated = For {
-            init: Some(Expression::Variable(Identifier::new("i")?).into()),
+            init: Some(Expression::Variable(Variable::new("i")?).into()),
             condition: Value::int(1).into(),
-            step: Some(Expression::Variable(Identifier::new("i")?)),
-            body: Expression::Variable(Identifier::new("x")?).into(),
+            step: Some(Variable::new("i")?.into()),
+            body: Expression::Variable(Variable::new("x")?).into(),
         }
         .to_string();
         assert_eq!(
@@ -114,11 +114,11 @@ mod tests {
     #[test]
     fn block() -> anyhow::Result<()> {
         let generated = For {
-            init: Some(Expression::Variable(Identifier::new("i")?).into()),
+            init: Some(Expression::Variable(Variable::new("i")?).into()),
             condition: Value::int(1).into(),
-            step: Some(Expression::Variable(Identifier::new("i")?)),
+            step: Some(Variable::new("i")?.into()),
             body: Block {
-                statements: vec![Expression::Variable(Identifier::new("x")?).into()],
+                statements: vec![Expression::Variable(Variable::new("x")?).into()],
             }
             .into(),
         }
@@ -143,19 +143,19 @@ mod tests {
                 variables: vec![(Identifier::new("i")?, Some(Value::int(0).into()))].try_into()?,
             })),
             condition: BinaryOperator {
-                left: Expression::Variable(Identifier::new("i")?),
+                left: Variable::new("i")?.into(),
                 operator: BinaryOperatorKind::Lt,
                 right: Value::int(5).into(),
             }
             .into(),
             step: Some(
                 PrefixOperator {
-                    operand: Expression::Variable(Identifier::new("i")?),
+                    operand: Variable::new("i")?.into(),
                     operator: PrefixOperatorKind::Increment,
                 }
                 .into(),
             ),
-            body: Expression::Variable(Identifier::new("x")?).into(),
+            body: Expression::Variable(Variable::new("x")?).into(),
         }
         .to_string();
         assert_eq!(
@@ -171,11 +171,11 @@ mod tests {
     fn complex_for_loop() -> anyhow::Result<()> {
         // Create initialization expressions x = 1, y = 10
         let x_init = Assignment {
-            left: Expression::Variable(Identifier::new("x")?),
+            left: Variable::new("x")?.into(),
             right: Value::int(1).into(),
         };
         let y_init = Assignment {
-            left: Expression::Variable(Identifier::new("y")?),
+            left: Variable::new("y")?.into(),
             right: Value::int(10).into(),
         };
         let init = CommaOperator {
@@ -185,12 +185,12 @@ mod tests {
 
         // Create condition x <= 10 && y >= 1
         let x_cond = BinaryOperator {
-            left: Expression::Variable(Identifier::new("x")?),
+            left: Variable::new("x")?.into(),
             operator: BinaryOperatorKind::Le,
             right: Value::int(10).into(),
         };
         let y_cond = BinaryOperator {
-            left: Expression::Variable(Identifier::new("y")?),
+            left: Variable::new("y")?.into(),
             operator: BinaryOperatorKind::Ge,
             right: Value::int(1).into(),
         };
@@ -202,12 +202,12 @@ mod tests {
 
         // Create increment expressions x+=2, y--
         let x_inc = CompoundAssignment {
-            left: Expression::Variable(Identifier::new("x")?),
+            left: Variable::new("x")?.into(),
             operator: CompoundAssignmentOperator::Add,
             right: Value::int(2).into(),
         };
         let y_dec = PrefixOperator {
-            operand: Expression::Variable(Identifier::new("y")?),
+            operand: Variable::new("y")?.into(),
             operator: PrefixOperatorKind::Decrement,
         };
         let step = CommaOperator {
@@ -221,8 +221,8 @@ mod tests {
             name: Identifier::new("printf")?,
             arguments: vec![
                 Value::String("%d %d\\n".to_string()).into(),
-                Expression::Variable(Identifier::new("x")?),
-                Expression::Variable(Identifier::new("y")?),
+                Variable::new("x")?.into(),
+                Variable::new("y")?.into(),
             ],
         };
 

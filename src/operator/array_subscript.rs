@@ -29,14 +29,14 @@ mod tests {
     use crate::{
         function::FunctionCall,
         operator::{BinaryOperator, BinaryOperatorKind},
-        Identifier, Statement, Value,
+        Identifier, Statement, Value, Variable,
     };
 
     #[test]
     fn basic() -> anyhow::Result<()> {
         let array_access =
             Statement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
-                array: Expression::Variable(Identifier::new("my_array")?),
+                array: Variable::new("my_array")?.into(),
                 index: Value::int(0).into(),
             })));
 
@@ -61,12 +61,12 @@ mod tests {
         // Test with a complex index expression: arr[i + j * 2]
         let complex_index_access =
             Statement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
-                array: Expression::Variable(Identifier::new("arr")?),
+                array: Variable::new("arr")?.into(),
                 index: Expression::BinaryOperator(Box::new(BinaryOperator {
-                    left: Expression::Variable(Identifier::new("i")?),
+                    left: Variable::new("i")?.into(),
                     operator: BinaryOperatorKind::Add,
                     right: Expression::BinaryOperator(Box::new(BinaryOperator {
-                        left: Expression::Variable(Identifier::new("j")?),
+                        left: Variable::new("j")?.into(),
                         operator: BinaryOperatorKind::Mul,
                         right: Value::int(2).into(),
                     })),

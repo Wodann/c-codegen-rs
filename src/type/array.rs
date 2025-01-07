@@ -70,7 +70,11 @@ impl_display_via_pretty!(Array, 80);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{r#type::InitializerList, variable, Identifier, Statement, Value};
+    use crate::{
+        operator::{ArraySubscript, Assignment},
+        r#type::{member::MemberAccess, structure::Struct, union::Union, InitializerList},
+        variable, Identifier, Statement, Value, Variable,
+    };
 
     #[test]
     fn fixed_width() -> anyhow::Result<()> {
@@ -303,6 +307,245 @@ mod tests {
             declaration.to_string(),
             "int three_dimensional[2][3][4] = { { { 1, 2, 3, 4 }, { 5, 6, 7, 8 }, { 9, 10, 11, 12 } }, { { 13, 14, 15, 16 }, { 17, 18, 19, 20 }, { 21, 22, 23, 24 } } };"
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn array_of_strings() -> anyhow::Result<()> {
+        let definition = variable::Definition {
+            storage_class: None,
+            ty: Array {
+                element_type: Box::new(Type::Char),
+                size: Some(26),
+            }
+            .into(),
+            identifiers: vec![Identifier::new("blue")?].try_into()?,
+        };
+        assert_eq!(definition.to_string(), "char blue[26];");
+
+        let fixed_char = Statement::from(variable::Declaration {
+            storage_class: None,
+            ty: Array {
+                element_type: Box::new(Type::Char),
+                size: Some(26),
+            }
+            .into(),
+            variables: vec![(
+                Identifier::new("yellow")?,
+                Some(
+                    InitializerList::Ordered(
+                        "yellow\0"
+                            .chars()
+                            .map(|value| Value::Char { value }.into())
+                            .collect(),
+                    )
+                    .into(),
+                ),
+            )]
+            .try_into()?,
+        });
+        assert_eq!(
+            fixed_char.to_string(),
+            "char yellow[26] = { 'y', 'e', 'l', 'l', 'o', 'w', '\0' };"
+        );
+
+        let fixed_string = Statement::from(variable::Declaration {
+            storage_class: None,
+            ty: Array {
+                element_type: Box::new(Type::Char),
+                size: Some(26),
+            }
+            .into(),
+            variables: vec![(
+                Identifier::new("orange")?,
+                Some(Value::String("orange".to_string()).into()),
+            )]
+            .try_into()?,
+        });
+        assert_eq!(fixed_string.to_string(), r#"char orange[26] = "orange";"#);
+
+        let flexible_char = Statement::from(variable::Declaration {
+            storage_class: None,
+            ty: Array {
+                element_type: Box::new(Type::Char),
+                size: None,
+            }
+            .into(),
+            variables: vec![(
+                Identifier::new("gray")?,
+                Some(
+                    InitializerList::Ordered(
+                        "gray\0"
+                            .chars()
+                            .map(|value| Value::Char { value }.into())
+                            .collect(),
+                    )
+                    .into(),
+                ),
+            )]
+            .try_into()?,
+        });
+        assert_eq!(
+            flexible_char.to_string(),
+            "char gray[] = { 'g', 'r', 'a', 'y', '\0' };"
+        );
+
+        let flexible_string = Statement::from(variable::Declaration {
+            storage_class: None,
+            ty: Array {
+                element_type: Box::new(Type::Char),
+                size: None,
+            }
+            .into(),
+            variables: vec![(
+                Identifier::new("salmon")?,
+                Some(Value::String("salmon".to_string()).into()),
+            )]
+            .try_into()?,
+        });
+        assert_eq!(flexible_string.to_string(), r#"char salmon[] = "salmon";"#);
+
+        Ok(())
+    }
+
+    #[test]
+    fn array_of_structures() -> anyhow::Result<()> {
+        let definition = variable::Definition {
+            storage_class: None,
+            ty: Array {
+                element_type: Box::new(
+                    Struct::Tag {
+                        name: Identifier::new("point")?,
+                    }
+                    .into(),
+                ),
+
+                size: Some(3),
+            }
+            .into(),
+            identifiers: vec![Identifier::new("point_array")?].try_into()?,
+        };
+        assert_eq!(definition.to_string(), "struct point point_array[3];");
+
+        let declaration = Statement::from(variable::Declaration {
+            storage_class: None,
+            ty: Array {
+                element_type: Box::new(
+                    Struct::Tag {
+                        name: Identifier::new("point")?,
+                    }
+                    .into(),
+                ),
+                size: Some(3),
+            }
+            .into(),
+            variables: vec![(
+                Identifier::new("point_array")?,
+                Some(
+                    InitializerList::Ordered(vec![
+                        InitializerList::Ordered(vec![Value::int(2).into(), Value::int(3).into()])
+                            .into(),
+                        InitializerList::Ordered(vec![Value::int(4).into(), Value::int(5).into()])
+                            .into(),
+                        InitializerList::Ordered(vec![Value::int(6).into(), Value::int(7).into()])
+                            .into(),
+                    ])
+                    .into(),
+                ),
+            )]
+            .try_into()?,
+        });
+        assert_eq!(
+            declaration.to_string(),
+            "struct point point_array[3] = { { 2, 3 }, { 4, 5 }, { 6, 7 } };"
+        );
+
+        let member_access = Statement::Expression(
+            Assignment {
+                left: MemberAccess {
+                    left: ArraySubscript {
+                        array: Variable::new("point_array")?.into(),
+                        index: Value::int(0).into(),
+                    }
+                    .into(),
+                    member: Identifier::new("x")?,
+                }
+                .into(),
+                right: Value::int(2).into(),
+            }
+            .into(),
+        );
+        assert_eq!(member_access.to_string(), "point_array[0].x = 2;");
+
+        Ok(())
+    }
+
+    #[test]
+    fn array_of_unions() -> anyhow::Result<()> {
+        let definition = variable::Definition {
+            storage_class: None,
+            ty: Array {
+                element_type: Box::new(
+                    Union::Tag {
+                        name: Identifier::new("numbers")?,
+                    }
+                    .into(),
+                ),
+                size: Some(3),
+            }
+            .into(),
+            identifiers: vec![Identifier::new("number_array")?].try_into()?,
+        };
+        assert_eq!(definition.to_string(), "union numbers number_array[3];");
+
+        let declaration = Statement::from(variable::Declaration {
+            storage_class: None,
+            ty: Array {
+                element_type: Box::new(
+                    Union::Tag {
+                        name: Identifier::new("numbers")?,
+                    }
+                    .into(),
+                ),
+                size: Some(3),
+            }
+            .into(),
+            variables: vec![(
+                Identifier::new("number_array")?,
+                Some(
+                    InitializerList::Ordered(vec![
+                        InitializerList::Ordered(vec![Value::int(3).into()]).into(),
+                        InitializerList::Ordered(vec![Value::int(4).into()]).into(),
+                        InitializerList::Ordered(vec![Value::int(5).into()]).into(),
+                    ])
+                    .into(),
+                ),
+            )]
+            .try_into()?,
+        });
+        assert_eq!(
+            declaration.to_string(),
+            "union numbers number_array[3] = { { 3 }, { 4 }, { 5 } };"
+        );
+
+        let member_access = Statement::Expression(
+            Assignment {
+                left: MemberAccess {
+                    left: ArraySubscript {
+                        array: Variable::new("number_array")?.into(),
+                        index: Value::int(0).into(),
+                    }
+                    .into(),
+                    member: Identifier::new("i")?,
+                }
+                .into(),
+
+                right: Value::int(2).into(),
+            }
+            .into(),
+        );
+        assert_eq!(member_access.to_string(), "number_array[0].i = 2;");
 
         Ok(())
     }

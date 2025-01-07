@@ -79,14 +79,14 @@ mod tests {
     use crate::{
         function::FunctionCall,
         operator::{BinaryOperator, BinaryOperatorKind},
-        Block, Expression, Identifier, Value,
+        Block, Expression, Identifier, Value, Variable,
     };
 
     #[test]
     fn if_statement() -> anyhow::Result<()> {
         let generated = If {
             condition: BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Eq,
                 right: Value::int(10).into(),
             }
@@ -121,7 +121,7 @@ else
     fn else_if_statement() -> anyhow::Result<()> {
         let generated = If {
             condition: BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Eq,
                 right: Value::int(10).into(),
             }
@@ -134,7 +134,7 @@ else
             else_statement: Some(
                 If {
                     condition: BinaryOperator {
-                        left: Expression::Variable(Identifier::new("x")?),
+                        left: Variable::new("x")?.into(),
                         operator: BinaryOperatorKind::Gt,
                         right: Value::int(10).into(),
                     }
@@ -175,7 +175,7 @@ else
     fn with_blocks() -> anyhow::Result<()> {
         let generated = If {
             condition: BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Eq,
                 right: Value::int(10).into(),
             }

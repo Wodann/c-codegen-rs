@@ -55,7 +55,7 @@ impl fmt::Display for PrefixOperatorKind {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Statement, Identifier};
+    use crate::{Statement, Variable};
 
     use super::*;
 
@@ -63,7 +63,7 @@ mod tests {
     fn increment_decrement() -> anyhow::Result<()> {
         let increment = Statement::Expression(
             PrefixOperator {
-                operand: Expression::Variable(Identifier::new("x")?),
+                operand: Variable::new("x")?.into(),
                 operator: PrefixOperatorKind::Increment,
             }
             .into(),
@@ -74,7 +74,7 @@ mod tests {
 
         let decrement = Statement::Expression(
             PrefixOperator {
-                operand: Expression::Variable(Identifier::new("y")?),
+                operand: Variable::new("y")?.into(),
                 operator: PrefixOperatorKind::Decrement,
             }
             .into(),
@@ -90,7 +90,7 @@ mod tests {
     fn positive_negative() -> anyhow::Result<()> {
         let positive = Statement::Expression(
             PrefixOperator {
-                operand: Expression::Variable(Identifier::new("x")?),
+                operand: Variable::new("x")?.into(),
                 operator: PrefixOperatorKind::Positive,
             }
             .into(),
@@ -101,7 +101,7 @@ mod tests {
 
         let negative = Statement::Expression(
             PrefixOperator {
-                operand: Expression::Variable(Identifier::new("y")?),
+                operand: Variable::new("y")?.into(),
                 operator: PrefixOperatorKind::Negative,
             }
             .into(),
@@ -117,7 +117,7 @@ mod tests {
     fn pointer() -> anyhow::Result<()> {
         let address = Statement::Expression(
             PrefixOperator {
-                operand: Expression::Variable(Identifier::new("x")?),
+                operand: Variable::new("x")?.into(),
                 operator: PrefixOperatorKind::Address,
             }
             .into(),
@@ -128,7 +128,7 @@ mod tests {
 
         let indirection = Statement::Expression(
             PrefixOperator {
-                operand: Expression::Variable(Identifier::new("ptr")?),
+                operand: Variable::new("ptr")?.into(),
                 operator: PrefixOperatorKind::Indirection,
             }
             .into(),

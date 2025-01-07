@@ -128,7 +128,7 @@ mod tests {
     use crate::{
         operator::{BinaryOperator, BinaryOperatorKind},
         statement::Return,
-        Expression, Value,
+        Value, Variable,
     };
 
     use super::*;
@@ -183,9 +183,9 @@ mod tests {
                 statements: vec![Return {
                     expression: Some(
                         BinaryOperator {
-                            left: Expression::Variable(Identifier::new("x")?),
+                            left: Variable::new("x")?.into(),
                             operator: BinaryOperatorKind::Add,
-                            right: Expression::Variable(Identifier::new("y")?),
+                            right: Variable::new("y")?.into(),
                         }
                         .into(),
                     ),
@@ -218,7 +218,7 @@ add_values (int x, int y) {
                 statements: vec![Return {
                     expression: Some(
                         BinaryOperator {
-                            left: Expression::Variable(Identifier::new("x")?),
+                            left: Variable::new("x")?.into(),
                             operator: BinaryOperatorKind::Add,
                             right: Value::int(42).into(),
                         }

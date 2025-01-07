@@ -63,7 +63,7 @@ mod tests {
     use crate::{
         operator::{BinaryOperator, BinaryOperatorKind},
         r#type::Definition,
-        variable, Statement, Value,
+        variable, Statement, Value, Variable,
     };
 
     use super::*;
@@ -109,7 +109,7 @@ mod tests {
                     Identifier::new("plum")?,
                     Some(
                         BinaryOperator {
-                            left: Expression::Variable(Identifier::new("peach")?),
+                            left: Variable::new("peach")?.into(),
                             operator: BinaryOperatorKind::Add,
                             right: Value::int(2).into(),
                         }
@@ -193,7 +193,7 @@ mod tests {
             .into(),
             variables: vec![(
                 Identifier::new("my_fruit")?,
-                Some(Expression::Variable(Identifier::new("apple")?)),
+                Some(Expression::Variable(Variable::new("apple")?).into()),
             )]
             .try_into()?,
         })

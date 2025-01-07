@@ -8,7 +8,7 @@ use crate::{
 #[derive(Clone)]
 pub enum Value {
     Array { values: Vec<Value>, base_type: Type },
-    Char { value: char, signed: bool },
+    Char { value: char },
     Enum { value: i32, name: String },
     IntegerSigned { value: i64, kind: IntegerKind },
     IntegerUnsigned { value: u64, kind: IntegerKind },
@@ -45,8 +45,8 @@ impl fmt::Display for Value {
                     .join(", ");
                 write!(f, "{}[] {{ {} }}", base_type, vals)
             }
-            Value::Char { value, signed } => {
-                write!(f, "{value}")
+            Value::Char { value } => {
+                write!(f, "'{value}'")
             }
             Value::Enum { value, name } => write!(f, "enum {} = {}", name, value),
             Value::Real { value, kind: ty } => write!(f, "{value}"),

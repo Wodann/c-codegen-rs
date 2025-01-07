@@ -78,12 +78,12 @@ mod tests {
     use std::vec;
 
     use super::*;
-    use crate::{function::FunctionCall, Expression, Identifier, Value};
+    use crate::{function::FunctionCall, Expression, Identifier, Value, Variable};
 
     #[test]
     fn switch_statement() -> anyhow::Result<()> {
         let generated = Switch {
-            condition: Expression::Variable(Identifier::new("x")?),
+            condition: Variable::new("x")?.into(),
             cases: vec![
                 (
                     Value::int(0).into(),
@@ -129,7 +129,7 @@ mod tests {
     #[test]
     fn empty_case() -> anyhow::Result<()> {
         let generated = Switch {
-            condition: Expression::Variable(Identifier::new("x")?),
+            condition: Variable::new("x")?.into(),
             cases: vec![
                 (Value::int(0).into(), Vec::new()),
                 (
@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn default_only() -> anyhow::Result<()> {
         let generated = Switch {
-            condition: Expression::Variable(Identifier::new("x")?),
+            condition: Variable::new("x")?.into(),
             cases: Vec::new(),
             default: Some(vec![Expression::FunctionCall(FunctionCall {
                 name: Identifier::new("puts")?,

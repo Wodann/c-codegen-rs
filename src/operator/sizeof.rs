@@ -33,7 +33,7 @@ impl_display_via_pretty!(SizeOf, 80);
 
 #[cfg(test)]
 mod test {
-    use crate::{Identifier, Statement};
+    use crate::{Statement, Variable};
 
     use super::*;
 
@@ -46,7 +46,7 @@ mod test {
 
         // Test sizeof with an expression
         let sizeof_expr = Statement::Expression(
-            SizeOf::Expression(Expression::Variable(Identifier::new("x")?)).into(),
+            SizeOf::Expression(Expression::Variable(Variable::new("x")?)).into(),
         )
         .to_string();
 

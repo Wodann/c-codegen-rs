@@ -32,7 +32,7 @@ mod tests {
     use crate::{
         function,
         operator::{BinaryOperator, BinaryOperatorKind},
-        Block, Identifier, Type,
+        Block, Identifier, Type, Variable,
     };
 
     #[test]
@@ -69,9 +69,9 @@ print_plus_five (int x) {
                 statements: vec![Return {
                     expression: Some(
                         BinaryOperator {
-                            left: Expression::Variable(Identifier::new("x")?),
+                            left: Variable::new("x")?.into(),
                             operator: BinaryOperatorKind::Mul,
-                            right: Expression::Variable(Identifier::new("x")?),
+                            right: Variable::new("x")?.into(),
                         }
                         .into(),
                     ),

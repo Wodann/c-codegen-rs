@@ -26,7 +26,7 @@ where
 
 #[derive(Clone)]
 pub struct MemberAccess {
-    pub variable: Identifier,
+    pub left: Expression,
     pub member: Identifier,
 }
 
@@ -38,7 +38,7 @@ where
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         allocator
-            .text(self.variable.to_string())
+            .text(self.left.to_string())
             .append(allocator.text("."))
             .append(allocator.text(self.member.to_string()))
     }
@@ -103,7 +103,7 @@ where
 mod tests {
     use anyhow::Ok;
 
-    use crate::{function::FunctionCall, operator, Statement, Value};
+    use crate::{function::FunctionCall, operator, Statement, Value, Variable};
 
     use super::*;
 
@@ -112,7 +112,7 @@ mod tests {
         let variable = Statement::Expression(
             operator::Assignment {
                 left: MemberAccess {
-                    variable: Identifier::new("first_number")?,
+                    left: Variable::new("first_number")?.into(),
                     member: Identifier::new("i")?,
                 }
                 .into(),
@@ -131,7 +131,7 @@ mod tests {
         let variable = Statement::Expression(
             operator::Assignment {
                 left: IndirectMemberAccess {
-                    left: Expression::Variable(Identifier::new("first_number")?),
+                    left: Variable::new("first_number")?.into(),
                     member: Identifier::new("i")?,
                 }
                 .into(),

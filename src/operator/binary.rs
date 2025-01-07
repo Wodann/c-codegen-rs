@@ -78,15 +78,15 @@ impl fmt::Display for BinaryOperatorKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Statement, Identifier};
+    use crate::{Statement, Variable};
 
     #[test]
     fn arithmetic() -> anyhow::Result<()> {
         let addition = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Add,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -95,9 +95,9 @@ mod tests {
 
         let subtraction = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Sub,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -106,9 +106,9 @@ mod tests {
 
         let multiplication = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Mul,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -117,9 +117,9 @@ mod tests {
 
         let division = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Div,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -128,9 +128,9 @@ mod tests {
 
         let modulo = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Mod,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -144,9 +144,9 @@ mod tests {
     fn comparison() -> anyhow::Result<()> {
         let equal_to = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Eq,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -155,9 +155,9 @@ mod tests {
 
         let not_equal_to = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Ne,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -166,9 +166,9 @@ mod tests {
 
         let less_than = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Lt,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -177,9 +177,9 @@ mod tests {
 
         let less_than_or_equal = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Le,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -188,9 +188,9 @@ mod tests {
 
         let greater_than = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Gt,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -199,9 +199,9 @@ mod tests {
 
         let greater_than_or_equal = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Ge,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -215,9 +215,9 @@ mod tests {
     fn logical() -> anyhow::Result<()> {
         let logical_and = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::And,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -226,9 +226,9 @@ mod tests {
 
         let logical_or = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Or,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -242,9 +242,9 @@ mod tests {
     fn bit_shifting() -> anyhow::Result<()> {
         let left_shift = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::LShift,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -253,9 +253,9 @@ mod tests {
 
         let right_shift = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::RShift,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -269,9 +269,9 @@ mod tests {
     fn bitwise_logical() -> anyhow::Result<()> {
         let bitwise_and = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::BitAnd,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -280,9 +280,9 @@ mod tests {
 
         let bitwise_or = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::BitOr,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )
@@ -291,9 +291,9 @@ mod tests {
 
         let bitwise_xor = Statement::Expression(
             BinaryOperator {
-                left: Expression::Variable(Identifier::new("x")?),
+                left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::BitXor,
-                right: Expression::Variable(Identifier::new("y")?),
+                right: Variable::new("y")?.into(),
             }
             .into(),
         )

@@ -5,14 +5,14 @@ use crate::{
     macros::impl_froms,
     operator::{
         ArraySubscript, Assignment, BinaryOperator, Cast, CommaOperator, CompoundAssignment,
-        PostfixOperator, PrefixOperator, SizeOf,
+        Conditional, PostfixOperator, PrefixOperator, SizeOf,
     },
     pretty::impl_display_via_pretty,
     r#type::{
         member::{IndirectMemberAccess, MemberAccess},
         InitializerList,
     },
-    Identifier, Type, Value,
+    Type, Value, Variable,
 };
 
 #[derive(Clone)]
@@ -24,16 +24,17 @@ pub enum Expression {
     Cast(Box<Cast>),
     CommaOperator(Box<CommaOperator>),
     CompoundAssignment(Box<CompoundAssignment>),
+    Conditional(Box<Conditional>),
     FunctionCall(FunctionCall),
     IndirectMemberAccess(Box<IndirectMemberAccess>),
     InitializerList(InitializerList),
-    MemberAccess(MemberAccess),
+    MemberAccess(Box<MemberAccess>),
     Parentheses(Box<Expression>),
     PostfixOperator(Box<PostfixOperator>),
     PrefixOperator(Box<PrefixOperator>),
     SizeOf(Box<SizeOf>),
     Value(Value),
-    Variable(Identifier),
+    Variable(Variable),
 }
 
 impl_froms!(Expression:
@@ -43,14 +44,16 @@ impl_froms!(Expression:
     box Cast,
     box CommaOperator,
     box CompoundAssignment,
+    box Conditional,
     FunctionCall,
     box IndirectMemberAccess,
     InitializerList,
-    MemberAccess,
+    box MemberAccess,
     box PostfixOperator,
     box PrefixOperator,
     box SizeOf,
-    Value
+    Value,
+    Variable,
 );
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Expression
@@ -70,6 +73,7 @@ where
             Expression::Cast(cast) => cast.pretty(allocator),
             Expression::CommaOperator(comma) => comma.pretty(allocator),
             Expression::CompoundAssignment(assignment) => assignment.pretty(allocator),
+            Expression::Conditional(conditional) => conditional.pretty(allocator),
             Expression::FunctionCall(function_call) => function_call.pretty(allocator),
             Expression::IndirectMemberAccess(member_access) => member_access.pretty(allocator),
             Expression::InitializerList(initializer_list) => initializer_list.pretty(allocator),
@@ -90,7 +94,7 @@ impl_display_via_pretty!(Expression, 80);
 mod tests {
     use crate::{
         operator::{BinaryOperator, BinaryOperatorKind},
-        Statement,
+        Identifier, Statement,
     };
 
     use super::*;

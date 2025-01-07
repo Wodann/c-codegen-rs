@@ -42,13 +42,13 @@ mod tests {
     use std::vec;
 
     use super::*;
-    use crate::{Block, Expression, Identifier, Value};
+    use crate::{Block, Expression, Value, Variable};
 
     #[test]
     fn single_statement() -> anyhow::Result<()> {
         let generated = While {
             condition: Value::int(1).into(),
-            body: Expression::Variable(Identifier::new("x")?).into(),
+            body: Expression::Variable(Variable::new("x")?).into(),
         }
         .to_string();
         assert_eq!(
@@ -65,7 +65,7 @@ mod tests {
         let generated = While {
             condition: Value::int(1).into(),
             body: Block {
-                statements: vec![Expression::Variable(Identifier::new("x")?).into()],
+                statements: vec![Expression::Variable(Variable::new("x")?).into()],
             }
             .into(),
         }
@@ -87,7 +87,7 @@ mod tests {
             condition: Value::int(1).into(),
             body: Block {
                 statements: vec![Block {
-                    statements: vec![Expression::Variable(Identifier::new("x")?).into()],
+                    statements: vec![Expression::Variable(Variable::new("x")?).into()],
                 }
                 .into()],
             }

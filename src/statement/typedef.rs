@@ -1,4 +1,4 @@
-use crate::{pretty::impl_display_via_pretty, Identifier, Type};
+use crate::{Identifier, Type};
 use pretty::Pretty;
 
 #[derive(Clone)]
