@@ -2,6 +2,7 @@ mod r#do;
 mod r#for;
 mod goto;
 mod r#if;
+mod include;
 mod label;
 mod r#return;
 mod switch;
@@ -12,6 +13,7 @@ use pretty::Pretty;
 
 pub use self::{
     goto::Goto,
+    include::Include,
     label::Label,
     r#do::Do,
     r#for::{For, ForDeclaration},
@@ -66,7 +68,7 @@ pub enum Statement {
         name: Identifier,
         variants: Vec<(Identifier, Option<Value>)>,
     },
-    Include(String),
+    Include(Include),
     MacroDefinition {
         name: Identifier,
         body: String,
@@ -83,7 +85,7 @@ impl Statement {
     }
 }
 
-impl_froms!(Statement: Block, box Do, Expression, box For, box If, box Label, Goto, Return, Typedef, VariableDeclaration, VariableDefinition);
+impl_froms!(Statement: Block, box Do, Expression, box For, box If, Include, box Label, Goto, Return, Typedef, VariableDeclaration, VariableDefinition);
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Statement
 where
