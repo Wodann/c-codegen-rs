@@ -12,7 +12,7 @@ pub enum Value {
     Enum { value: i32, name: String },
     IntegerSigned { value: i64, kind: IntegerKind },
     IntegerUnsigned { value: u64, kind: IntegerKind },
-    Pointer { address: usize, base_type: Type },
+    Pointer { address: usize },
     Real { value: f64, kind: Real },
     String(String),
     Struct { fields: Vec<(String, Value)> },
@@ -52,8 +52,8 @@ impl fmt::Display for Value {
             Value::Real { value, kind: ty } => write!(f, "{value}"),
             Value::IntegerSigned { value, kind: ty } => write!(f, "{value}"),
             Value::IntegerUnsigned { value, kind: ty } => write!(f, "{value}"),
-            Value::Pointer { address, base_type } => {
-                write!(f, "{}* at 0x{:x}", base_type, address)
+            Value::Pointer { address } => {
+                write!(f, "{address:#x}")
             }
             Value::String(val) => write!(f, "\"{}\"", val),
             Value::Struct { fields } => {
