@@ -14,6 +14,7 @@ pub enum Value {
     IntegerUnsigned { value: u64, kind: IntegerKind },
     Pointer { address: usize },
     Real { value: f64, kind: Real },
+    Size { value: usize },
     String(String),
     Struct { fields: Vec<(String, Value)> },
 }
@@ -35,7 +36,7 @@ impl Value {
 }
 
 impl fmt::Display for Value {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Value::Array { values, base_type } => {
                 let vals = values
@@ -55,6 +56,7 @@ impl fmt::Display for Value {
             Value::Pointer { address } => {
                 write!(f, "{address:#x}")
             }
+            Value::Size { value } => write!(f, "{value}"),
             Value::String(val) => write!(f, "\"{}\"", val),
             Value::Struct { fields } => {
                 let field_str = fields
