@@ -1,6 +1,6 @@
 use pretty::Pretty;
 
-use crate::{non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Identifier};
+use crate::{pretty::impl_display_via_pretty, Identifier};
 
 use super::member;
 
@@ -8,7 +8,7 @@ use super::member;
 pub enum Struct {
     Definition {
         name: Option<Identifier>,
-        member_groups: NonEmptyVec<member::Group>,
+        member_groups: Vec<member::Group>,
     },
     /// An incomplete structure type, only useable as pointer type. Requires a complete definiton elsewhere.
     Tag { name: Identifier },
@@ -84,8 +84,7 @@ mod tests {
                     },
                 ]
                 .try_into()?,
-            }]
-            .try_into()?,
+            }],
         })
         .to_string();
         assert_eq!(
@@ -114,8 +113,7 @@ mod tests {
                     }]
                     .try_into()?,
                 },
-            ]
-            .try_into()?,
+            ],
         })
         .to_string();
         assert_eq!(
@@ -164,8 +162,7 @@ mod tests {
                         }]
                         .try_into()?,
                     },
-                ]
-                .try_into()?,
+                ],
             }
             .into(),
             variables: vec![
@@ -284,8 +281,7 @@ mod tests {
                     },
                 ]
                 .try_into()?,
-            }]
-            .try_into()?,
+            }],
         })
         .to_string();
         assert_eq!(
@@ -314,8 +310,7 @@ mod tests {
                     }]
                     .try_into()?,
                 },
-            ]
-            .try_into()?,
+            ],
         })
         .to_string();
         assert_eq!(

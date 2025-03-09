@@ -81,8 +81,7 @@ mod tests {
                         }]
                         .try_into()?,
                     },
-                ]
-                .try_into()?,
+                ],
             }
             .into(),
             alias: Identifier::new("fish_type")?,

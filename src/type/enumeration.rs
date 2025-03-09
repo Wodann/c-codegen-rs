@@ -193,7 +193,7 @@ mod tests {
             .into(),
             variables: vec![(
                 Identifier::new("my_fruit")?,
-                Some(Expression::Variable(Variable::new("apple")?).into()),
+                Some(Variable::new("apple")?.into()),
             )]
             .try_into()?,
         })
