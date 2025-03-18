@@ -26,6 +26,30 @@ where
     }
 }
 
+#[derive(Clone)]
+pub struct FunctionParameter {
+    pub ty: Type,
+    pub name: Option<Identifier>,
+}
+
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for FunctionParameter
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        let builder = allocator.text(self.ty.to_string());
+        if let Some(name) = self.name {
+            builder
+                .append(allocator.space())
+                .append(allocator.text(name))
+        } else {
+            builder
+        }
+    }
+}
+
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Function-Declarations
@@ -33,17 +57,20 @@ where
 pub struct Declaration {
     pub is_static: bool,
     pub name: Identifier,
-    pub parameters: Vec<(Type, Option<Identifier>)>,
+    pub parameters: Vec<FunctionParameter>,
     pub return_ty: Type,
 }
 
-impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Declaration
-where
-    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
-    AllocatorT::Doc: Clone,
-    AnnotationT: Clone + 'a,
-{
-    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+impl Declaration {
+    pub fn pretty_return_type<'a, AllocatorT, AnnotationT>(
+        &self,
+        allocator: &'a AllocatorT,
+    ) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT>
+    where
+        AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+        AllocatorT::Doc: Clone,
+        AnnotationT: Clone + 'a,
+    {
         let builder = if self.is_static {
             allocator.text("static").append(allocator.space())
         } else {
@@ -53,23 +80,46 @@ where
         builder
             .append(allocator.text(self.return_ty.to_string()))
             .append(allocator.space())
+    }
+
+    pub fn pretty_parameters<'a, AllocatorT, AnnotationT>(
+        &self,
+        allocator: &'a AllocatorT,
+    ) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT>
+    where
+        AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+        AllocatorT::Doc: Clone,
+        AnnotationT: Clone + 'a,
+    {
+        allocator
+            .text("(")
+            .append(
+                allocator.intersperse(
+                    self.parameters
+                        .iter()
+                        .map(|parameter| parameter.clone().pretty(allocator)),
+                    allocator.text(",").append(allocator.space()),
+                ),
+            )
+            .append(allocator.text(")"))
+    }
+}
+
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Declaration
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        let return_type = self.pretty_return_type(allocator);
+        let parameters = self.pretty_parameters(allocator);
+
+        return_type
             .append(allocator.text(self.name))
             .append(allocator.space())
-            .append(allocator.text("("))
-            .append(allocator.intersperse(
-                self.parameters.into_iter().map(|(ty, name)| {
-                    let builder = allocator.text(ty.to_string());
-                    if let Some(name) = name {
-                        builder
-                            .append(allocator.space())
-                            .append(allocator.text(name))
-                    } else {
-                        builder
-                    }
-                }),
-                allocator.text(",").append(allocator.space()),
-            ))
-            .append(allocator.text(");"))
+            .append(parameters)
+            .append(allocator.text(";"))
     }
 }
 
@@ -140,7 +190,16 @@ mod tests {
             is_static: false,
             name: Identifier::new("foo")?,
             return_ty: Type::int(),
-            parameters: vec![(Type::int(), None), (Type::double(), None)],
+            parameters: vec![
+                FunctionParameter {
+                    ty: Type::int(),
+                    name: None,
+                },
+                FunctionParameter {
+                    ty: Type::double(),
+                    name: None,
+                },
+            ],
         }
         .to_string();
 
@@ -157,8 +216,14 @@ mod tests {
             name: Identifier::new("foo")?,
             return_ty: Type::int(),
             parameters: vec![
-                (Type::int(), Some(Identifier::new("x")?)),
-                (Type::double(), Some(Identifier::new("y")?)),
+                FunctionParameter {
+                    ty: Type::int(),
+                    name: Some(Identifier::new("x")?),
+                },
+                FunctionParameter {
+                    ty: Type::double(),
+                    name: Some(Identifier::new("y")?),
+                },
             ],
         }
         .to_string();

@@ -15,7 +15,7 @@ use pretty::Pretty;
 use structure::Struct;
 use union::Union;
 
-use crate::{macros::impl_froms, pretty::impl_display_via_pretty};
+use crate::{macros::impl_froms, pretty::impl_display_via_pretty, FunctionDeclaration};
 
 pub use self::{
     array::Array,
@@ -35,6 +35,7 @@ pub enum Type {
     Char,
     Enum(Enum),
     Integer(Integer),
+    Function(Box<FunctionDeclaration>),
     Pointer(Pointer),
     Real(Real),
     Size,
@@ -45,6 +46,12 @@ pub enum Type {
 }
 
 impl_froms!(Type: Array, Enum, Integer, Pointer, Real, Struct, StrongInt, Union);
+
+impl From<FunctionDeclaration> for Type {
+    fn from(value: FunctionDeclaration) -> Self {
+        Self::Function(Box::new(value))
+    }
+}
 
 impl Type {
     pub const fn float() -> Self {
@@ -112,6 +119,7 @@ where
             Type::Array(array) => array.pretty(allocator),
             Type::Char => allocator.text("char"),
             Type::Enum(enumeration) => enumeration.pretty(allocator),
+            Type::Function(function) => function.pretty(allocator),
             Type::Integer(integer) => allocator.text(integer.to_string()),
             Type::Pointer(pointer) => allocator.text(pointer.to_string()),
             Type::Real(ty) => allocator.text(ty.to_string()),
