@@ -18,6 +18,13 @@ impl Pointer {
             ty => ty.clone(),
         }
     }
+
+    pub fn pointer_depth(&self) -> usize {
+        match self.pointer_ty.as_ref() {
+            Type::Pointer(pointer) => 1 + pointer.pointer_depth(),
+            _ => 1,
+        }
+    }
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Pointer
@@ -30,6 +37,16 @@ where
         if let Type::Function(function) = self.base_type() {
             let return_type = function.pretty_return_type(allocator);
             let parameters = function.pretty_parameters(allocator);
+
+            let mut builder = return_type
+                .append(allocator.space())
+                .append(allocator.text("("));
+
+            for _ in 0..self.pointer_depth() {
+                builder = builder.append(allocator.text("*"));
+            }
+
+            builder.append(allocator.text(")")).append(parameters)
         } else {
             if self.is_const {
                 write!(f, "{}* const", self.pointer_ty)

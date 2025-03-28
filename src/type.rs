@@ -15,7 +15,9 @@ use pretty::Pretty;
 use structure::Struct;
 use union::Union;
 
-use crate::{macros::impl_froms, pretty::impl_display_via_pretty, FunctionDeclaration};
+use crate::{
+    macros::impl_froms, pretty::impl_display_via_pretty, statement::Typedef, FunctionDeclaration,
+};
 
 pub use self::{
     array::Array,
@@ -41,11 +43,12 @@ pub enum Type {
     Size,
     StrongInt(StrongInt),
     Struct(Struct),
+    Typedef(Box<Typedef>),
     Union(Union),
     Void,
 }
 
-impl_froms!(Type: Array, Enum, Integer, Pointer, Real, Struct, StrongInt, Union);
+impl_froms!(Type: Array, Enum, Integer, Pointer, Real, Struct, StrongInt, box Typedef, Union);
 
 impl From<FunctionDeclaration> for Type {
     fn from(value: FunctionDeclaration) -> Self {
@@ -126,6 +129,7 @@ where
             Type::Size => allocator.text("size_t"),
             Type::StrongInt(integer) => allocator.text(integer.to_string()),
             Type::Struct(structure) => structure.pretty(allocator),
+            Type::Typedef(typedef) => allocator.text(typedef.alias),
             Type::Union(union) => union.pretty(allocator),
             Type::Void => allocator.text("void"),
         }
