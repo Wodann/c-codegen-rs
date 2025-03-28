@@ -90,7 +90,7 @@ mod tests {
             Assignment, BinaryOperator, BinaryOperatorKind, CommaOperator, CompoundAssignment,
             CompoundAssignmentOperator, PrefixOperator, PrefixOperatorKind,
         },
-        Block, Expression, Identifier, Type, Value, Variable,
+        Block, Expression, Identifier, ConcreteType, Value, Variable,
     };
 
     #[test]
@@ -139,7 +139,7 @@ mod tests {
         let generated = For {
             init: Some(ForDeclaration::VariableDeclaration(VariableDeclaration {
                 storage_class: None,
-                ty: Type::Size,
+                ty: ConcreteType::Size,
                 variables: vec![(Identifier::new("i")?, Some(Value::int(0).into()))].try_into()?,
             })),
             condition: BinaryOperator {

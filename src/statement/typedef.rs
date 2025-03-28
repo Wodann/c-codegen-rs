@@ -1,9 +1,9 @@
-use crate::{Identifier, Type};
+use crate::{ConcreteType, Identifier};
 use pretty::Pretty;
 
 #[derive(Clone)]
 pub struct Typedef {
-    pub ty: Type,
+    pub ty: ConcreteType,
     pub alias: Identifier,
 }
 
@@ -31,10 +31,11 @@ where
 mod tests {
     use super::*;
     use crate::{
+        function::FunctionParameter,
         r#type::{
             member::{self, Member},
             structure::Struct,
-            Array,
+            Array, Function, Pointer,
         },
         Statement,
     };
@@ -42,7 +43,7 @@ mod tests {
     #[test]
     fn primitive() -> anyhow::Result<()> {
         let generated = Statement::from(Typedef {
-            ty: Type::unsigned_char(),
+            ty: ConcreteType::unsigned_char(),
             alias: Identifier::new("byte_type")?,
         })
         .to_string();
@@ -58,7 +59,7 @@ mod tests {
                 name: Some(Identifier::new("fish")?),
                 member_groups: vec![
                     member::Group {
-                        ty: Type::float(),
+                        ty: ConcreteType::float(),
                         members: vec![Member {
                             name: Identifier::new("weight")?,
                             bit_field_size: None,
@@ -66,7 +67,7 @@ mod tests {
                         .try_into()?,
                     },
                     member::Group {
-                        ty: Type::float(),
+                        ty: ConcreteType::float(),
                         members: vec![member::Member {
                             name: Identifier::new("length")?,
                             bit_field_size: None,
@@ -74,7 +75,7 @@ mod tests {
                         .try_into()?,
                     },
                     member::Group {
-                        ty: Type::float(),
+                        ty: ConcreteType::float(),
                         members: vec![member::Member {
                             name: Identifier::new("probability_of_being_caught")?,
                             bit_field_size: None,
@@ -102,7 +103,7 @@ mod tests {
     fn array() -> anyhow::Result<()> {
         let typedef = Statement::from(Typedef {
             ty: Array {
-                element_type: Box::new(Type::Char),
+                element_type: Box::new(ConcreteType::Char),
                 size: Some(5),
             }
             .into(),
@@ -110,6 +111,29 @@ mod tests {
         })
         .to_string();
         assert_eq!(typedef, "typedef char array_of_bytes[5];");
+
+        Ok(())
+    }
+
+    #[test]
+    fn function_pointer() -> anyhow::Result<()> {
+        let typedef = Statement::from(Typedef {
+            ty: Pointer {
+                pointer_ty: Function {
+                    parameters: vec![FunctionParameter {
+                        ty: ConcreteType::int(),
+                        name: Some(Identifier::new("x")?),
+                    }],
+                    return_ty: ConcreteType::Void,
+                }
+                .into(),
+                is_const: false,
+            }
+            .into(),
+            alias: Identifier::new("func_ptr")?,
+        })
+        .to_string();
+        assert_eq!(typedef, "typedef void (*func_ptr)(int x);");
 
         Ok(())
     }

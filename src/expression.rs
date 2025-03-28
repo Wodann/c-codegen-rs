@@ -12,12 +12,12 @@ use crate::{
         member::{IndirectMemberAccess, MemberAccess},
         InitializerList,
     },
-    Type, Value, Variable,
+    ConcreteType, Value, Variable,
 };
 
 #[derive(Clone)]
 pub enum Expression {
-    AlignOf(Type),
+    AlignOf(ConcreteType),
     ArraySubscript(Box<ArraySubscript>),
     Assignment(Box<Assignment>),
     BinaryOperator(Box<BinaryOperator>),
@@ -101,7 +101,7 @@ mod tests {
 
     #[test]
     fn alignof() -> anyhow::Result<()> {
-        let generated = Statement::Expression(Expression::AlignOf(Type::int())).to_string();
+        let generated = Statement::Expression(Expression::AlignOf(ConcreteType::int())).to_string();
         assert_eq!(generated, "_Alignof(int);");
 
         Ok(())

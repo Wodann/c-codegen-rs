@@ -2,7 +2,7 @@ use pretty::Pretty;
 
 use crate::{
     non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Expression, Identifier,
-    StorageClass, Type,
+    StorageClass, ConcreteType,
 };
 
 pub type Variable = Identifier;
@@ -10,7 +10,7 @@ pub type Variable = Identifier;
 #[derive(Clone)]
 pub struct Definition {
     pub storage_class: Option<StorageClass>,
-    pub ty: Type,
+    pub ty: ConcreteType,
     pub identifiers: NonEmptyVec<Identifier>,
 }
 
@@ -50,7 +50,7 @@ impl_display_via_pretty!(Definition, 80);
 #[derive(Clone)]
 pub struct Declaration {
     pub storage_class: Option<StorageClass>,
-    pub ty: Type,
+    pub ty: ConcreteType,
     pub variables: NonEmptyVec<(Identifier, Option<Expression>)>,
 }
 
@@ -90,7 +90,7 @@ impl_display_via_pretty!(Declaration, 80);
 
 fn pretty_variable_type<'a, AllocatorT, AnnotationT>(
     storage_class: Option<StorageClass>,
-    ty: Type,
+    ty: ConcreteType,
     allocator: &'a AllocatorT,
 ) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT>
 where
@@ -119,7 +119,7 @@ mod tests {
     fn initializers() -> anyhow::Result<()> {
         let multiple = Statement::from(Declaration {
             storage_class: None,
-            ty: Type::int(),
+            ty: ConcreteType::int(),
             variables: vec![
                 (Identifier::new("x")?, None),
                 (Identifier::new("y")?, Some(Value::int(5).into())),

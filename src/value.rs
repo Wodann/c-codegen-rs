@@ -2,21 +2,44 @@ use core::fmt;
 
 use crate::{
     r#type::{IntegerKind, Real},
-    Type,
+    ConcreteType,
 };
 
 #[derive(Clone)]
 pub enum Value {
-    Array { values: Vec<Value>, base_type: Type },
-    Char { value: char },
-    Enum { value: i32, name: String },
-    IntegerSigned { value: i64, kind: IntegerKind },
-    IntegerUnsigned { value: u64, kind: IntegerKind },
-    Pointer { address: usize },
-    Real { value: f64, kind: Real },
-    Size { value: usize },
+    Array {
+        values: Vec<Value>,
+        base_type: ConcreteType,
+    },
+    Char {
+        value: char,
+    },
+    Enum {
+        value: i32,
+        name: String,
+    },
+    IntegerSigned {
+        value: i64,
+        kind: IntegerKind,
+    },
+    IntegerUnsigned {
+        value: u64,
+        kind: IntegerKind,
+    },
+    Pointer {
+        address: usize,
+    },
+    Real {
+        value: f64,
+        kind: Real,
+    },
+    Size {
+        value: usize,
+    },
     String(String),
-    Struct { fields: Vec<(String, Value)> },
+    Struct {
+        fields: Vec<(String, Value)>,
+    },
 }
 
 impl Value {

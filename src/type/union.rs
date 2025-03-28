@@ -63,7 +63,7 @@ mod tests {
 
     use crate::{
         r#type::{Definition, InitializerList},
-        variable, Statement, Type, Value,
+        variable, Statement, ConcreteType, Value,
     };
 
     use super::{member::Member, *};
@@ -73,7 +73,7 @@ mod tests {
         let single_line = Definition::from(Union::Definition {
             name: Some(Identifier::new("numbers")?),
             member_groups: vec![member::Group {
-                ty: Type::int(),
+                ty: ConcreteType::int(),
                 members: vec![
                     Member {
                         name: Identifier::new("i")?,
@@ -100,7 +100,7 @@ mod tests {
             name: Some(Identifier::new("numbers")?),
             member_groups: vec![
                 member::Group {
-                    ty: Type::int(),
+                    ty: ConcreteType::int(),
                     members: vec![Member {
                         name: Identifier::new("i")?,
                         bit_field_size: None,
@@ -108,7 +108,7 @@ mod tests {
                     .try_into()?,
                 },
                 member::Group {
-                    ty: Type::float(),
+                    ty: ConcreteType::float(),
                     members: vec![Member {
                         name: Identifier::new("f")?,
                         bit_field_size: None,
@@ -150,7 +150,7 @@ mod tests {
                 name: Some(Identifier::new("numbers")?),
                 member_groups: vec![
                     member::Group {
-                        ty: Type::int(),
+                        ty: ConcreteType::int(),
                         members: vec![Member {
                             name: Identifier::new("i")?,
                             bit_field_size: None,
@@ -158,7 +158,7 @@ mod tests {
                         .try_into()?,
                     },
                     member::Group {
-                        ty: Type::float(),
+                        ty: ConcreteType::float(),
                         members: vec![Member {
                             name: Identifier::new("f")?,
                             bit_field_size: None,
@@ -251,7 +251,7 @@ mod tests {
         let single_line = Definition::from(Union::Definition {
             name: Some(Identifier::new("numbers")?),
             member_groups: vec![member::Group {
-                ty: Type::unsigned_int(),
+                ty: ConcreteType::unsigned_int(),
                 members: vec![
                     Member {
                         name: Identifier::new("i2")?,
@@ -278,7 +278,7 @@ mod tests {
             name: Some(Identifier::new("numbers")?),
             member_groups: vec![
                 member::Group {
-                    ty: Type::unsigned_int(),
+                    ty: ConcreteType::unsigned_int(),
                     members: vec![Member {
                         name: Identifier::new("ui")?,
                         bit_field_size: Some(2),
@@ -286,7 +286,7 @@ mod tests {
                     .try_into()?,
                 },
                 member::Group {
-                    ty: Type::int(),
+                    ty: ConcreteType::int(),
                     members: vec![Member {
                         name: Identifier::new("i")?,
                         bit_field_size: Some(4),

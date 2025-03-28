@@ -1,20 +1,20 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, Type};
+use crate::{pretty::impl_display_via_pretty, ConcreteType};
 
 /// Represents a C array type with its base type and size
 #[derive(Clone)]
 pub struct Array {
     /// The base type of the array elements
-    pub element_type: Box<Type>,
+    pub element_type: Box<ConcreteType>,
     /// The size of the array (optional for flexible arrays)
     pub size: Option<usize>,
 }
 
 impl Array {
-    pub fn base_type(&self) -> Type {
+    pub fn base_type(&self) -> ConcreteType {
         match self.element_type.as_ref() {
-            Type::Array(array) => array.base_type(),
+            ConcreteType::Array(array) => array.base_type(),
             ty => ty.clone(),
         }
     }
@@ -22,8 +22,8 @@ impl Array {
     pub fn dimensions(&self) -> Vec<Option<usize>> {
         let mut dimensions = vec![self.size];
 
-        if let Type::Array(array) = self.element_type.as_ref() {
-            dimensions.extend(array.dimensions())
+        if let ConcreteType::Array(array) = self.element_type.as_ref() {
+            dimensions.extend(array.dimensions());
         }
 
         dimensions
@@ -81,7 +81,7 @@ mod tests {
         let definition = variable::Definition {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(Type::int()),
+                element_type: Box::new(ConcreteType::int()),
                 size: Some(10),
             }
             .into(),
@@ -92,7 +92,7 @@ mod tests {
         let initialization = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(Type::int()),
+                element_type: Box::new(ConcreteType::int()),
                 size: Some(10),
             }
             .into(),
@@ -124,7 +124,7 @@ mod tests {
         let definition = variable::Definition {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(Type::int()),
+                element_type: Box::new(ConcreteType::int()),
                 size: None,
             }
             .into(),
@@ -135,7 +135,7 @@ mod tests {
         let initialization = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(Type::int()),
+                element_type: Box::new(ConcreteType::int()),
                 size: None,
             }
             .into(),
@@ -165,7 +165,7 @@ mod tests {
     #[test]
     fn two_dimensional() -> anyhow::Result<()> {
         let inner_array = Array {
-            element_type: Box::new(Type::int()),
+            element_type: Box::new(ConcreteType::int()),
             size: Some(5),
         };
 
@@ -221,7 +221,7 @@ mod tests {
     #[test]
     fn three_dimensional() -> anyhow::Result<()> {
         let inner_array = Array {
-            element_type: Box::new(Type::int()),
+            element_type: Box::new(ConcreteType::int()),
             size: Some(4),
         };
 
@@ -316,7 +316,7 @@ mod tests {
         let definition = variable::Definition {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(Type::Char),
+                element_type: Box::new(ConcreteType::Char),
                 size: Some(26),
             }
             .into(),
@@ -327,7 +327,7 @@ mod tests {
         let fixed_char = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(Type::Char),
+                element_type: Box::new(ConcreteType::Char),
                 size: Some(26),
             }
             .into(),
@@ -353,7 +353,7 @@ mod tests {
         let fixed_string = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(Type::Char),
+                element_type: Box::new(ConcreteType::Char),
                 size: Some(26),
             }
             .into(),
@@ -368,7 +368,7 @@ mod tests {
         let flexible_char = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(Type::Char),
+                element_type: Box::new(ConcreteType::Char),
                 size: None,
             }
             .into(),
@@ -394,7 +394,7 @@ mod tests {
         let flexible_string = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(Type::Char),
+                element_type: Box::new(ConcreteType::Char),
                 size: None,
             }
             .into(),

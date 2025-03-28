@@ -2,7 +2,7 @@ use pretty::Pretty;
 
 use crate::{non_empty_vec::NonEmptyVec, Expression, Identifier};
 
-use super::Type;
+use super::ConcreteType;
 
 #[derive(Clone)]
 pub struct IndirectMemberAccess {
@@ -46,7 +46,7 @@ where
 
 #[derive(Clone)]
 pub struct Group {
-    pub ty: Type,
+    pub ty: ConcreteType,
     pub members: NonEmptyVec<Member>,
 }
 

@@ -34,27 +34,47 @@ macro_rules! impl_froms {
 
     // Match a nested variant with multiple inner types, the first being boxed, followed by more variants
     ($e:ident: $outer:ident(box $inner:ident, $($others:tt)*), $($rest:tt)*) => {
-        impl_froms!($e: $outer(box $inner));
+        impl From<$inner> for $e {
+            fn from(it: $inner) -> $e {
+                $e::$outer($outer::$inner(Box::new(it)))
+            }
+        }
+
         impl_froms!($e: $outer($($others)*));
         impl_froms!($e: $($rest)*);
     };
 
     // Match a nested variant with multiple inner types, the first being regular, followed by more variants
     ($e:ident: $outer:ident($inner:ident, $($others:tt)*), $($rest:tt)*) => {
-        impl_froms!($e: $outer($inner));
+        impl From<$inner> for $e {
+            fn from(it: $inner) -> $e {
+                $e::$outer($outer::$inner(it))
+            }
+        }
+
         impl_froms!($e: $outer($($others)*));
         impl_froms!($e: $($rest)*);
     };
 
     // Match a single nested variant with multiple inner types, the first being boxed (end case)
     ($e:ident: $outer:ident(box $inner:ident, $($others:tt)*)) => {
-        impl_froms!($e: $outer(box $inner));
+        impl From<$inner> for $e {
+            fn from(it: $inner) -> $e {
+                $e::$outer($outer::$inner(Box::new(it)))
+            }
+        }
+
         impl_froms!($e: $outer($($others)*));
     };
 
     // Match a single nested variant with multiple inner types, the first being regular (end case)
     ($e:ident: $outer:ident($inner:ident, $($others:tt)*)) => {
-        impl_froms!($e: $outer($inner));
+        impl From<$inner> for $e {
+            fn from(it: $inner) -> $e {
+                $e::$outer($outer::$inner(it))
+            }
+        }
+
         impl_froms!($e: $outer($($others)*));
     };
 
