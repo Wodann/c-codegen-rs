@@ -1,6 +1,6 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, ConcreteType};
+use crate::{pretty::impl_display_via_pretty, ConcreteType, Identifier};
 
 use super::OpaqueType;
 
@@ -47,7 +47,7 @@ where
                         .append(allocator.text("*"));
 
                     if is_const {
-                        builder = builder.append(allocator.space().append(allocator.text("const")));
+                        builder = builder.append(allocator.text("const"));
                     }
                 }
 
@@ -61,12 +61,19 @@ where
                     .append(allocator.space())
                     .append(allocator.text("("));
 
+                let mut needs_space = false;
                 for is_const in self.flatten_pointers() {
+                    if needs_space {
+                        builder = builder.append(allocator.space());
+                    }
+
                     builder = builder.append(allocator.text("*"));
 
                     if is_const {
-                        builder = builder.append(allocator.space().append(allocator.text("const")));
+                        builder = builder.append(allocator.text("const"));
                     }
+
+                    needs_space = true;
                 }
 
                 builder.append(allocator.text(")")).append(parameters)

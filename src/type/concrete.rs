@@ -2,7 +2,9 @@ use pretty::Pretty;
 
 use crate::{macros::impl_froms, pretty::impl_display_via_pretty};
 
-use super::{Array, Enum, Integer, IntegerKind, Pointer, Real, StrongInt, Struct, Typedef, Union};
+use super::{
+    Array, Enum, Integer, IntegerKind, OpaqueType, Pointer, Real, StrongInt, Struct, Typedef, Union,
+};
 
 /// Source
 ///
@@ -55,10 +57,17 @@ impl ConcreteType {
         })
     }
 
-    pub fn base_type(&self) -> ConcreteType {
+    /// Returns the fundamental type of the instance, after stripping away all type constructors (like pointers and arrays).
+    ///
+    /// # Examples
+    ///
+    /// - For `int[3][4]`, it returns `int`.
+    /// - For `void (*)(int, int)`, it returns `void (int, int)`.
+    pub fn base_type(&self) -> OpaqueType {
         match self {
             ConcreteType::Array(array) => array.base_type(),
-            ty => ty.clone(),
+            ConcreteType::Pointer(pointer) => pointer.base_type(),
+            ty => OpaqueType::ConcreteType(ty.clone()),
         }
     }
 

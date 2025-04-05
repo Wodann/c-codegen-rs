@@ -2,6 +2,8 @@ use pretty::Pretty;
 
 use crate::{pretty::impl_display_via_pretty, ConcreteType};
 
+use super::OpaqueType;
+
 /// Represents a C array type with its base type and size
 #[derive(Clone)]
 pub struct Array {
@@ -12,9 +14,26 @@ pub struct Array {
 }
 
 impl Array {
-    pub fn base_type(&self) -> ConcreteType {
+    /// Returns the fundamental type of the array, after stripping away all type constructors (like pointers and arrays).
+    ///
+    /// # Examples
+    ///
+    /// - For `int[3][4]`, it returns `int`.
+    /// - For `void (*)(int, int)`, it returns `void (int, int)`.
+    pub fn base_type(&self) -> OpaqueType {
         match self.element_type.as_ref() {
             ConcreteType::Array(array) => array.base_type(),
+            ConcreteType::Pointer(pointer) => pointer.base_type(),
+            ty => OpaqueType::ConcreteType(ty.clone()),
+        }
+    }
+
+    /// Returns the innermost element type of the array.
+    /// This is useful for determining the type of elements in a multi-dimensional array.
+    /// For example, for `int[3][4]`, it returns `int`.
+    pub fn innermost_element_type(&self) -> ConcreteType {
+        match self.element_type.as_ref() {
+            ConcreteType::Array(array) => array.innermost_element_type(),
             ty => ty.clone(),
         }
     }
@@ -58,10 +77,10 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let base_type = self.base_type().pretty(allocator);
+        let innermost_element = self.innermost_element_type().pretty(allocator);
         let dimensions = self.pretty_dimensions(allocator);
 
-        base_type.append(dimensions)
+        innermost_element.append(dimensions)
     }
 }
 

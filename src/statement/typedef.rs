@@ -1,9 +1,9 @@
-use crate::{ConcreteType, Identifier};
+use crate::{r#type::OpaqueType, ConcreteType, Identifier};
 use pretty::Pretty;
 
 #[derive(Clone)]
 pub struct Typedef {
-    pub ty: ConcreteType,
+    pub ty: OpaqueType,
     pub alias: Identifier,
 }
 
@@ -14,16 +14,63 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let base_type = self.ty.base_type();
-        let dimensions = self.ty.pretty_dimensions(allocator);
+        let builder = allocator.text("typedef").append(allocator.space());
 
-        allocator
-            .text("typedef")
-            .append(allocator.space())
-            .append(base_type.pretty(allocator))
-            .append(allocator.space())
-            .append(allocator.text(self.alias).append(dimensions))
-            .append(allocator.text(";"))
+        let alias = if let OpaqueType::ConcreteType(ConcreteType::Array(array)) = self.ty {
+            let dimensions = array.pretty_dimensions(allocator);
+            allocator.text(self.alias).append(dimensions)
+        } else {
+            allocator.text(self.alias)
+        };
+
+        let builder = if let OpaqueType::Function(function) = self.ty.base_type() {
+            let return_type = function.pretty_return_type(allocator);
+            let parameters = function.pretty_parameters(allocator);
+
+            let mut builder = builder
+                .append(return_type)
+                .append(allocator.space())
+                .append(allocator.text("("));
+
+            if let ConcreteType::Pointer(pointer) = self.ty {
+                let mut needs_space = false;
+                for is_const in pointer.flatten_pointers() {
+                    if needs_space {
+                        builder = builder.append(allocator.space());
+                    }
+
+                    builder = builder.append(allocator.text("*"));
+
+                    if is_const {
+                        builder = builder.append(allocator.space().append(allocator.text("const")));
+                    }
+
+                    needs_space = true;
+                }
+
+                builder = builder.append(allocator.space());
+            }
+
+            builder
+                .append(allocator.text(self.alias))
+                .append(allocator.text(")"))
+                .append(parameters)
+        } else if let OpaqueType::ConcreteType(ConcreteType::Array(array)) = self.ty {
+            let dimensions = self.ty.pretty_dimensions(allocator);
+
+            builder
+                .append(base_type.pretty(allocator))
+                .append(allocator.space())
+                .append(allocator.text(self.alias))
+                .append(dimensions)
+        } else {
+            builder
+                .append(self.ty.pretty(allocator))
+                .append(allocator.space())
+                .append(allocator.text(self.alias))
+        };
+
+        builder.append(allocator.text(";"))
     }
 }
 
