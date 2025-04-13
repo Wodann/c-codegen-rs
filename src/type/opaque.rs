@@ -28,4 +28,19 @@ impl OpaqueType {
             ty => ty.clone(),
         }
     }
+
+    /// Returns the innermost element type of the array, return type of a function, or otherwise the type itself.
+    /// This is useful for determining the type of elements in a multi-dimensional array.
+    ///
+    /// # Examples
+    ///
+    /// - For `int`, it returns `int`.
+    /// - For `int[3][4]`, it returns `int`.
+    ///
+    pub fn innermost_element_type(&self) -> ConcreteType {
+        match self {
+            Self::ConcreteType(ty) => ty.innermost_element_type(),
+            Self::Function(function) => function.return_ty.clone(),
+        }
+    }
 }

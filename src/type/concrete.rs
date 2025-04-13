@@ -71,7 +71,7 @@ impl ConcreteType {
         }
     }
 
-    /// Returns the innermost element type of the array, or otherwise the type itself.
+    /// Returns the innermost element type of the array, return type of a function, or otherwise the type itself.
     /// This is useful for determining the type of elements in a multi-dimensional array.
     ///
     /// # Examples
@@ -82,6 +82,7 @@ impl ConcreteType {
     pub fn innermost_element_type(&self) -> ConcreteType {
         match self {
             ConcreteType::Array(array) => array.innermost_element_type(),
+            ConcreteType::Pointer(pointer) => pointer.pointer_ty.innermost_element_type(),
             ty => ty.clone(),
         }
     }

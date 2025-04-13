@@ -59,9 +59,9 @@ impl_display_via_pretty!(Struct, 80);
 
 #[cfg(test)]
 mod tests {
-
     use crate::{
-        r#type::{Definition, InitializerList, Pointer},
+        function::FunctionParameter,
+        r#type::{Definition, Function, InitializerList, Pointer},
         variable, ConcreteType, Statement, Value,
     };
 
@@ -318,6 +318,66 @@ mod tests {
             r#"struct card {
   unsigned int suit : 2;
   unsigned int face_value : 4;
+};"#
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn function_pointer_member() -> anyhow::Result<()> {
+        let generated = Definition::from(Struct::Definition {
+            name: Some(Identifier::new("with_pointers")?),
+            member_groups: vec![
+                member::Group {
+                    ty: Pointer {
+                        pointer_ty: Function {
+                            parameters: vec![
+                                FunctionParameter {
+                                    ty: ConcreteType::int(),
+                                    name: None,
+                                },
+                                FunctionParameter {
+                                    ty: ConcreteType::int(),
+                                    name: None,
+                                },
+                            ],
+                            return_ty: ConcreteType::int(),
+                        }
+                        .into(),
+                        is_const: false,
+                    }
+                    .into(),
+                    members: vec![Member {
+                        name: Identifier::new("mutable")?,
+                        bit_field_size: None,
+                    }]
+                    .try_into()?,
+                },
+                member::Group {
+                    ty: Pointer {
+                        pointer_ty: Function {
+                            parameters: vec![],
+                            return_ty: ConcreteType::Void,
+                        }
+                        .into(),
+                        is_const: true,
+                    }
+                    .into(),
+                    members: vec![Member {
+                        name: Identifier::new("immutable")?,
+                        bit_field_size: None,
+                    }]
+                    .try_into()?,
+                },
+            ],
+        })
+        .to_string();
+        assert_eq!(
+            generated,
+            r#"struct with_pointers {
+  int (*mutable)(int, int);
+  void (*const immutable)();
 };"#
         );
 

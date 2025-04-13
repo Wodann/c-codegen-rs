@@ -57,6 +57,12 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        let innermost_element_type = self
+            .ty
+            .innermost_element_type()
+            .pretty(allocator)
+            .append(allocator.space());
+
         let needs_trailing_whitespace = self.ty.needs_trailing_whitespace();
         let builder = self.ty.pretty(allocator);
 

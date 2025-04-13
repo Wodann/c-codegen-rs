@@ -105,9 +105,10 @@ where
         allocator.nil()
     };
 
-    let builder = builder.append(allocator.text(ty.to_string()));
+    let needs_trailing_whitespace = ty.needs_trailing_whitespace();
+    let builder = builder.append(ty.pretty(allocator));
 
-    if ty.needs_trailing_whitespace() {
+    if needs_trailing_whitespace {
         builder.append(allocator.space())
     } else {
         builder

@@ -1,4 +1,4 @@
-use crate::{r#type::OpaqueType, ConcreteType, Identifier};
+use crate::{r#type::OpaqueType, Identifier};
 use pretty::Pretty;
 
 #[derive(Clone)]
@@ -40,7 +40,7 @@ mod tests {
             structure::Struct,
             Array, Function, Pointer,
         },
-        Statement,
+        ConcreteType, Statement,
     };
 
     #[test]
