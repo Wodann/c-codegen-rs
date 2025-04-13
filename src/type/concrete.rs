@@ -1,6 +1,6 @@
 use pretty::Pretty;
 
-use crate::{macros::impl_froms, pretty::impl_display_via_pretty};
+use crate::{macros::impl_froms, pretty::impl_display_via_pretty, Identifier};
 
 use super::{
     Array, Enum, Integer, IntegerKind, OpaqueType, Pointer, Real, StrongInt, Struct, Typedef, Union,
@@ -68,6 +68,77 @@ impl ConcreteType {
             ConcreteType::Array(array) => array.base_type(),
             ConcreteType::Pointer(pointer) => pointer.base_type(),
             ty => OpaqueType::ConcreteType(ty.clone()),
+        }
+    }
+
+    /// Returns the innermost element type of the array, or otherwise the type itself.
+    /// This is useful for determining the type of elements in a multi-dimensional array.
+    ///
+    /// # Examples
+    ///
+    /// - For `int`, it returns `int`.
+    /// - For `int[3][4]`, it returns `int`.
+    ///
+    pub fn innermost_element_type(&self) -> ConcreteType {
+        match self {
+            ConcreteType::Array(array) => array.innermost_element_type(),
+            ty => ty.clone(),
+        }
+    }
+
+    pub fn pretty_definition<'a, 's, AllocatorT, AnnotationT>(
+        self,
+        alias: Identifier,
+        allocator: &'a AllocatorT,
+    ) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT>
+    where
+        AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+        AllocatorT::Doc: Clone,
+        AnnotationT: Clone + 'a,
+    {
+        let base_type = self.base_type();
+        match self {
+            ConcreteType::Array(array) => {
+                let alias = allocator
+                    .text(alias)
+                    .append(array.pretty_dimensions(allocator));
+
+                if let OpaqueType::Function(function) = base_type {
+                    let mut builder = function.pretty_signature_start(allocator);
+
+                    if let ConcreteType::Pointer(pointer) = *array.element_type {
+                        builder = builder.append(pointer.pretty_pointers(allocator));
+                    }
+
+                    builder
+                        .append(alias)
+                        .append(function.pretty_signature_end(allocator))
+                } else {
+                    array
+                        .innermost_element_type()
+                        .pretty(allocator)
+                        .append(allocator.space())
+                        .append(alias)
+                }
+            }
+            ConcreteType::Pointer(pointer) => {
+                if let OpaqueType::Function(function) = base_type {
+                    function
+                        .pretty_signature_start(allocator)
+                        .append(pointer.pretty_pointers(allocator))
+                        .append(allocator.text(alias))
+                        .append(function.pretty_signature_end(allocator))
+                } else {
+                    pointer
+                        .pretty(allocator)
+                        .append(allocator.space())
+                        .append(allocator.text(alias))
+                }
+            }
+            ty => ty
+                .pretty(allocator)
+                .append(allocator.space())
+                .append(allocator.text(alias)),
         }
     }
 

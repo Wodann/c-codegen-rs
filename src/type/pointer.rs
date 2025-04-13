@@ -1,6 +1,6 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, ConcreteType, Identifier};
+use crate::{pretty::impl_display_via_pretty, ConcreteType};
 
 use super::OpaqueType;
 
@@ -29,6 +29,35 @@ impl Pointer {
 
         flattened
     }
+
+    pub fn pretty_pointers<'a, AllocatorT, AnnotationT>(
+        &self,
+        allocator: &'a AllocatorT,
+    ) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT>
+    where
+        AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+        AllocatorT::Doc: Clone,
+        AnnotationT: Clone + 'a,
+    {
+        let mut builder = allocator.nil();
+
+        let mut needs_space = false;
+        for is_const in self.flatten_pointers() {
+            if needs_space {
+                builder = builder.append(allocator.space());
+                needs_space = false;
+            }
+
+            builder = builder.append(allocator.text("*"));
+
+            if is_const {
+                builder = builder.append(allocator.text("const"));
+                needs_space = true;
+            }
+        }
+
+        builder
+    }
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Pointer
@@ -39,47 +68,68 @@ where
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         match self.base_type() {
-            OpaqueType::ConcreteType(base_type) => {
-                let mut builder = base_type.pretty(allocator);
-                for is_const in self.flatten_pointers() {
-                    builder = builder
-                        .append(allocator.space())
-                        .append(allocator.text("*"));
-
-                    if is_const {
-                        builder = builder.append(allocator.text("const"));
-                    }
-                }
-
-                builder
-            }
+            OpaqueType::ConcreteType(base_type) => base_type
+                .pretty(allocator)
+                .append(allocator.space())
+                .append(self.pretty_pointers(allocator)),
             OpaqueType::Function(function) => {
                 let return_type = function.pretty_return_type(allocator);
                 let parameters = function.pretty_parameters(allocator);
 
-                let mut builder = return_type
+                return_type
                     .append(allocator.space())
-                    .append(allocator.text("("));
-
-                let mut needs_space = false;
-                for is_const in self.flatten_pointers() {
-                    if needs_space {
-                        builder = builder.append(allocator.space());
-                    }
-
-                    builder = builder.append(allocator.text("*"));
-
-                    if is_const {
-                        builder = builder.append(allocator.text("const"));
-                    }
-
-                    needs_space = true;
-                }
-
-                builder.append(allocator.text(")")).append(parameters)
+                    .append(allocator.text("("))
+                    .append(self.pretty_pointers(allocator))
+                    .append(allocator.text(")"))
+                    .append(parameters)
             }
         }
     }
 }
 
 impl_display_via_pretty!(Pointer, 80);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn const_pointer() -> anyhow::Result<()> {
+        let pointer = Pointer {
+            pointer_ty: ConcreteType::Void.into(),
+            is_const: true,
+        }
+        .to_string();
+        assert_eq!(pointer, "void *const");
+
+        Ok(())
+    }
+
+    #[test]
+    fn const_pointer_to_pointer() -> anyhow::Result<()> {
+        let pointer = Pointer {
+            pointer_ty: Pointer {
+                pointer_ty: ConcreteType::Void.into(),
+                is_const: false,
+            }
+            .into(),
+            is_const: true,
+        }
+        .to_string();
+        assert_eq!(pointer, "void *const *");
+
+        Ok(())
+    }
+
+    #[test]
+    fn pointer() -> anyhow::Result<()> {
+        let pointer = Pointer {
+            pointer_ty: ConcreteType::Void.into(),
+            is_const: false,
+        }
+        .to_string();
+        assert_eq!(pointer, "void *");
+
+        Ok(())
+    }
+}

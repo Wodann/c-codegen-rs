@@ -14,63 +14,19 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let builder = allocator.text("typedef").append(allocator.space());
-
-        let alias = if let OpaqueType::ConcreteType(ConcreteType::Array(array)) = self.ty {
-            let dimensions = array.pretty_dimensions(allocator);
-            allocator.text(self.alias).append(dimensions)
-        } else {
-            allocator.text(self.alias)
+        let definition = match self.ty {
+            OpaqueType::ConcreteType(concrete) => concrete.pretty_definition(self.alias, allocator),
+            OpaqueType::Function(function) => function
+                .pretty_signature_start(allocator)
+                .append(allocator.text(self.alias))
+                .append(function.pretty_signature_end(allocator)),
         };
 
-        let builder = if let OpaqueType::Function(function) = self.ty.base_type() {
-            let return_type = function.pretty_return_type(allocator);
-            let parameters = function.pretty_parameters(allocator);
-
-            let mut builder = builder
-                .append(return_type)
-                .append(allocator.space())
-                .append(allocator.text("("));
-
-            if let ConcreteType::Pointer(pointer) = self.ty {
-                let mut needs_space = false;
-                for is_const in pointer.flatten_pointers() {
-                    if needs_space {
-                        builder = builder.append(allocator.space());
-                    }
-
-                    builder = builder.append(allocator.text("*"));
-
-                    if is_const {
-                        builder = builder.append(allocator.space().append(allocator.text("const")));
-                    }
-
-                    needs_space = true;
-                }
-
-                builder = builder.append(allocator.space());
-            }
-
-            builder
-                .append(allocator.text(self.alias))
-                .append(allocator.text(")"))
-                .append(parameters)
-        } else if let OpaqueType::ConcreteType(ConcreteType::Array(array)) = self.ty {
-            let dimensions = self.ty.pretty_dimensions(allocator);
-
-            builder
-                .append(base_type.pretty(allocator))
-                .append(allocator.space())
-                .append(allocator.text(self.alias))
-                .append(dimensions)
-        } else {
-            builder
-                .append(self.ty.pretty(allocator))
-                .append(allocator.space())
-                .append(allocator.text(self.alias))
-        };
-
-        builder.append(allocator.text(";"))
+        allocator
+            .text("typedef")
+            .append(allocator.space())
+            .append(definition)
+            .append(allocator.text(";"))
     }
 }
 
@@ -90,7 +46,7 @@ mod tests {
     #[test]
     fn primitive() -> anyhow::Result<()> {
         let generated = Statement::from(Typedef {
-            ty: ConcreteType::unsigned_char(),
+            ty: ConcreteType::unsigned_char().into(),
             alias: Identifier::new("byte_type")?,
         })
         .to_string();
@@ -158,6 +114,87 @@ mod tests {
         })
         .to_string();
         assert_eq!(typedef, "typedef char array_of_bytes[5];");
+
+        Ok(())
+    }
+
+    #[test]
+    fn array_of_function_pointers() -> anyhow::Result<()> {
+        let typedef = Statement::from(Typedef {
+            ty: Array {
+                element_type: Box::new(
+                    Pointer {
+                        pointer_ty: Function {
+                            parameters: vec![FunctionParameter {
+                                ty: ConcreteType::int(),
+                                name: Some(Identifier::new("x")?),
+                            }],
+                            return_ty: ConcreteType::Void,
+                        }
+                        .into(),
+                        is_const: false,
+                    }
+                    .into(),
+                ),
+                size: None,
+            }
+            .into(),
+            alias: Identifier::new("func_ptr_arr")?,
+        })
+        .to_string();
+        assert_eq!(typedef, "typedef void (*func_ptr_arr[])(int x);");
+
+        Ok(())
+    }
+
+    #[test]
+    fn array_of_function_pointer_pointers() -> anyhow::Result<()> {
+        let typedef = Statement::from(Typedef {
+            ty: Array {
+                element_type: Box::new(
+                    Pointer {
+                        pointer_ty: Pointer {
+                            pointer_ty: Function {
+                                parameters: vec![FunctionParameter {
+                                    ty: ConcreteType::int(),
+                                    name: Some(Identifier::new("x")?),
+                                }],
+                                return_ty: ConcreteType::Void,
+                            }
+                            .into(),
+                            is_const: false,
+                        }
+                        .into(),
+                        is_const: true,
+                    }
+                    .into(),
+                ),
+                size: None,
+            }
+            .into(),
+            alias: Identifier::new("func_ptr_arr")?,
+        })
+        .to_string();
+        assert_eq!(typedef, "typedef void (*const *func_ptr_arr[])(int x);");
+
+        Ok(())
+    }
+
+    #[test]
+    fn function() -> anyhow::Result<()> {
+        let typedef = Statement::from(Typedef {
+            ty: Function {
+                parameters: vec![FunctionParameter {
+                    ty: ConcreteType::int(),
+                    name: Some(Identifier::new("x")?),
+                }],
+                return_ty: ConcreteType::Void,
+            }
+            .into(),
+            alias: Identifier::new("func_type")?,
+        })
+        .to_string();
+        assert_eq!(typedef, "typedef void (func_type)(int x);");
 
         Ok(())
     }

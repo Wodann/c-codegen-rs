@@ -1,8 +1,8 @@
 use pretty::Pretty;
 
 use crate::{
-    non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Expression, Identifier,
-    StorageClass, ConcreteType,
+    non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, ConcreteType, Expression,
+    Identifier, StorageClass,
 };
 
 pub type Variable = Identifier;
@@ -21,11 +21,10 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let base_type = self.ty.base_type();
+        let innermost_element_type = self.ty.innermost_element_type();
         let dimensions = self.ty.pretty_dimensions(allocator);
 
-        pretty_variable_type(self.storage_class, base_type, allocator)
-            .append(allocator.space())
+        pretty_variable_type(self.storage_class, innermost_element_type, allocator)
             .append(
                 allocator.intersperse(
                     self.identifiers
@@ -62,12 +61,11 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let base_type = self.ty.base_type();
+        let innermost_element_type = self.ty.innermost_element_type();
         let dimensions = self.ty.pretty_dimensions(allocator);
 
-        pretty_variable_type(self.storage_class, base_type, allocator)
-            .append(allocator.space())
-            .append(allocator.intersperse(
+        pretty_variable_type(self.storage_class, innermost_element_type, allocator).append(
+            allocator.intersperse(
                 self.variables.into_iter().map(|(identifier, initializer)| {
                     let mut builder = allocator.text(identifier).append(dimensions.clone());
 
@@ -82,7 +80,8 @@ where
                     builder
                 }),
                 allocator.text(",").append(allocator.space()),
-            ))
+            ),
+        )
     }
 }
 
@@ -106,14 +105,45 @@ where
         allocator.nil()
     };
 
-    builder.append(allocator.text(ty.to_string()))
+    let builder = builder.append(allocator.text(ty.to_string()));
+
+    if let ConcreteType::Pointer(pointer) = ty {
+        if pointer
+            .flatten_pointers()
+            .last()
+            .is_some_and(|is_const| *is_const)
+        {
+            builder.append(allocator.space())
+        } else {
+            builder
+        }
+    } else {
+        builder.append(allocator.space())
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{Statement, Value};
+    use crate::{r#type::Pointer, Statement, Value};
 
     use super::*;
+
+    #[test]
+    fn const_pointer() -> anyhow::Result<()> {
+        let generated = Statement::from(Declaration {
+            storage_class: None,
+            ty: Pointer {
+                pointer_ty: ConcreteType::int().into(),
+                is_const: true,
+            }
+            .into(),
+            variables: vec![(Identifier::new("x")?, None)].try_into().unwrap(),
+        })
+        .to_string();
+        assert_eq!(generated, "int *const x;");
+
+        Ok(())
+    }
 
     #[test]
     fn initializers() -> anyhow::Result<()> {
@@ -128,6 +158,23 @@ mod tests {
         })
         .to_string();
         assert_eq!(multiple, "int x, y = 5;");
+
+        Ok(())
+    }
+
+    #[test]
+    fn pointer() -> anyhow::Result<()> {
+        let generated = Statement::from(Declaration {
+            storage_class: None,
+            ty: Pointer {
+                pointer_ty: ConcreteType::int().into(),
+                is_const: false,
+            }
+            .into(),
+            variables: vec![(Identifier::new("x")?, None)].try_into().unwrap(),
+        })
+        .to_string();
+        assert_eq!(generated, "int *x;");
 
         Ok(())
     }
