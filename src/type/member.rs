@@ -57,9 +57,16 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        allocator
-            .text(self.ty.to_string())
-            .append(allocator.space())
+        let needs_trailing_whitespace = self.ty.needs_trailing_whitespace();
+        let builder = self.ty.pretty(allocator);
+
+        let builder = if needs_trailing_whitespace {
+            builder.append(allocator.space())
+        } else {
+            builder
+        };
+
+        builder
             .append(
                 allocator.intersperse(
                     self.members

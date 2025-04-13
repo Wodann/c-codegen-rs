@@ -30,6 +30,16 @@ impl Pointer {
         flattened
     }
 
+    /// Whether the pointer needs a trailing whitespace.
+    /// This is the case when the last pointer is constant.
+    pub(crate) fn needs_trailing_whitespace(&self) -> bool {
+        if let OpaqueType::ConcreteType(ConcreteType::Pointer(pointer)) = &self.pointer_ty {
+            pointer.needs_trailing_whitespace()
+        } else {
+            self.is_const
+        }
+    }
+
     pub fn pretty_pointers<'a, AllocatorT, AnnotationT>(
         &self,
         allocator: &'a AllocatorT,

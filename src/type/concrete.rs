@@ -86,6 +86,19 @@ impl ConcreteType {
         }
     }
 
+    /// Whether the pointer needs a trailing whitespace.
+    ///
+    /// This is the case for:
+    /// - non-pointer types (e.g. `int x;`)
+    /// - pointers for which the last pointer is constant (e.g. `int *const x;`)
+    pub(crate) fn needs_trailing_whitespace(&self) -> bool {
+        if let ConcreteType::Pointer(pointer) = self {
+            pointer.needs_trailing_whitespace()
+        } else {
+            true
+        }
+    }
+
     pub fn pretty_definition<'a, 's, AllocatorT, AnnotationT>(
         self,
         alias: Identifier,

@@ -107,18 +107,10 @@ where
 
     let builder = builder.append(allocator.text(ty.to_string()));
 
-    if let ConcreteType::Pointer(pointer) = ty {
-        if pointer
-            .flatten_pointers()
-            .last()
-            .is_some_and(|is_const| *is_const)
-        {
-            builder.append(allocator.space())
-        } else {
-            builder
-        }
-    } else {
+    if ty.needs_trailing_whitespace() {
         builder.append(allocator.space())
+    } else {
+        builder
     }
 }
 
