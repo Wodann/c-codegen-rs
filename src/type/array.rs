@@ -97,15 +97,16 @@ mod tests {
 
     #[test]
     fn fixed_width() -> anyhow::Result<()> {
-        let definition = variable::Definition {
+        let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
                 element_type: Box::new(ConcreteType::int()),
                 size: Some(10),
             }
             .into(),
-            identifiers: vec![Identifier::new("my_array")?].try_into()?,
-        };
+            identifier: Identifier::new("my_array")?,
+            initializer: None,
+        });
         assert_eq!(definition.to_string(), "int my_array[10];");
 
         let initialization = Statement::from(variable::Declaration {
@@ -115,20 +116,17 @@ mod tests {
                 size: Some(10),
             }
             .into(),
-            variables: vec![(
-                Identifier::new("my_array")?,
-                Some(
-                    InitializerList::Ordered(vec![
-                        Value::int(0).into(),
-                        Value::int(1).into(),
-                        Value::int(2).into(),
-                        Value::int(3).into(),
-                        Value::int(4).into(),
-                    ])
-                    .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("my_array")?,
+            initializer: Some(
+                InitializerList::Ordered(vec![
+                    Value::int(0).into(),
+                    Value::int(1).into(),
+                    Value::int(2).into(),
+                    Value::int(3).into(),
+                    Value::int(4).into(),
+                ])
+                .into(),
+            ),
         });
         assert_eq!(
             initialization.to_string(),
@@ -140,15 +138,16 @@ mod tests {
 
     #[test]
     fn flex_width() -> anyhow::Result<()> {
-        let definition = variable::Definition {
+        let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
                 element_type: Box::new(ConcreteType::int()),
                 size: None,
             }
             .into(),
-            identifiers: vec![Identifier::new("flex")?].try_into()?,
-        };
+            identifier: Identifier::new("flex")?,
+            initializer: None,
+        });
         assert_eq!(definition.to_string(), "int flex[];");
 
         let initialization = Statement::from(variable::Declaration {
@@ -158,20 +157,17 @@ mod tests {
                 size: None,
             }
             .into(),
-            variables: vec![(
-                Identifier::new("flex")?,
-                Some(
-                    InitializerList::Ordered(vec![
-                        Value::int(0).into(),
-                        Value::int(1).into(),
-                        Value::int(2).into(),
-                        Value::int(3).into(),
-                        Value::int(4).into(),
-                    ])
-                    .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("flex")?,
+            initializer: Some(
+                InitializerList::Ordered(vec![
+                    Value::int(0).into(),
+                    Value::int(1).into(),
+                    Value::int(2).into(),
+                    Value::int(3).into(),
+                    Value::int(4).into(),
+                ])
+                .into(),
+            ),
         });
         assert_eq!(
             initialization.to_string(),
@@ -193,41 +189,39 @@ mod tests {
             size: Some(2),
         };
 
-        let definition = Statement::from(variable::Definition {
+        let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: outer_array.clone().into(),
-            identifiers: vec![Identifier::new("two_dimensions")?].try_into()?,
+            identifier: Identifier::new("two_dimensions")?,
+            initializer: None,
         });
         assert_eq!(definition.to_string(), "int two_dimensions[2][5];");
 
         let declaration = Statement::from(variable::Declaration {
             storage_class: None,
             ty: outer_array.into(),
-            variables: vec![(
-                Identifier::new("two_dimensions")?,
-                Some(
+            identifier: Identifier::new("two_dimensions")?,
+            initializer: Some(
+                InitializerList::Ordered(vec![
                     InitializerList::Ordered(vec![
-                        InitializerList::Ordered(vec![
-                            Value::int(1).into(),
-                            Value::int(2).into(),
-                            Value::int(3).into(),
-                            Value::int(4).into(),
-                            Value::int(5).into(),
-                        ])
-                        .into(),
-                        InitializerList::Ordered(vec![
-                            Value::int(6).into(),
-                            Value::int(7).into(),
-                            Value::int(8).into(),
-                            Value::int(9).into(),
-                            Value::int(10).into(),
-                        ])
-                        .into(),
+                        Value::int(1).into(),
+                        Value::int(2).into(),
+                        Value::int(3).into(),
+                        Value::int(4).into(),
+                        Value::int(5).into(),
                     ])
                     .into(),
-                ),
-            )]
-            .try_into()?,
+                    InitializerList::Ordered(vec![
+                        Value::int(6).into(),
+                        Value::int(7).into(),
+                        Value::int(8).into(),
+                        Value::int(9).into(),
+                        Value::int(10).into(),
+                    ])
+                    .into(),
+                ])
+                .into(),
+            ),
         });
         assert_eq!(
             declaration.to_string(),
@@ -254,73 +248,71 @@ mod tests {
             size: Some(2),
         };
 
-        let definition = Statement::from(variable::Definition {
+        let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: outer_array.clone().into(),
-            identifiers: vec![Identifier::new("three_dimensional")?].try_into()?,
+            identifier: Identifier::new("three_dimensional")?,
+            initializer: None,
         });
         assert_eq!(definition.to_string(), "int three_dimensional[2][3][4];");
 
         let declaration = Statement::from(variable::Declaration {
             storage_class: None,
             ty: outer_array.into(),
-            variables: vec![(
-                Identifier::new("three_dimensional")?,
-                Some(
+            identifier: Identifier::new("three_dimensional")?,
+            initializer: Some(
+                InitializerList::Ordered(vec![
                     InitializerList::Ordered(vec![
                         InitializerList::Ordered(vec![
-                            InitializerList::Ordered(vec![
-                                Value::int(1).into(),
-                                Value::int(2).into(),
-                                Value::int(3).into(),
-                                Value::int(4).into(),
-                            ])
-                            .into(),
-                            InitializerList::Ordered(vec![
-                                Value::int(5).into(),
-                                Value::int(6).into(),
-                                Value::int(7).into(),
-                                Value::int(8).into(),
-                            ])
-                            .into(),
-                            InitializerList::Ordered(vec![
-                                Value::int(9).into(),
-                                Value::int(10).into(),
-                                Value::int(11).into(),
-                                Value::int(12).into(),
-                            ])
-                            .into(),
+                            Value::int(1).into(),
+                            Value::int(2).into(),
+                            Value::int(3).into(),
+                            Value::int(4).into(),
                         ])
                         .into(),
                         InitializerList::Ordered(vec![
-                            InitializerList::Ordered(vec![
-                                Value::int(13).into(),
-                                Value::int(14).into(),
-                                Value::int(15).into(),
-                                Value::int(16).into(),
-                            ])
-                            .into(),
-                            InitializerList::Ordered(vec![
-                                Value::int(17).into(),
-                                Value::int(18).into(),
-                                Value::int(19).into(),
-                                Value::int(20).into(),
-                            ])
-                            .into(),
-                            InitializerList::Ordered(vec![
-                                Value::int(21).into(),
-                                Value::int(22).into(),
-                                Value::int(23).into(),
-                                Value::int(24).into(),
-                            ])
-                            .into(),
+                            Value::int(5).into(),
+                            Value::int(6).into(),
+                            Value::int(7).into(),
+                            Value::int(8).into(),
+                        ])
+                        .into(),
+                        InitializerList::Ordered(vec![
+                            Value::int(9).into(),
+                            Value::int(10).into(),
+                            Value::int(11).into(),
+                            Value::int(12).into(),
                         ])
                         .into(),
                     ])
                     .into(),
-                ),
-            )]
-            .try_into()?,
+                    InitializerList::Ordered(vec![
+                        InitializerList::Ordered(vec![
+                            Value::int(13).into(),
+                            Value::int(14).into(),
+                            Value::int(15).into(),
+                            Value::int(16).into(),
+                        ])
+                        .into(),
+                        InitializerList::Ordered(vec![
+                            Value::int(17).into(),
+                            Value::int(18).into(),
+                            Value::int(19).into(),
+                            Value::int(20).into(),
+                        ])
+                        .into(),
+                        InitializerList::Ordered(vec![
+                            Value::int(21).into(),
+                            Value::int(22).into(),
+                            Value::int(23).into(),
+                            Value::int(24).into(),
+                        ])
+                        .into(),
+                    ])
+                    .into(),
+                ])
+                .into(),
+            ),
         });
         assert_eq!(
             declaration.to_string(),
@@ -332,15 +324,16 @@ mod tests {
 
     #[test]
     fn array_of_strings() -> anyhow::Result<()> {
-        let definition = variable::Definition {
+        let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
                 element_type: Box::new(ConcreteType::Char),
                 size: Some(26),
             }
             .into(),
-            identifiers: vec![Identifier::new("blue")?].try_into()?,
-        };
+            identifier: Identifier::new("blue")?,
+            initializer: None,
+        });
         assert_eq!(definition.to_string(), "char blue[26];");
 
         let fixed_char = Statement::from(variable::Declaration {
@@ -350,19 +343,16 @@ mod tests {
                 size: Some(26),
             }
             .into(),
-            variables: vec![(
-                Identifier::new("yellow")?,
-                Some(
-                    InitializerList::Ordered(
-                        "yellow\0"
-                            .chars()
-                            .map(|value| Value::Char { value }.into())
-                            .collect(),
-                    )
-                    .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("yellow")?,
+            initializer: Some(
+                InitializerList::Ordered(
+                    "yellow\0"
+                        .chars()
+                        .map(|value| Value::Char { value }.into())
+                        .collect(),
+                )
+                .into(),
+            ),
         });
         assert_eq!(
             fixed_char.to_string(),
@@ -376,11 +366,8 @@ mod tests {
                 size: Some(26),
             }
             .into(),
-            variables: vec![(
-                Identifier::new("orange")?,
-                Some(Value::String("orange".to_string()).into()),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("orange")?,
+            initializer: Some(Value::String("orange".to_string()).into()),
         });
         assert_eq!(fixed_string.to_string(), r#"char orange[26] = "orange";"#);
 
@@ -391,19 +378,16 @@ mod tests {
                 size: None,
             }
             .into(),
-            variables: vec![(
-                Identifier::new("gray")?,
-                Some(
-                    InitializerList::Ordered(
-                        "gray\0"
-                            .chars()
-                            .map(|value| Value::Char { value }.into())
-                            .collect(),
-                    )
-                    .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("gray")?,
+            initializer: Some(
+                InitializerList::Ordered(
+                    "gray\0"
+                        .chars()
+                        .map(|value| Value::Char { value }.into())
+                        .collect(),
+                )
+                .into(),
+            ),
         });
         assert_eq!(
             flexible_char.to_string(),
@@ -417,11 +401,8 @@ mod tests {
                 size: None,
             }
             .into(),
-            variables: vec![(
-                Identifier::new("salmon")?,
-                Some(Value::String("salmon".to_string()).into()),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("salmon")?,
+            initializer: Some(Value::String("salmon".to_string()).into()),
         });
         assert_eq!(flexible_string.to_string(), r#"char salmon[] = "salmon";"#);
 
@@ -430,7 +411,7 @@ mod tests {
 
     #[test]
     fn array_of_structures() -> anyhow::Result<()> {
-        let definition = variable::Definition {
+        let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
                 element_type: Box::new(
@@ -443,8 +424,9 @@ mod tests {
                 size: Some(3),
             }
             .into(),
-            identifiers: vec![Identifier::new("point_array")?].try_into()?,
-        };
+            identifier: Identifier::new("point_array")?,
+            initializer: None,
+        });
         assert_eq!(definition.to_string(), "struct point point_array[3];");
 
         let declaration = Statement::from(variable::Declaration {
@@ -459,21 +441,18 @@ mod tests {
                 size: Some(3),
             }
             .into(),
-            variables: vec![(
-                Identifier::new("point_array")?,
-                Some(
-                    InitializerList::Ordered(vec![
-                        InitializerList::Ordered(vec![Value::int(2).into(), Value::int(3).into()])
-                            .into(),
-                        InitializerList::Ordered(vec![Value::int(4).into(), Value::int(5).into()])
-                            .into(),
-                        InitializerList::Ordered(vec![Value::int(6).into(), Value::int(7).into()])
-                            .into(),
-                    ])
-                    .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("point_array")?,
+            initializer: Some(
+                InitializerList::Ordered(vec![
+                    InitializerList::Ordered(vec![Value::int(2).into(), Value::int(3).into()])
+                        .into(),
+                    InitializerList::Ordered(vec![Value::int(4).into(), Value::int(5).into()])
+                        .into(),
+                    InitializerList::Ordered(vec![Value::int(6).into(), Value::int(7).into()])
+                        .into(),
+                ])
+                .into(),
+            ),
         });
         assert_eq!(
             declaration.to_string(),
@@ -502,7 +481,7 @@ mod tests {
 
     #[test]
     fn array_of_unions() -> anyhow::Result<()> {
-        let definition = variable::Definition {
+        let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
                 element_type: Box::new(
@@ -514,8 +493,9 @@ mod tests {
                 size: Some(3),
             }
             .into(),
-            identifiers: vec![Identifier::new("number_array")?].try_into()?,
-        };
+            identifier: Identifier::new("number_array")?,
+            initializer: None,
+        });
         assert_eq!(definition.to_string(), "union numbers number_array[3];");
 
         let declaration = Statement::from(variable::Declaration {
@@ -530,18 +510,15 @@ mod tests {
                 size: Some(3),
             }
             .into(),
-            variables: vec![(
-                Identifier::new("number_array")?,
-                Some(
-                    InitializerList::Ordered(vec![
-                        InitializerList::Ordered(vec![Value::int(3).into()]).into(),
-                        InitializerList::Ordered(vec![Value::int(4).into()]).into(),
-                        InitializerList::Ordered(vec![Value::int(5).into()]).into(),
-                    ])
-                    .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("number_array")?,
+            initializer: Some(
+                InitializerList::Ordered(vec![
+                    InitializerList::Ordered(vec![Value::int(3).into()]).into(),
+                    InitializerList::Ordered(vec![Value::int(4).into()]).into(),
+                    InitializerList::Ordered(vec![Value::int(5).into()]).into(),
+                ])
+                .into(),
+            ),
         });
         assert_eq!(
             declaration.to_string(),

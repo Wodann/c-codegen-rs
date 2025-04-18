@@ -1,6 +1,6 @@
 use pretty::Pretty;
 
-use crate::{non_empty_vec::NonEmptyVec, Expression, Identifier};
+use crate::{Expression, Identifier};
 
 use super::ConcreteType;
 
@@ -45,48 +45,8 @@ where
 }
 
 #[derive(Clone)]
-pub struct Group {
-    pub ty: ConcreteType,
-    pub members: NonEmptyVec<Member>,
-}
-
-impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Group
-where
-    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
-    AllocatorT::Doc: Clone,
-    AnnotationT: Clone + 'a,
-{
-    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let innermost_element_type = self
-            .ty
-            .innermost_element_type()
-            .pretty(allocator)
-            .append(allocator.space());
-
-        let needs_trailing_whitespace = self.ty.needs_trailing_whitespace();
-        let builder = self.ty.pretty(allocator);
-
-        let builder = if needs_trailing_whitespace {
-            builder.append(allocator.space())
-        } else {
-            builder
-        };
-
-        builder
-            .append(
-                allocator.intersperse(
-                    self.members
-                        .into_iter()
-                        .map(|member| member.pretty(allocator)),
-                    allocator.text(",").append(allocator.space()),
-                ),
-            )
-            .append(allocator.text(";"))
-    }
-}
-
-#[derive(Clone)]
 pub struct Member {
+    pub ty: ConcreteType,
     pub name: Identifier,
     pub bit_field_size: Option<usize>,
 }
@@ -98,17 +58,19 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let mut builder = allocator.text(self.name.to_string());
+        let definition = self.ty.pretty_definition(self.name, allocator);
 
-        if let Some(size) = self.bit_field_size {
-            builder = builder
+        let builder = if let Some(size) = self.bit_field_size {
+            definition
                 .append(allocator.space())
                 .append(allocator.text(":"))
                 .append(allocator.space())
-                .append(allocator.text(size.to_string()));
-        }
+                .append(allocator.text(size.to_string()))
+        } else {
+            definition
+        };
 
-        builder
+        builder.append(allocator.text(";"))
     }
 }
 

@@ -35,11 +35,7 @@ mod tests {
     use super::*;
     use crate::{
         function::FunctionParameter,
-        r#type::{
-            member::{self, Member},
-            structure::Struct,
-            Array, Function, Pointer,
-        },
+        r#type::{member::Member, structure::Struct, Array, Function, Pointer},
         ConcreteType, Statement,
     };
 
@@ -60,30 +56,21 @@ mod tests {
         let typedef = Statement::from(Typedef {
             ty: Struct::Definition {
                 name: Some(Identifier::new("fish")?),
-                member_groups: vec![
-                    member::Group {
+                members: vec![
+                    Member {
                         ty: ConcreteType::float(),
-                        members: vec![Member {
-                            name: Identifier::new("weight")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                        name: Identifier::new("weight")?,
+                        bit_field_size: None,
                     },
-                    member::Group {
+                    Member {
                         ty: ConcreteType::float(),
-                        members: vec![member::Member {
-                            name: Identifier::new("length")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                        name: Identifier::new("length")?,
+                        bit_field_size: None,
                     },
-                    member::Group {
+                    Member {
                         ty: ConcreteType::float(),
-                        members: vec![member::Member {
-                            name: Identifier::new("probability_of_being_caught")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                        name: Identifier::new("probability_of_being_caught")?,
+                        bit_field_size: None,
                     },
                 ],
             }

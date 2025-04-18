@@ -90,7 +90,7 @@ mod tests {
             Assignment, BinaryOperator, BinaryOperatorKind, CommaOperator, CompoundAssignment,
             CompoundAssignmentOperator, PrefixOperator, PrefixOperatorKind,
         },
-        Block, Expression, Identifier, ConcreteType, Value, Variable,
+        Block, ConcreteType, Expression, Identifier, Value, Variable,
     };
 
     #[test]
@@ -140,7 +140,8 @@ mod tests {
             init: Some(ForDeclaration::VariableDeclaration(VariableDeclaration {
                 storage_class: None,
                 ty: ConcreteType::Size,
-                variables: vec![(Identifier::new("i")?, Some(Value::int(0).into()))].try_into()?,
+                identifier: Identifier::new("i")?,
+                initializer: Some(Value::int(0).into()),
             })),
             condition: BinaryOperator {
                 left: Variable::new("i")?.into(),

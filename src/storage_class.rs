@@ -24,7 +24,7 @@ impl fmt::Display for StorageClass {
 
 #[cfg(test)]
 mod tests {
-    use crate::{variable, Identifier, Statement, ConcreteType, Value};
+    use crate::{variable, ConcreteType, Identifier, Statement, Value};
 
     use super::*;
 
@@ -35,7 +35,8 @@ mod tests {
         let generated = Statement::from(variable::Declaration {
             storage_class: Some(StorageClass::Extern),
             ty: ConcreteType::int(),
-            variables: vec![(Identifier::new("numberOfClients")?, None)].try_into()?,
+            identifier: Identifier::new("numberOfClients")?,
+            initializer: None,
         })
         .to_string();
 
@@ -44,11 +45,8 @@ mod tests {
         let generated = Statement::from(variable::Declaration {
             storage_class: None,
             ty: ConcreteType::int(),
-            variables: vec![(
-                Identifier::new("numberOfClients")?,
-                Some(Value::int(0).into()),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("numberOfClients")?,
+            initializer: Some(Value::int(0).into()),
         })
         .to_string();
 

@@ -71,7 +71,7 @@ impl ConcreteType {
         }
     }
 
-    /// Returns the innermost element type of the array, return type of a function, or otherwise the type itself.
+    /// Returns the innermost element type of the array, or otherwise the type itself.
     /// This is useful for determining the type of elements in a multi-dimensional array.
     ///
     /// # Examples
@@ -82,7 +82,6 @@ impl ConcreteType {
     pub fn innermost_element_type(&self) -> ConcreteType {
         match self {
             ConcreteType::Array(array) => array.innermost_element_type(),
-            ConcreteType::Pointer(pointer) => pointer.pointer_ty.innermost_element_type(),
             ty => ty.clone(),
         }
     }
@@ -136,17 +135,32 @@ impl ConcreteType {
                 }
             }
             ConcreteType::Pointer(pointer) => {
+                let needs_trailing_whitespace = pointer.needs_trailing_whitespace();
+
                 if let OpaqueType::Function(function) = base_type {
-                    function
+                    let builder = function
                         .pretty_signature_start(allocator)
-                        .append(pointer.pretty_pointers(allocator))
+                        .append(pointer.pretty_pointers(allocator));
+
+                    let builder = if needs_trailing_whitespace {
+                        builder.append(allocator.space())
+                    } else {
+                        builder
+                    };
+
+                    builder
                         .append(allocator.text(alias))
                         .append(function.pretty_signature_end(allocator))
                 } else {
-                    pointer
-                        .pretty(allocator)
-                        .append(allocator.space())
-                        .append(allocator.text(alias))
+                    let builder = pointer.pretty(allocator);
+
+                    let builder = if needs_trailing_whitespace {
+                        builder.append(allocator.space())
+                    } else {
+                        builder
+                    };
+
+                    builder.append(allocator.text(alias))
                 }
             }
             ty => ty

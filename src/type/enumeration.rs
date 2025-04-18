@@ -154,7 +154,8 @@ mod tests {
                 .try_into()?,
             }
             .into(),
-            variables: vec![(Identifier::new("my_fruit")?, None)].try_into()?,
+            identifier: Identifier::new("my_fruit")?,
+            initializer: None,
         })
         .to_string();
         assert_eq!(
@@ -168,7 +169,8 @@ mod tests {
                 name: Identifier::new("fruit")?,
             }
             .into(),
-            variables: vec![(Identifier::new("my_fruit")?, None)].try_into()?,
+            identifier: Identifier::new("my_fruit")?,
+            initializer: None,
         })
         .to_string();
         assert_eq!(tag, "enum fruit my_fruit;");
@@ -191,11 +193,8 @@ mod tests {
                 .try_into()?,
             }
             .into(),
-            variables: vec![(
-                Identifier::new("my_fruit")?,
-                Some(Variable::new("apple")?.into()),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("my_fruit")?,
+            initializer: Some(Variable::new("apple")?.into()),
         })
         .to_string();
         assert_eq!(

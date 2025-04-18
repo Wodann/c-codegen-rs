@@ -1,43 +1,8 @@
 use pretty::Pretty;
 
-use crate::{
-    non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, ConcreteType, Expression,
-    Identifier, StorageClass,
-};
+use crate::{pretty::impl_display_via_pretty, ConcreteType, Expression, Identifier, StorageClass};
 
 pub type Variable = Identifier;
-
-#[derive(Clone)]
-pub struct Definition {
-    pub storage_class: Option<StorageClass>,
-    pub ty: ConcreteType,
-    pub identifiers: NonEmptyVec<Identifier>,
-}
-
-impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Definition
-where
-    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
-    AllocatorT::Doc: Clone,
-    AnnotationT: Clone + 'a,
-{
-    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let innermost_element_type = self.ty.innermost_element_type();
-        let dimensions = self.ty.pretty_dimensions(allocator);
-
-        pretty_variable_type(self.storage_class, innermost_element_type, allocator)
-            .append(
-                allocator.intersperse(
-                    self.identifiers
-                        .into_iter()
-                        .map(|identifier| allocator.text(identifier).append(dimensions.clone())),
-                    allocator.text(",").append(allocator.space()),
-                ),
-            )
-            .append(allocator.text(";"))
-    }
-}
-
-impl_display_via_pretty!(Definition, 80);
 
 /// Variable declaration
 ///
@@ -50,7 +15,8 @@ impl_display_via_pretty!(Definition, 80);
 pub struct Declaration {
     pub storage_class: Option<StorageClass>,
     pub ty: ConcreteType,
-    pub variables: NonEmptyVec<(Identifier, Option<Expression>)>,
+    pub identifier: Identifier,
+    pub initializer: Option<Expression>,
 }
 
 // Implement Pretty for Declaration
@@ -61,63 +27,37 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let innermost_element_type = self.ty.innermost_element_type();
-        let dimensions = self.ty.pretty_dimensions(allocator);
+        let builder = if let Some(storage_class) = self.storage_class {
+            allocator
+                .text(storage_class.to_string())
+                .append(allocator.space())
+        } else {
+            allocator.nil()
+        };
 
-        pretty_variable_type(self.storage_class, innermost_element_type, allocator).append(
-            allocator.intersperse(
-                self.variables.into_iter().map(|(identifier, initializer)| {
-                    let mut builder = allocator.text(identifier).append(dimensions.clone());
+        let builder = builder.append(self.ty.pretty_definition(self.identifier, allocator));
 
-                    if let Some(initializer) = initializer {
-                        builder = builder
-                            .append(allocator.space())
-                            .append(allocator.text("="))
-                            .append(allocator.space())
-                            .append(initializer.pretty(allocator));
-                    }
-
-                    builder
-                }),
-                allocator.text(",").append(allocator.space()),
-            ),
-        )
+        if let Some(initializer) = self.initializer {
+            builder
+                .append(allocator.space())
+                .append(allocator.text("="))
+                .append(allocator.space())
+                .append(initializer.pretty(allocator))
+        } else {
+            builder
+        }
     }
 }
 
 impl_display_via_pretty!(Declaration, 80);
 
-fn pretty_variable_type<'a, AllocatorT, AnnotationT>(
-    storage_class: Option<StorageClass>,
-    ty: ConcreteType,
-    allocator: &'a AllocatorT,
-) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT>
-where
-    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
-    AllocatorT::Doc: Clone,
-    AnnotationT: Clone + 'a,
-{
-    let builder = if let Some(storage_class) = storage_class {
-        allocator
-            .text(storage_class.to_string())
-            .append(allocator.space())
-    } else {
-        allocator.nil()
-    };
-
-    let needs_trailing_whitespace = ty.needs_trailing_whitespace();
-    let builder = builder.append(ty.pretty(allocator));
-
-    if needs_trailing_whitespace {
-        builder.append(allocator.space())
-    } else {
-        builder
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::{r#type::Pointer, Statement, Value};
+    use crate::{
+        function::FunctionParameter,
+        r#type::{Function, Pointer},
+        Statement, Value,
+    };
 
     use super::*;
 
@@ -130,7 +70,8 @@ mod tests {
                 is_const: true,
             }
             .into(),
-            variables: vec![(Identifier::new("x")?, None)].try_into().unwrap(),
+            identifier: Identifier::new("x")?,
+            initializer: None,
         })
         .to_string();
         assert_eq!(generated, "int *const x;");
@@ -139,18 +80,72 @@ mod tests {
     }
 
     #[test]
-    fn initializers() -> anyhow::Result<()> {
+    fn function_pointer() -> anyhow::Result<()> {
+        let immutable = Statement::from(Declaration {
+            storage_class: None,
+            ty: Pointer {
+                pointer_ty: Function {
+                    parameters: vec![
+                        FunctionParameter {
+                            ty: ConcreteType::int(),
+                            name: None,
+                        },
+                        FunctionParameter {
+                            ty: ConcreteType::int(),
+                            name: None,
+                        },
+                    ],
+                    return_ty: ConcreteType::int(),
+                }
+                .into(),
+                is_const: true,
+            }
+            .into(),
+            identifier: Identifier::new("immutable")?,
+            initializer: None,
+        })
+        .to_string();
+        assert_eq!(immutable, "int (*const immutable)(int, int);");
+
+        let mutable = Statement::from(Declaration {
+            storage_class: None,
+            ty: Pointer {
+                pointer_ty: Function {
+                    parameters: vec![
+                        FunctionParameter {
+                            ty: ConcreteType::int(),
+                            name: None,
+                        },
+                        FunctionParameter {
+                            ty: ConcreteType::int(),
+                            name: None,
+                        },
+                    ],
+                    return_ty: ConcreteType::int(),
+                }
+                .into(),
+                is_const: false,
+            }
+            .into(),
+            identifier: Identifier::new("mutable")?,
+            initializer: None,
+        })
+        .to_string();
+        assert_eq!(mutable, "int (*mutable)(int, int);");
+
+        Ok(())
+    }
+
+    #[test]
+    fn initializer() -> anyhow::Result<()> {
         let multiple = Statement::from(Declaration {
             storage_class: None,
             ty: ConcreteType::int(),
-            variables: vec![
-                (Identifier::new("x")?, None),
-                (Identifier::new("y")?, Some(Value::int(5).into())),
-            ]
-            .try_into()?,
+            identifier: Identifier::new("x")?,
+            initializer: Some(Value::int(5).into()),
         })
         .to_string();
-        assert_eq!(multiple, "int x, y = 5;");
+        assert_eq!(multiple, "int x = 5;");
 
         Ok(())
     }
@@ -164,7 +159,8 @@ mod tests {
                 is_const: false,
             }
             .into(),
-            variables: vec![(Identifier::new("x")?, None)].try_into().unwrap(),
+            identifier: Identifier::new("x")?,
+            initializer: None,
         })
         .to_string();
         assert_eq!(generated, "int *x;");
