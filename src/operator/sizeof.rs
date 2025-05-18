@@ -1,10 +1,10 @@
-use crate::{pretty::impl_display_via_pretty, Expression, Type};
+use crate::{pretty::impl_display_via_pretty, Expression, ConcreteType};
 use pretty::Pretty;
 
 #[derive(Clone)]
 pub enum SizeOf {
     Expression(Expression),
-    Type(Type),
+    Type(ConcreteType),
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for SizeOf
@@ -40,7 +40,7 @@ mod test {
     #[test]
     fn sizeof_operator() -> anyhow::Result<()> {
         // Test sizeof with a type
-        let sizeof_type = Statement::Expression(SizeOf::Type(Type::int()).into()).to_string();
+        let sizeof_type = Statement::Expression(SizeOf::Type(ConcreteType::int()).into()).to_string();
 
         assert_eq!(sizeof_type, "sizeof (int);");
 

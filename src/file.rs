@@ -1,26 +1,20 @@
 use core::fmt;
 use std::io;
 
-use crate::{function, r#type, variable};
+use crate::{
+    macros::impl_froms, r#type, statement::Include, FunctionDeclaration, FunctionDefinition,
+    VariableDeclaration,
+};
 
 pub enum FileLevelStatement {
-    FunctionDeclaration(function::Declaration),
-    FunctionDefinition(function::Definition),
+    FunctionDeclaration(FunctionDeclaration),
+    FunctionDefinition(FunctionDefinition),
+    Include(Include),
     TypeDefinition(r#type::Definition),
-    Variable(variable::Declaration),
+    VariableDeclaration(VariableDeclaration),
 }
 
-impl From<function::Declaration> for FileLevelStatement {
-    fn from(value: function::Declaration) -> Self {
-        FileLevelStatement::FunctionDeclaration(value)
-    }
-}
-
-impl From<function::Definition> for FileLevelStatement {
-    fn from(value: function::Definition) -> Self {
-        FileLevelStatement::FunctionDefinition(value)
-    }
-}
+impl_froms!(FileLevelStatement: FunctionDeclaration, FunctionDefinition, Include, VariableDeclaration);
 
 impl From<r#type::Definition> for FileLevelStatement {
     fn from(value: r#type::Definition) -> Self {
@@ -28,19 +22,14 @@ impl From<r#type::Definition> for FileLevelStatement {
     }
 }
 
-impl From<variable::Declaration> for FileLevelStatement {
-    fn from(value: variable::Declaration) -> Self {
-        FileLevelStatement::Variable(value)
-    }
-}
-
 impl fmt::Display for FileLevelStatement {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             FileLevelStatement::FunctionDeclaration(declaration) => write!(f, "{declaration}"),
             FileLevelStatement::FunctionDefinition(definition) => write!(f, "{definition}"),
+            FileLevelStatement::Include(include) => write!(f, "{include}"),
             FileLevelStatement::TypeDefinition(definition) => write!(f, "{definition}"),
-            FileLevelStatement::Variable(declaration) => write!(f, "{declaration}"),
+            FileLevelStatement::VariableDeclaration(declaration) => write!(f, "{declaration}"),
         }
     }
 }

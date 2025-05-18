@@ -1,9 +1,9 @@
-use crate::{Identifier, Type};
+use crate::{r#type::OpaqueType, Identifier};
 use pretty::Pretty;
 
 #[derive(Clone)]
 pub struct Typedef {
-    pub ty: Type,
+    pub ty: OpaqueType,
     pub alias: Identifier,
 }
 
@@ -14,15 +14,18 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let base_type = self.ty.base_type();
-        let dimensions = self.ty.pretty_dimensions(allocator);
+        let definition = match self.ty {
+            OpaqueType::ConcreteType(concrete) => concrete.pretty_definition(self.alias, allocator),
+            OpaqueType::Function(function) => function
+                .pretty_signature_start(allocator)
+                .append(allocator.text(self.alias))
+                .append(function.pretty_signature_end(allocator)),
+        };
 
         allocator
             .text("typedef")
             .append(allocator.space())
-            .append(base_type.pretty(allocator))
-            .append(allocator.space())
-            .append(allocator.text(self.alias).append(dimensions))
+            .append(definition)
             .append(allocator.text(";"))
     }
 }
@@ -31,18 +34,15 @@ where
 mod tests {
     use super::*;
     use crate::{
-        r#type::{
-            member::{self, Member},
-            structure::Struct,
-            Array,
-        },
-        Statement,
+        function::FunctionParameter,
+        r#type::{member::Member, structure::Struct, Array, Function, Pointer},
+        ConcreteType, Statement,
     };
 
     #[test]
     fn primitive() -> anyhow::Result<()> {
         let generated = Statement::from(Typedef {
-            ty: Type::unsigned_char(),
+            ty: ConcreteType::unsigned_char().into(),
             alias: Identifier::new("byte_type")?,
         })
         .to_string();
@@ -56,33 +56,23 @@ mod tests {
         let typedef = Statement::from(Typedef {
             ty: Struct::Definition {
                 name: Some(Identifier::new("fish")?),
-                member_groups: vec![
-                    member::Group {
-                        ty: Type::float(),
-                        members: vec![Member {
-                            name: Identifier::new("weight")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                members: vec![
+                    Member {
+                        ty: ConcreteType::float(),
+                        name: Identifier::new("weight")?,
+                        bit_field_size: None,
                     },
-                    member::Group {
-                        ty: Type::float(),
-                        members: vec![member::Member {
-                            name: Identifier::new("length")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                    Member {
+                        ty: ConcreteType::float(),
+                        name: Identifier::new("length")?,
+                        bit_field_size: None,
                     },
-                    member::Group {
-                        ty: Type::float(),
-                        members: vec![member::Member {
-                            name: Identifier::new("probability_of_being_caught")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                    Member {
+                        ty: ConcreteType::float(),
+                        name: Identifier::new("probability_of_being_caught")?,
+                        bit_field_size: None,
                     },
-                ]
-                .try_into()?,
+                ],
             }
             .into(),
             alias: Identifier::new("fish_type")?,
@@ -103,7 +93,7 @@ mod tests {
     fn array() -> anyhow::Result<()> {
         let typedef = Statement::from(Typedef {
             ty: Array {
-                element_type: Box::new(Type::Char),
+                element_type: Box::new(ConcreteType::Char),
                 size: Some(5),
             }
             .into(),
@@ -111,6 +101,110 @@ mod tests {
         })
         .to_string();
         assert_eq!(typedef, "typedef char array_of_bytes[5];");
+
+        Ok(())
+    }
+
+    #[test]
+    fn array_of_function_pointers() -> anyhow::Result<()> {
+        let typedef = Statement::from(Typedef {
+            ty: Array {
+                element_type: Box::new(
+                    Pointer {
+                        pointer_ty: Function {
+                            parameters: vec![FunctionParameter {
+                                ty: ConcreteType::int(),
+                                name: Some(Identifier::new("x")?),
+                            }],
+                            return_ty: ConcreteType::Void,
+                        }
+                        .into(),
+                        is_const: false,
+                    }
+                    .into(),
+                ),
+                size: None,
+            }
+            .into(),
+            alias: Identifier::new("func_ptr_arr")?,
+        })
+        .to_string();
+        assert_eq!(typedef, "typedef void (*func_ptr_arr[])(int x);");
+
+        Ok(())
+    }
+
+    #[test]
+    fn array_of_function_pointer_pointers() -> anyhow::Result<()> {
+        let typedef = Statement::from(Typedef {
+            ty: Array {
+                element_type: Box::new(
+                    Pointer {
+                        pointer_ty: Pointer {
+                            pointer_ty: Function {
+                                parameters: vec![FunctionParameter {
+                                    ty: ConcreteType::int(),
+                                    name: Some(Identifier::new("x")?),
+                                }],
+                                return_ty: ConcreteType::Void,
+                            }
+                            .into(),
+                            is_const: false,
+                        }
+                        .into(),
+                        is_const: true,
+                    }
+                    .into(),
+                ),
+                size: None,
+            }
+            .into(),
+            alias: Identifier::new("func_ptr_arr")?,
+        })
+        .to_string();
+        assert_eq!(typedef, "typedef void (*const *func_ptr_arr[])(int x);");
+
+        Ok(())
+    }
+
+    #[test]
+    fn function() -> anyhow::Result<()> {
+        let typedef = Statement::from(Typedef {
+            ty: Function {
+                parameters: vec![FunctionParameter {
+                    ty: ConcreteType::int(),
+                    name: Some(Identifier::new("x")?),
+                }],
+                return_ty: ConcreteType::Void,
+            }
+            .into(),
+            alias: Identifier::new("func_type")?,
+        })
+        .to_string();
+        assert_eq!(typedef, "typedef void (func_type)(int x);");
+
+        Ok(())
+    }
+
+    #[test]
+    fn function_pointer() -> anyhow::Result<()> {
+        let typedef = Statement::from(Typedef {
+            ty: Pointer {
+                pointer_ty: Function {
+                    parameters: vec![FunctionParameter {
+                        ty: ConcreteType::int(),
+                        name: Some(Identifier::new("x")?),
+                    }],
+                    return_ty: ConcreteType::Void,
+                }
+                .into(),
+                is_const: false,
+            }
+            .into(),
+            alias: Identifier::new("func_ptr")?,
+        })
+        .to_string();
+        assert_eq!(typedef, "typedef void (*func_ptr)(int x);");
 
         Ok(())
     }

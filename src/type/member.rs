@@ -1,8 +1,8 @@
 use pretty::Pretty;
 
-use crate::{non_empty_vec::NonEmptyVec, Expression, Identifier};
+use crate::{Expression, Identifier};
 
-use super::Type;
+use super::ConcreteType;
 
 #[derive(Clone)]
 pub struct IndirectMemberAccess {
@@ -45,35 +45,8 @@ where
 }
 
 #[derive(Clone)]
-pub struct Group {
-    pub ty: Type,
-    pub members: NonEmptyVec<Member>,
-}
-
-impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Group
-where
-    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
-    AllocatorT::Doc: Clone,
-    AnnotationT: Clone + 'a,
-{
-    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        allocator
-            .text(self.ty.to_string())
-            .append(allocator.space())
-            .append(
-                allocator.intersperse(
-                    self.members
-                        .into_iter()
-                        .map(|member| member.pretty(allocator)),
-                    allocator.text(",").append(allocator.space()),
-                ),
-            )
-            .append(allocator.text(";"))
-    }
-}
-
-#[derive(Clone)]
 pub struct Member {
+    pub ty: ConcreteType,
     pub name: Identifier,
     pub bit_field_size: Option<usize>,
 }
@@ -85,17 +58,19 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        let mut builder = allocator.text(self.name.to_string());
+        let definition = self.ty.pretty_definition(self.name, allocator);
 
-        if let Some(size) = self.bit_field_size {
-            builder = builder
+        let builder = if let Some(size) = self.bit_field_size {
+            definition
                 .append(allocator.space())
                 .append(allocator.text(":"))
                 .append(allocator.space())
-                .append(allocator.text(size.to_string()));
-        }
+                .append(allocator.text(size.to_string()))
+        } else {
+            definition
+        };
 
-        builder
+        builder.append(allocator.text(";"))
     }
 }
 

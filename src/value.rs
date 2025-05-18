@@ -2,20 +2,44 @@ use core::fmt;
 
 use crate::{
     r#type::{IntegerKind, Real},
-    Type,
+    ConcreteType,
 };
 
 #[derive(Clone)]
 pub enum Value {
-    Array { values: Vec<Value>, base_type: Type },
-    Char { value: char },
-    Enum { value: i32, name: String },
-    IntegerSigned { value: i64, kind: IntegerKind },
-    IntegerUnsigned { value: u64, kind: IntegerKind },
-    Pointer { address: usize, base_type: Type },
-    Real { value: f64, kind: Real },
+    Array {
+        values: Vec<Value>,
+        base_type: ConcreteType,
+    },
+    Char {
+        value: char,
+    },
+    Enum {
+        value: i32,
+        name: String,
+    },
+    IntegerSigned {
+        value: i64,
+        kind: IntegerKind,
+    },
+    IntegerUnsigned {
+        value: u64,
+        kind: IntegerKind,
+    },
+    Pointer {
+        address: usize,
+    },
+    Real {
+        value: f64,
+        kind: Real,
+    },
+    Size {
+        value: usize,
+    },
     String(String),
-    Struct { fields: Vec<(String, Value)> },
+    Struct {
+        fields: Vec<(String, Value)>,
+    },
 }
 
 impl Value {
@@ -35,7 +59,7 @@ impl Value {
 }
 
 impl fmt::Display for Value {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Value::Array { values, base_type } => {
                 let vals = values
@@ -52,9 +76,10 @@ impl fmt::Display for Value {
             Value::Real { value, kind: ty } => write!(f, "{value}"),
             Value::IntegerSigned { value, kind: ty } => write!(f, "{value}"),
             Value::IntegerUnsigned { value, kind: ty } => write!(f, "{value}"),
-            Value::Pointer { address, base_type } => {
-                write!(f, "{}* at 0x{:x}", base_type, address)
+            Value::Pointer { address } => {
+                write!(f, "{address:#x}")
             }
+            Value::Size { value } => write!(f, "{value}"),
             Value::String(val) => write!(f, "\"{}\"", val),
             Value::Struct { fields } => {
                 let field_str = fields

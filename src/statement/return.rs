@@ -32,7 +32,7 @@ mod tests {
     use crate::{
         function,
         operator::{BinaryOperator, BinaryOperatorKind},
-        Block, Identifier, Type, Variable,
+        Block, Identifier, ConcreteType, Variable,
     };
 
     #[test]
@@ -40,8 +40,8 @@ mod tests {
         let generated = function::Definition {
             is_static: false,
             name: Identifier::new("print_plus_five")?,
-            parameters: vec![(Type::int(), Identifier::new("x")?)],
-            return_ty: Type::Void,
+            parameters: vec![(ConcreteType::int(), Identifier::new("x")?)],
+            return_ty: ConcreteType::Void,
             body: Block {
                 statements: vec![Return { expression: None }.into()],
             },
@@ -63,8 +63,8 @@ print_plus_five (int x) {
         let generated = function::Definition {
             is_static: false,
             name: Identifier::new("square_value")?,
-            parameters: vec![(Type::int(), Identifier::new("x")?)],
-            return_ty: Type::int(),
+            parameters: vec![(ConcreteType::int(), Identifier::new("x")?)],
+            return_ty: ConcreteType::int(),
             body: Block {
                 statements: vec![Return {
                     expression: Some(

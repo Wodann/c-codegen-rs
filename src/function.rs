@@ -1,6 +1,8 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, Block, Expression, Identifier, Type};
+use crate::{
+    pretty::impl_display_via_pretty, r#type::Function, Block, ConcreteType, Expression, Identifier,
+};
 
 #[derive(Clone)]
 pub struct FunctionCall {
@@ -26,6 +28,30 @@ where
     }
 }
 
+#[derive(Clone)]
+pub struct FunctionParameter {
+    pub ty: ConcreteType,
+    pub name: Option<Identifier>,
+}
+
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for FunctionParameter
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        let builder = allocator.text(self.ty.to_string());
+        if let Some(name) = self.name {
+            builder
+                .append(allocator.space())
+                .append(allocator.text(name))
+        } else {
+            builder
+        }
+    }
+}
+
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Function-Declarations
@@ -33,8 +59,7 @@ where
 pub struct Declaration {
     pub is_static: bool,
     pub name: Identifier,
-    pub parameters: Vec<(Type, Option<Identifier>)>,
-    pub return_ty: Type,
+    pub ty: Function,
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Declaration
@@ -50,26 +75,15 @@ where
             allocator.nil()
         };
 
+        let return_type = self.ty.pretty_return_type(allocator);
+        let parameters = self.ty.pretty_parameters(allocator);
+
         builder
-            .append(allocator.text(self.return_ty.to_string()))
-            .append(allocator.space())
+            .append(return_type)
             .append(allocator.text(self.name))
             .append(allocator.space())
-            .append(allocator.text("("))
-            .append(allocator.intersperse(
-                self.parameters.into_iter().map(|(ty, name)| {
-                    let builder = allocator.text(ty.to_string());
-                    if let Some(name) = name {
-                        builder
-                            .append(allocator.space())
-                            .append(allocator.text(name))
-                    } else {
-                        builder
-                    }
-                }),
-                allocator.text(",").append(allocator.space()),
-            ))
-            .append(allocator.text(");"))
+            .append(parameters)
+            .append(allocator.text(";"))
     }
 }
 
@@ -82,8 +96,8 @@ impl_display_via_pretty!(Declaration, 80);
 pub struct Definition {
     pub is_static: bool,
     pub name: Identifier,
-    pub parameters: Vec<(Type, Identifier)>,
-    pub return_ty: Type,
+    pub parameters: Vec<(ConcreteType, Identifier)>,
+    pub return_ty: ConcreteType,
     pub body: Block,
 }
 
@@ -139,8 +153,19 @@ mod tests {
         let generated = Declaration {
             is_static: false,
             name: Identifier::new("foo")?,
-            return_ty: Type::int(),
-            parameters: vec![(Type::int(), None), (Type::double(), None)],
+            ty: Function {
+                return_ty: ConcreteType::int(),
+                parameters: vec![
+                    FunctionParameter {
+                        ty: ConcreteType::int(),
+                        name: None,
+                    },
+                    FunctionParameter {
+                        ty: ConcreteType::double(),
+                        name: None,
+                    },
+                ],
+            },
         }
         .to_string();
 
@@ -155,11 +180,19 @@ mod tests {
         let generated = Declaration {
             is_static: false,
             name: Identifier::new("foo")?,
-            return_ty: Type::int(),
-            parameters: vec![
-                (Type::int(), Some(Identifier::new("x")?)),
-                (Type::double(), Some(Identifier::new("y")?)),
-            ],
+            ty: Function {
+                return_ty: ConcreteType::int(),
+                parameters: vec![
+                    FunctionParameter {
+                        ty: ConcreteType::int(),
+                        name: Some(Identifier::new("x")?),
+                    },
+                    FunctionParameter {
+                        ty: ConcreteType::double(),
+                        name: Some(Identifier::new("y")?),
+                    },
+                ],
+            },
         }
         .to_string();
 
@@ -174,10 +207,10 @@ mod tests {
         let generated = Definition {
             is_static: false,
             name: Identifier::new("add_values")?,
-            return_ty: Type::int(),
+            return_ty: ConcreteType::int(),
             parameters: vec![
-                (Type::int(), Identifier::new("x")?),
-                (Type::int(), Identifier::new("y")?),
+                (ConcreteType::int(), Identifier::new("x")?),
+                (ConcreteType::int(), Identifier::new("y")?),
             ],
             body: Block {
                 statements: vec![Return {
@@ -212,8 +245,8 @@ add_values (int x, int y) {
         let generated = Definition {
             is_static: true,
             name: Identifier::new("foo")?,
-            return_ty: Type::int(),
-            parameters: vec![(Type::int(), Identifier::new("x")?)],
+            return_ty: ConcreteType::int(),
+            parameters: vec![(ConcreteType::int(), Identifier::new("x")?)],
             body: Block {
                 statements: vec![Return {
                     expression: Some(
