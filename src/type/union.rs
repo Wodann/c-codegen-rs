@@ -2,13 +2,13 @@ use pretty::Pretty;
 
 use crate::{non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Identifier};
 
-use super::member;
+use super::member::Member;
 
 #[derive(Clone)]
 pub enum Union {
     Definition {
         name: Option<Identifier>,
-        member_groups: NonEmptyVec<member::Group>,
+        members: NonEmptyVec<Member>,
     },
     /// An incomplete union type, only useable as pointer type. Requires a complete definiton elsewhere.
     Tag { name: Identifier },
@@ -24,10 +24,7 @@ where
         let builder = allocator.text("union").append(allocator.space());
 
         match self {
-            Union::Definition {
-                name,
-                member_groups,
-            } => {
+            Union::Definition { name, members } => {
                 let builder = if let Some(name) = name {
                     builder
                         .append(allocator.text(name.to_string()))
@@ -41,7 +38,7 @@ where
                     .append(allocator.hardline())
                     .append(
                         allocator.intersperse(
-                            member_groups.into_iter().map(|member| {
+                            members.into_iter().map(|member| {
                                 allocator.text("  ").append(member.pretty(allocator))
                             }),
                             allocator.hardline(),
@@ -63,57 +60,25 @@ mod tests {
 
     use crate::{
         r#type::{Definition, InitializerList},
-        variable, Statement, Type, Value,
+        variable, ConcreteType, Statement, Value,
     };
 
-    use super::{member::Member, *};
+    use super::*;
 
     #[test]
     fn complete_definitions() -> anyhow::Result<()> {
-        let single_line = Definition::from(Union::Definition {
-            name: Some(Identifier::new("numbers")?),
-            member_groups: vec![member::Group {
-                ty: Type::int(),
-                members: vec![
-                    Member {
-                        name: Identifier::new("i")?,
-                        bit_field_size: None,
-                    },
-                    Member {
-                        name: Identifier::new("j")?,
-                        bit_field_size: None,
-                    },
-                ]
-                .try_into()?,
-            }]
-            .try_into()?,
-        })
-        .to_string();
-        assert_eq!(
-            single_line,
-            r#"union numbers {
-  int i, j;
-};"#
-        );
-
         let multi_line = Definition::from(Union::Definition {
             name: Some(Identifier::new("numbers")?),
-            member_groups: vec![
-                member::Group {
-                    ty: Type::int(),
-                    members: vec![Member {
-                        name: Identifier::new("i")?,
-                        bit_field_size: None,
-                    }]
-                    .try_into()?,
+            members: vec![
+                Member {
+                    ty: ConcreteType::int(),
+                    name: Identifier::new("i")?,
+                    bit_field_size: None,
                 },
-                member::Group {
-                    ty: Type::float(),
-                    members: vec![Member {
-                        name: Identifier::new("f")?,
-                        bit_field_size: None,
-                    }]
-                    .try_into()?,
+                Member {
+                    ty: ConcreteType::float(),
+                    name: Identifier::new("f")?,
+                    bit_field_size: None,
                 },
             ]
             .try_into()?,
@@ -148,32 +113,23 @@ mod tests {
             storage_class: None,
             ty: Union::Definition {
                 name: Some(Identifier::new("numbers")?),
-                member_groups: vec![
-                    member::Group {
-                        ty: Type::int(),
-                        members: vec![Member {
-                            name: Identifier::new("i")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                members: vec![
+                    Member {
+                        ty: ConcreteType::int(),
+                        name: Identifier::new("i")?,
+                        bit_field_size: None,
                     },
-                    member::Group {
-                        ty: Type::float(),
-                        members: vec![Member {
-                            name: Identifier::new("f")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                    Member {
+                        ty: ConcreteType::float(),
+                        name: Identifier::new("f")?,
+                        bit_field_size: None,
                     },
                 ]
                 .try_into()?,
             }
             .into(),
-            variables: vec![
-                (Identifier::new("first_number")?, None),
-                (Identifier::new("second_number")?, None),
-            ]
-            .try_into()?,
+            identifier: Identifier::new("first_number")?,
+            initializer: None,
         })
         .to_string();
         assert_eq!(
@@ -181,7 +137,7 @@ mod tests {
             r#"union numbers {
   int i;
   float f;
-} first_number, second_number;"#
+} first_number;"#
         );
 
         let tag = Statement::from(variable::Declaration {
@@ -190,14 +146,11 @@ mod tests {
                 name: Identifier::new("numbers")?,
             }
             .into(),
-            variables: vec![
-                (Identifier::new("first_number")?, None),
-                (Identifier::new("second_number")?, None),
-            ]
-            .try_into()?,
+            identifier: Identifier::new("first_number")?,
+            initializer: None,
         })
         .to_string();
-        assert_eq!(tag, "union numbers first_number, second_number;");
+        assert_eq!(tag, "union numbers first_number;");
 
         Ok(())
     }
@@ -210,11 +163,8 @@ mod tests {
                 name: Identifier::new("numbers")?,
             }
             .into(),
-            variables: vec![(
-                Identifier::new("first_number")?,
-                Some(InitializerList::Ordered(vec![Value::int(5).into()]).into()),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("first_number")?,
+            initializer: Some(InitializerList::Ordered(vec![Value::int(5).into()]).into()),
         })
         .to_string();
         assert_eq!(ordered, "union numbers first_number = { 5 };");
@@ -225,17 +175,14 @@ mod tests {
                 name: Identifier::new("numbers")?,
             }
             .into(),
-            variables: vec![(
-                Identifier::new("first_number")?,
-                Some(
-                    InitializerList::Named(vec![(
-                        Identifier::new("f")?,
-                        Value::float(f64::consts::PI).into(),
-                    )])
-                    .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("first_number")?,
+            initializer: Some(
+                InitializerList::Named(vec![(
+                    Identifier::new("f")?,
+                    Value::float(f64::consts::PI).into(),
+                )])
+                .into(),
+            ),
         })
         .to_string();
         assert_eq!(
@@ -248,50 +195,18 @@ mod tests {
 
     #[test]
     fn bit_fields() -> anyhow::Result<()> {
-        let single_line = Definition::from(Union::Definition {
-            name: Some(Identifier::new("numbers")?),
-            member_groups: vec![member::Group {
-                ty: Type::unsigned_int(),
-                members: vec![
-                    Member {
-                        name: Identifier::new("i2")?,
-                        bit_field_size: Some(2),
-                    },
-                    Member {
-                        name: Identifier::new("i4")?,
-                        bit_field_size: Some(4),
-                    },
-                ]
-                .try_into()?,
-            }]
-            .try_into()?,
-        })
-        .to_string();
-        assert_eq!(
-            single_line,
-            r#"union numbers {
-  unsigned int i2 : 2, i4 : 4;
-};"#
-        );
-
         let multi_line = Definition::from(Union::Definition {
             name: Some(Identifier::new("numbers")?),
-            member_groups: vec![
-                member::Group {
-                    ty: Type::unsigned_int(),
-                    members: vec![Member {
-                        name: Identifier::new("ui")?,
-                        bit_field_size: Some(2),
-                    }]
-                    .try_into()?,
+            members: vec![
+                Member {
+                    ty: ConcreteType::unsigned_int(),
+                    name: Identifier::new("ui")?,
+                    bit_field_size: Some(2),
                 },
-                member::Group {
-                    ty: Type::int(),
-                    members: vec![Member {
-                        name: Identifier::new("i")?,
-                        bit_field_size: Some(4),
-                    }]
-                    .try_into()?,
+                Member {
+                    ty: ConcreteType::int(),
+                    name: Identifier::new("i")?,
+                    bit_field_size: Some(4),
                 },
             ]
             .try_into()?,

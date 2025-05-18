@@ -52,7 +52,7 @@ impl fmt::Display for Identifier {
     }
 }
 
-impl<'a> From<Identifier> for Cow<'a, str> {
+impl From<Identifier> for Cow<'_, str> {
     fn from(identifier: Identifier) -> Self {
         Cow::Owned(identifier.0)
     }

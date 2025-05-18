@@ -1,14 +1,14 @@
 use pretty::Pretty;
 
-use crate::{non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Identifier};
+use crate::{pretty::impl_display_via_pretty, Identifier};
 
-use super::member;
+use super::member::Member;
 
 #[derive(Clone)]
 pub enum Struct {
     Definition {
         name: Option<Identifier>,
-        member_groups: NonEmptyVec<member::Group>,
+        members: Vec<Member>,
     },
     /// An incomplete structure type, only useable as pointer type. Requires a complete definiton elsewhere.
     Tag { name: Identifier },
@@ -24,10 +24,7 @@ where
         let builder = allocator.text("struct").append(allocator.space());
 
         match self {
-            Struct::Definition {
-                name,
-                member_groups,
-            } => {
+            Struct::Definition { name, members } => {
                 let builder = if let Some(name) = name {
                     builder
                         .append(allocator.text(name.to_string()))
@@ -41,7 +38,7 @@ where
                     .append(allocator.hardline())
                     .append(
                         allocator.intersperse(
-                            member_groups.into_iter().map(|member| {
+                            members.into_iter().map(|member| {
                                 allocator.text("  ").append(member.pretty(allocator))
                             }),
                             allocator.hardline(),
@@ -59,63 +56,30 @@ impl_display_via_pretty!(Struct, 80);
 
 #[cfg(test)]
 mod tests {
-
     use crate::{
-        r#type::{Definition, InitializerList},
-        variable, Statement, Type, Value,
+        function::FunctionParameter,
+        r#type::{Definition, Function, InitializerList, Pointer},
+        variable, ConcreteType, Statement, Value,
     };
 
-    use super::{member::Member, *};
+    use super::*;
 
     #[test]
     fn complete_definitions() -> anyhow::Result<()> {
-        let single_line = Definition::from(Struct::Definition {
-            name: Some(Identifier::new("point")?),
-            member_groups: vec![member::Group {
-                ty: Type::int(),
-                members: vec![
-                    Member {
-                        name: Identifier::new("x")?,
-                        bit_field_size: None,
-                    },
-                    Member {
-                        name: Identifier::new("y")?,
-                        bit_field_size: None,
-                    },
-                ]
-                .try_into()?,
-            }]
-            .try_into()?,
-        })
-        .to_string();
-        assert_eq!(
-            single_line,
-            r#"struct point {
-  int x, y;
-};"#
-        );
-
         let multi_line = Definition::from(Struct::Definition {
             name: Some(Identifier::new("point")?),
-            member_groups: vec![
-                member::Group {
-                    ty: Type::int(),
-                    members: vec![Member {
-                        name: Identifier::new("x")?,
-                        bit_field_size: None,
-                    }]
-                    .try_into()?,
+            members: vec![
+                Member {
+                    ty: ConcreteType::int(),
+                    name: Identifier::new("x")?,
+                    bit_field_size: None,
                 },
-                member::Group {
-                    ty: Type::int(),
-                    members: vec![Member {
-                        name: Identifier::new("y")?,
-                        bit_field_size: None,
-                    }]
-                    .try_into()?,
+                Member {
+                    ty: ConcreteType::int(),
+                    name: Identifier::new("y")?,
+                    bit_field_size: None,
                 },
-            ]
-            .try_into()?,
+            ],
         })
         .to_string();
         assert_eq!(
@@ -147,32 +111,22 @@ mod tests {
             storage_class: None,
             ty: Struct::Definition {
                 name: Some(Identifier::new("point")?),
-                member_groups: vec![
-                    member::Group {
-                        ty: Type::int(),
-                        members: vec![Member {
-                            name: Identifier::new("x")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                members: vec![
+                    Member {
+                        ty: ConcreteType::int(),
+                        name: Identifier::new("x")?,
+                        bit_field_size: None,
                     },
-                    member::Group {
-                        ty: Type::int(),
-                        members: vec![Member {
-                            name: Identifier::new("y")?,
-                            bit_field_size: None,
-                        }]
-                        .try_into()?,
+                    Member {
+                        ty: ConcreteType::int(),
+                        name: Identifier::new("y")?,
+                        bit_field_size: None,
                     },
-                ]
-                .try_into()?,
+                ],
             }
             .into(),
-            variables: vec![
-                (Identifier::new("first_point")?, None),
-                (Identifier::new("second_point")?, None),
-            ]
-            .try_into()?,
+            identifier: Identifier::new("first_point")?,
+            initializer: None,
         })
         .to_string();
         assert_eq!(
@@ -180,7 +134,7 @@ mod tests {
             r#"struct point {
   int x;
   int y;
-} first_point, second_point;"#
+} first_point;"#
         );
 
         let tag = Statement::from(variable::Declaration {
@@ -189,7 +143,8 @@ mod tests {
                 name: Identifier::new("point")?,
             }
             .into(),
-            variables: vec![(Identifier::new("my_point")?, None)].try_into()?,
+            identifier: Identifier::new("my_point")?,
+            initializer: None,
         })
         .to_string();
         assert_eq!(tag, "struct point my_point;");
@@ -205,14 +160,10 @@ mod tests {
                 name: Identifier::new("point")?,
             }
             .into(),
-            variables: vec![(
-                Identifier::new("first_point")?,
-                Some(
-                    InitializerList::Ordered(vec![Value::int(5).into(), Value::int(10).into()])
-                        .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("first_point")?,
+            initializer: Some(
+                InitializerList::Ordered(vec![Value::int(5).into(), Value::int(10).into()]).into(),
+            ),
         })
         .to_string();
         assert_eq!(ordered, "struct point first_point = { 5, 10 };");
@@ -223,17 +174,14 @@ mod tests {
                 name: Identifier::new("point")?,
             }
             .into(),
-            variables: vec![(
-                Identifier::new("first_point")?,
-                Some(
-                    InitializerList::Named(vec![
-                        (Identifier::new("y")?, Value::int(10).into()),
-                        (Identifier::new("x")?, Value::int(5).into()),
-                    ])
-                    .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("first_point")?,
+            initializer: Some(
+                InitializerList::Named(vec![
+                    (Identifier::new("y")?, Value::int(10).into()),
+                    (Identifier::new("x")?, Value::int(5).into()),
+                ])
+                .into(),
+            ),
         })
         .to_string();
         assert_eq!(named, "struct point first_point = { .y = 10, .x = 5 };");
@@ -244,19 +192,16 @@ mod tests {
                 name: Identifier::new("rectangle")?,
             }
             .into(),
-            variables: vec![(
-                Identifier::new("my_rectangle")?,
-                Some(
-                    InitializerList::Ordered(vec![
-                        InitializerList::Ordered(vec![Value::int(0).into(), Value::int(5).into()])
-                            .into(),
-                        InitializerList::Ordered(vec![Value::int(10).into(), Value::int(0).into()])
-                            .into(),
-                    ])
-                    .into(),
-                ),
-            )]
-            .try_into()?,
+            identifier: Identifier::new("my_rectangle")?,
+            initializer: Some(
+                InitializerList::Ordered(vec![
+                    InitializerList::Ordered(vec![Value::int(0).into(), Value::int(5).into()])
+                        .into(),
+                    InitializerList::Ordered(vec![Value::int(10).into(), Value::int(0).into()])
+                        .into(),
+                ])
+                .into(),
+            ),
         })
         .to_string();
         assert_eq!(
@@ -269,53 +214,20 @@ mod tests {
 
     #[test]
     fn bit_fields() -> anyhow::Result<()> {
-        let single_line = Definition::from(Struct::Definition {
-            name: Some(Identifier::new("card")?),
-            member_groups: vec![member::Group {
-                ty: Type::unsigned_int(),
-                members: vec![
-                    Member {
-                        name: Identifier::new("suit")?,
-                        bit_field_size: Some(2),
-                    },
-                    Member {
-                        name: Identifier::new("face_value")?,
-                        bit_field_size: Some(4),
-                    },
-                ]
-                .try_into()?,
-            }]
-            .try_into()?,
-        })
-        .to_string();
-        assert_eq!(
-            single_line,
-            r#"struct card {
-  unsigned int suit : 2, face_value : 4;
-};"#
-        );
-
         let multi_line = Definition::from(Struct::Definition {
             name: Some(Identifier::new("card")?),
-            member_groups: vec![
-                member::Group {
-                    ty: Type::unsigned_int(),
-                    members: vec![Member {
-                        name: Identifier::new("suit")?,
-                        bit_field_size: Some(2),
-                    }]
-                    .try_into()?,
+            members: vec![
+                Member {
+                    ty: ConcreteType::unsigned_int(),
+                    name: Identifier::new("suit")?,
+                    bit_field_size: Some(2),
                 },
-                member::Group {
-                    ty: Type::unsigned_int(),
-                    members: vec![Member {
-                        name: Identifier::new("face_value")?,
-                        bit_field_size: Some(4),
-                    }]
-                    .try_into()?,
+                Member {
+                    ty: ConcreteType::unsigned_int(),
+                    name: Identifier::new("face_value")?,
+                    bit_field_size: Some(4),
                 },
-            ]
-            .try_into()?,
+            ],
         })
         .to_string();
         assert_eq!(
@@ -323,6 +235,97 @@ mod tests {
             r#"struct card {
   unsigned int suit : 2;
   unsigned int face_value : 4;
+};"#
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn function_pointer_member() -> anyhow::Result<()> {
+        let generated = Definition::from(Struct::Definition {
+            name: Some(Identifier::new("with_pointers")?),
+            members: vec![
+                Member {
+                    ty: Pointer {
+                        pointer_ty: Function {
+                            parameters: vec![
+                                FunctionParameter {
+                                    ty: ConcreteType::int(),
+                                    name: None,
+                                },
+                                FunctionParameter {
+                                    ty: ConcreteType::int(),
+                                    name: None,
+                                },
+                            ],
+                            return_ty: ConcreteType::int(),
+                        }
+                        .into(),
+                        is_const: false,
+                    }
+                    .into(),
+                    name: Identifier::new("mutable")?,
+                    bit_field_size: None,
+                },
+                Member {
+                    ty: Pointer {
+                        pointer_ty: Function {
+                            parameters: vec![],
+                            return_ty: ConcreteType::Void,
+                        }
+                        .into(),
+                        is_const: true,
+                    }
+                    .into(),
+                    name: Identifier::new("immutable")?,
+                    bit_field_size: None,
+                },
+            ],
+        })
+        .to_string();
+        assert_eq!(
+            generated,
+            r#"struct with_pointers {
+  int (*mutable)(int, int);
+  void (*const immutable)();
+};"#
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn pointer_member() -> anyhow::Result<()> {
+        let generated = Definition::from(Struct::Definition {
+            name: Some(Identifier::new("with_pointers")?),
+            members: vec![
+                Member {
+                    ty: Pointer {
+                        pointer_ty: ConcreteType::int().into(),
+                        is_const: false,
+                    }
+                    .into(),
+                    name: Identifier::new("mutable")?,
+                    bit_field_size: None,
+                },
+                Member {
+                    ty: Pointer {
+                        pointer_ty: ConcreteType::Void.into(),
+                        is_const: true,
+                    }
+                    .into(),
+                    name: Identifier::new("immutable")?,
+                    bit_field_size: None,
+                },
+            ],
+        })
+        .to_string();
+        assert_eq!(
+            generated,
+            r#"struct with_pointers {
+  int *mutable;
+  void *const immutable;
 };"#
         );
 
