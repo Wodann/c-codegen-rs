@@ -1,21 +1,25 @@
 mod block;
+mod error;
 mod expression;
 mod file;
 pub mod function;
-mod identifier;
+pub mod identifier;
 mod macros;
 pub mod non_empty_vec;
 pub mod operator;
 pub mod pretty;
-mod statement;
+pub mod statement;
 mod storage_class;
 pub mod r#type;
 pub mod value;
 pub mod variable;
 
 pub use self::{
-    block::Block, expression::Expression, file::CFileBuilder, identifier::Identifier, r#type::Type,
-    statement::Statement, storage_class::StorageClass, value::Value,
-    variable::Declaration as VariableDeclaration, variable::Definition as VariableDefinition,
+    block::Block, error::Error, expression::Expression, file::CFileBuilder,
+    function::Declaration as FunctionDeclaration, function::Definition as FunctionDefinition,
+    identifier::Identifier, r#type::ConcreteType, statement::Statement,
+    storage_class::StorageClass, value::Value, variable::Declaration as VariableDeclaration,
     variable::Variable,
 };
+
+pub type Result<T> = std::result::Result<T, Error>;

@@ -2,6 +2,7 @@ mod r#do;
 mod r#for;
 mod goto;
 mod r#if;
+mod include;
 mod label;
 mod r#return;
 mod switch;
@@ -12,6 +13,7 @@ use pretty::Pretty;
 
 pub use self::{
     goto::Goto,
+    include::Include,
     label::Label,
     r#do::Do,
     r#for::{For, ForDeclaration},
@@ -22,8 +24,8 @@ pub use self::{
     typedef::Typedef,
 };
 use crate::{
-    macros::impl_froms, pretty::impl_display_via_pretty, Block, Expression, Identifier, Type,
-    Value, VariableDeclaration, VariableDefinition,
+    macros::impl_froms, pretty::impl_display_via_pretty, Block, ConcreteType, Expression,
+    Identifier, Value, VariableDeclaration,
 };
 
 /// # Source
@@ -45,28 +47,27 @@ pub enum Statement {
     Continue,
     Return(Return),
     Typedef(Typedef),
-    VariableDefinition(VariableDefinition),
     VariableDeclaration(VariableDeclaration),
     FunctionDeclaration {
-        return_type: Type,
+        return_type: ConcreteType,
         name: Identifier,
-        parameters: Vec<(Type, Option<Identifier>)>,
+        parameters: Vec<(ConcreteType, Option<Identifier>)>,
     },
     FunctionDefinition {
-        return_type: Type,
+        return_type: ConcreteType,
         name: Identifier,
-        parameters: Vec<(Type, Option<Identifier>)>,
+        parameters: Vec<(ConcreteType, Option<Identifier>)>,
         body: Vec<Statement>,
     },
     StructDeclaration {
         name: Identifier,
-        fields: Vec<(Type, Identifier)>,
+        fields: Vec<(ConcreteType, Identifier)>,
     },
     EnumDeclaration {
         name: Identifier,
         variants: Vec<(Identifier, Option<Value>)>,
     },
-    Include(String),
+    Include(Include),
     MacroDefinition {
         name: Identifier,
         body: String,
@@ -83,7 +84,7 @@ impl Statement {
     }
 }
 
-impl_froms!(Statement: Block, box Do, Expression, box For, box If, box Label, Goto, Return, Typedef, VariableDeclaration, VariableDefinition);
+impl_froms!(Statement: Block, box Do, Expression, box For, box If, Include, box Label, Goto, Return, Typedef, VariableDeclaration);
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Statement
 where
@@ -111,7 +112,6 @@ where
             Statement::VariableDeclaration(declaration) => {
                 declaration.pretty(allocator).append(allocator.text(";"))
             }
-            Statement::VariableDefinition(definition) => definition.pretty(allocator),
             Statement::Typedef(typedef) => typedef.pretty(allocator),
             Statement::FunctionDeclaration {
                 return_type,
