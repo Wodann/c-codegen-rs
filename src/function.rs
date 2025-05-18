@@ -1,7 +1,8 @@
 use pretty::Pretty;
 
 use crate::{
-    pretty::impl_display_via_pretty, r#type::Function, Block, ConcreteType, Expression, Identifier,
+    pretty::impl_display_via_pretty, r#type::Function, Block, Expression, Identifier,
+    IncompleteType,
 };
 
 #[derive(Clone, Debug)]
@@ -28,9 +29,9 @@ where
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FunctionParameter {
-    pub ty: ConcreteType,
+    pub ty: IncompleteType,
     pub name: Option<Identifier>,
 }
 
@@ -55,7 +56,7 @@ where
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Function-Declarations
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Declaration {
     pub is_static: bool,
     pub name: Identifier,
@@ -96,8 +97,8 @@ impl_display_via_pretty!(Declaration, 80);
 pub struct Definition {
     pub is_static: bool,
     pub name: Identifier,
-    pub parameters: Vec<(ConcreteType, Identifier)>,
-    pub return_ty: ConcreteType,
+    pub parameters: Vec<(IncompleteType, Identifier)>,
+    pub return_ty: IncompleteType,
     pub body: Block,
 }
 
@@ -154,14 +155,14 @@ mod tests {
             is_static: false,
             name: Identifier::new("foo")?,
             ty: Function {
-                return_ty: ConcreteType::int(),
+                return_ty: IncompleteType::int(),
                 parameters: vec![
                     FunctionParameter {
-                        ty: ConcreteType::int(),
+                        ty: IncompleteType::int(),
                         name: None,
                     },
                     FunctionParameter {
-                        ty: ConcreteType::double(),
+                        ty: IncompleteType::double(),
                         name: None,
                     },
                 ],
@@ -181,14 +182,14 @@ mod tests {
             is_static: false,
             name: Identifier::new("foo")?,
             ty: Function {
-                return_ty: ConcreteType::int(),
+                return_ty: IncompleteType::int(),
                 parameters: vec![
                     FunctionParameter {
-                        ty: ConcreteType::int(),
+                        ty: IncompleteType::int(),
                         name: Some(Identifier::new("x")?),
                     },
                     FunctionParameter {
-                        ty: ConcreteType::double(),
+                        ty: IncompleteType::double(),
                         name: Some(Identifier::new("y")?),
                     },
                 ],
@@ -207,10 +208,10 @@ mod tests {
         let generated = Definition {
             is_static: false,
             name: Identifier::new("add_values")?,
-            return_ty: ConcreteType::int(),
+            return_ty: IncompleteType::int(),
             parameters: vec![
-                (ConcreteType::int(), Identifier::new("x")?),
-                (ConcreteType::int(), Identifier::new("y")?),
+                (IncompleteType::int(), Identifier::new("x")?),
+                (IncompleteType::int(), Identifier::new("y")?),
             ],
             body: Block {
                 statements: vec![Return {
@@ -245,8 +246,8 @@ add_values (int x, int y) {
         let generated = Definition {
             is_static: true,
             name: Identifier::new("foo")?,
-            return_ty: ConcreteType::int(),
-            parameters: vec![(ConcreteType::int(), Identifier::new("x")?)],
+            return_ty: IncompleteType::int(),
+            parameters: vec![(IncompleteType::int(), Identifier::new("x")?)],
             body: Block {
                 statements: vec![Return {
                     expression: Some(

@@ -2,12 +2,12 @@ use pretty::Pretty as _;
 
 use crate::function::FunctionParameter;
 
-use super::ConcreteType;
+use super::IncompleteType;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Function {
     pub parameters: Vec<FunctionParameter>,
-    pub return_ty: ConcreteType,
+    pub return_ty: IncompleteType,
 }
 
 impl Function {

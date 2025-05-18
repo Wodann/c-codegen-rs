@@ -1,6 +1,6 @@
 use core::fmt;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Integer {
     pub kind: IntegerKind,
     pub is_signed: bool,
@@ -23,7 +23,7 @@ impl fmt::Display for Integer {
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Integer-Types
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IntegerKind {
     Char,
     Short,
@@ -44,7 +44,7 @@ impl fmt::Display for IntegerKind {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StrongInt {
     Int16,
     Int32,

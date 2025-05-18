@@ -4,17 +4,33 @@ use crate::{pretty::impl_display_via_pretty, Identifier};
 
 use super::member::Member;
 
-#[derive(Clone, Debug)]
-pub enum Struct {
-    Definition {
-        name: Option<Identifier>,
-        members: Vec<Member>,
-    },
-    /// An incomplete structure type, only useable as pointer type. Requires a complete definiton elsewhere.
-    Tag { name: Identifier },
+/// An incomplete structure type, only useable in a declaration and as pointer type. Requires a complete definiton elsewhere.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Declaration {
+    pub name: Identifier,
 }
 
-impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Struct
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Declaration
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        allocator
+            .text("struct")
+            .append(allocator.space())
+            .append(allocator.text(self.name.to_string()))
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Definition {
+    pub name: Option<Identifier>,
+    pub members: Vec<Member>,
+}
+
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Definition
 where
     AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
     AllocatorT::Doc: Clone,
@@ -23,59 +39,54 @@ where
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         let builder = allocator.text("struct").append(allocator.space());
 
-        match self {
-            Struct::Definition { name, members } => {
-                let builder = if let Some(name) = name {
-                    builder
-                        .append(allocator.text(name.to_string()))
-                        .append(allocator.space())
-                } else {
-                    builder
-                };
+        let builder = if let Some(name) = self.name {
+            builder
+                .append(allocator.text(name.to_string()))
+                .append(allocator.space())
+        } else {
+            builder
+        };
 
-                builder
-                    .append(allocator.text("{"))
-                    .append(allocator.hardline())
-                    .append(
-                        allocator.intersperse(
-                            members.into_iter().map(|member| {
-                                allocator.text("  ").append(member.pretty(allocator))
-                            }),
-                            allocator.hardline(),
-                        ),
-                    )
-                    .append(allocator.hardline())
-                    .append(allocator.text("}"))
-            }
-            Struct::Tag { name } => builder.append(allocator.text(name.to_string())),
-        }
+        builder
+            .append(allocator.text("{"))
+            .append(allocator.hardline())
+            .append(
+                allocator.intersperse(
+                    self.members
+                        .into_iter()
+                        .map(|member| allocator.text("  ").append(member.pretty(allocator))),
+                    allocator.hardline(),
+                ),
+            )
+            .append(allocator.hardline())
+            .append(allocator.text("}"))
     }
 }
 
-impl_display_via_pretty!(Struct, 80);
+impl_display_via_pretty!(Definition, 80);
 
 #[cfg(test)]
 mod tests {
     use crate::{
         function::FunctionParameter,
-        r#type::{Definition, Function, InitializerList, Pointer},
-        variable, ConcreteType, Statement, Value,
+        r#type::{self, Function, InitializerList, Pointer},
+        variable, IncompleteType, Statement, Value,
     };
 
     use super::*;
 
     #[test]
     fn complete_definitions() -> anyhow::Result<()> {
-        let multi_line = Definition::from(Struct::Definition {
+        let multi_line = r#type::Definition::from(Definition {
             name: Some(Identifier::new("point")?),
             members: vec![
                 Member {
-                    ty: ConcreteType::int(),
+                    ty: IncompleteType::int(),
                     name: Identifier::new("x")?,
                     bit_field_size: None,
                 },
                 Member {
-                    ty: ConcreteType::int(),
+                    ty: IncompleteType::int(),
                     name: Identifier::new("y")?,
                     bit_field_size: None,
                 },
@@ -95,11 +106,11 @@ mod tests {
 
     #[test]
     fn incomplete_definition() -> anyhow::Result<()> {
-        let generated = Definition::from(Struct::Tag {
+        let generated = r#type::Declaration::from(Declaration {
             name: Identifier::new("point")?,
         })
         .to_string();
-        assert_eq!(generated, "struct point;");
+        assert_eq!(generated, "struct point");
 
         Ok(())
     }
@@ -109,16 +120,16 @@ mod tests {
         // Test inline declaration
         let inline = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: Struct::Definition {
+            ty: Definition {
                 name: Some(Identifier::new("point")?),
                 members: vec![
                     Member {
-                        ty: ConcreteType::int(),
+                        ty: IncompleteType::int(),
                         name: Identifier::new("x")?,
                         bit_field_size: None,
                     },
                     Member {
-                        ty: ConcreteType::int(),
+                        ty: IncompleteType::int(),
                         name: Identifier::new("y")?,
                         bit_field_size: None,
                     },
@@ -139,7 +150,7 @@ mod tests {
 
         let tag = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: Struct::Tag {
+            ty: Declaration {
                 name: Identifier::new("point")?,
             }
             .into(),
@@ -156,7 +167,7 @@ mod tests {
     fn initializers() -> anyhow::Result<()> {
         let ordered = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: Struct::Tag {
+            ty: Declaration {
                 name: Identifier::new("point")?,
             }
             .into(),
@@ -170,7 +181,7 @@ mod tests {
 
         let named = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: Struct::Tag {
+            ty: Declaration {
                 name: Identifier::new("point")?,
             }
             .into(),
@@ -188,7 +199,7 @@ mod tests {
 
         let nested = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: Struct::Tag {
+            ty: Declaration {
                 name: Identifier::new("rectangle")?,
             }
             .into(),
@@ -214,16 +225,16 @@ mod tests {
 
     #[test]
     fn bit_fields() -> anyhow::Result<()> {
-        let multi_line = Definition::from(Struct::Definition {
+        let multi_line = r#type::Definition::from(Definition {
             name: Some(Identifier::new("card")?),
             members: vec![
                 Member {
-                    ty: ConcreteType::unsigned_int(),
+                    ty: IncompleteType::unsigned_int(),
                     name: Identifier::new("suit")?,
                     bit_field_size: Some(2),
                 },
                 Member {
-                    ty: ConcreteType::unsigned_int(),
+                    ty: IncompleteType::unsigned_int(),
                     name: Identifier::new("face_value")?,
                     bit_field_size: Some(4),
                 },
@@ -243,7 +254,7 @@ mod tests {
 
     #[test]
     fn function_pointer_member() -> anyhow::Result<()> {
-        let generated = Definition::from(Struct::Definition {
+        let generated = r#type::Definition::from(Definition {
             name: Some(Identifier::new("with_pointers")?),
             members: vec![
                 Member {
@@ -251,15 +262,15 @@ mod tests {
                         pointer_ty: Function {
                             parameters: vec![
                                 FunctionParameter {
-                                    ty: ConcreteType::int(),
+                                    ty: IncompleteType::int(),
                                     name: None,
                                 },
                                 FunctionParameter {
-                                    ty: ConcreteType::int(),
+                                    ty: IncompleteType::int(),
                                     name: None,
                                 },
                             ],
-                            return_ty: ConcreteType::int(),
+                            return_ty: IncompleteType::int(),
                         }
                         .into(),
                         is_const: false,
@@ -272,7 +283,7 @@ mod tests {
                     ty: Pointer {
                         pointer_ty: Function {
                             parameters: vec![],
-                            return_ty: ConcreteType::Void,
+                            return_ty: IncompleteType::Void,
                         }
                         .into(),
                         is_const: true,
@@ -297,12 +308,12 @@ mod tests {
 
     #[test]
     fn pointer_member() -> anyhow::Result<()> {
-        let generated = Definition::from(Struct::Definition {
+        let generated = r#type::Definition::from(Definition {
             name: Some(Identifier::new("with_pointers")?),
             members: vec![
                 Member {
                     ty: Pointer {
-                        pointer_ty: ConcreteType::int().into(),
+                        pointer_ty: IncompleteType::int().into(),
                         is_const: false,
                     }
                     .into(),
@@ -311,7 +322,7 @@ mod tests {
                 },
                 Member {
                     ty: Pointer {
-                        pointer_ty: ConcreteType::Void.into(),
+                        pointer_ty: IncompleteType::Void.into(),
                         is_const: true,
                     }
                     .into(),

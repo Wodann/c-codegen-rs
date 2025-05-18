@@ -1,17 +1,18 @@
 use crate::{macros::impl_froms, statement::Typedef};
 
 use super::{
-    Array, ConcreteType, Enum, Function, Integer, Pointer, Real, StrongInt, Struct, Union,
+    enumeration::Declaration as Enum, structure::Definition as Struct, union::Definition as Union,
+    Array, Function, IncompleteType, Integer, Pointer, Real, StrongInt,
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OpaqueType {
-    ConcreteType(ConcreteType),
+    IncompleteType(IncompleteType),
     Function(Function),
 }
 
 impl_froms!(OpaqueType:
-        ConcreteType(Array, Enum, Integer, box Pointer, Real, Struct, StrongInt, box Typedef, Union),
+        IncompleteType(Array, Enum, Integer, box Pointer, Real, Struct, StrongInt, box Typedef, Union),
         Function
 );
 
@@ -24,7 +25,7 @@ impl OpaqueType {
     /// - For `void (*)(int, int)`, it returns `void (int, int)`.
     pub fn base_type(&self) -> OpaqueType {
         match self {
-            OpaqueType::ConcreteType(ty) => ty.base_type(),
+            OpaqueType::IncompleteType(ty) => ty.base_type(),
             ty => ty.clone(),
         }
     }

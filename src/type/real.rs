@@ -3,7 +3,7 @@ use std::fmt;
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Real-Number-Types
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Real {
     Float,
     Double,

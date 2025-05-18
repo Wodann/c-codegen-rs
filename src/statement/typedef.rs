@@ -1,7 +1,7 @@
 use crate::{r#type::OpaqueType, Identifier};
 use pretty::Pretty;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Typedef {
     pub ty: OpaqueType,
     pub alias: Identifier,
@@ -15,7 +15,9 @@ where
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         let definition = match self.ty {
-            OpaqueType::ConcreteType(concrete) => concrete.pretty_definition(self.alias, allocator),
+            OpaqueType::IncompleteType(concrete) => {
+                concrete.pretty_definition(self.alias, allocator)
+            }
             OpaqueType::Function(function) => function
                 .pretty_signature_start(allocator)
                 .append(allocator.text(self.alias))
@@ -35,14 +37,14 @@ mod tests {
     use super::*;
     use crate::{
         function::FunctionParameter,
-        r#type::{member::Member, structure::Struct, Array, Function, Pointer},
-        ConcreteType, Statement,
+        r#type::{member::Member, structure::Definition, Array, Function, Pointer},
+        IncompleteType, Statement,
     };
 
     #[test]
     fn primitive() -> anyhow::Result<()> {
         let generated = Statement::from(Typedef {
-            ty: ConcreteType::unsigned_char().into(),
+            ty: IncompleteType::unsigned_char().into(),
             alias: Identifier::new("byte_type")?,
         })
         .to_string();
@@ -54,21 +56,21 @@ mod tests {
     #[test]
     fn structure() -> anyhow::Result<()> {
         let typedef = Statement::from(Typedef {
-            ty: Struct::Definition {
+            ty: Definition {
                 name: Some(Identifier::new("fish")?),
                 members: vec![
                     Member {
-                        ty: ConcreteType::float(),
+                        ty: IncompleteType::float(),
                         name: Identifier::new("weight")?,
                         bit_field_size: None,
                     },
                     Member {
-                        ty: ConcreteType::float(),
+                        ty: IncompleteType::float(),
                         name: Identifier::new("length")?,
                         bit_field_size: None,
                     },
                     Member {
-                        ty: ConcreteType::float(),
+                        ty: IncompleteType::float(),
                         name: Identifier::new("probability_of_being_caught")?,
                         bit_field_size: None,
                     },
@@ -93,7 +95,7 @@ mod tests {
     fn array() -> anyhow::Result<()> {
         let typedef = Statement::from(Typedef {
             ty: Array {
-                element_type: Box::new(ConcreteType::Char),
+                element_type: Box::new(IncompleteType::Char),
                 size: Some(5),
             }
             .into(),
@@ -113,10 +115,10 @@ mod tests {
                     Pointer {
                         pointer_ty: Function {
                             parameters: vec![FunctionParameter {
-                                ty: ConcreteType::int(),
+                                ty: IncompleteType::int(),
                                 name: Some(Identifier::new("x")?),
                             }],
-                            return_ty: ConcreteType::Void,
+                            return_ty: IncompleteType::Void,
                         }
                         .into(),
                         is_const: false,
@@ -143,10 +145,10 @@ mod tests {
                         pointer_ty: Pointer {
                             pointer_ty: Function {
                                 parameters: vec![FunctionParameter {
-                                    ty: ConcreteType::int(),
+                                    ty: IncompleteType::int(),
                                     name: Some(Identifier::new("x")?),
                                 }],
-                                return_ty: ConcreteType::Void,
+                                return_ty: IncompleteType::Void,
                             }
                             .into(),
                             is_const: false,
@@ -172,10 +174,10 @@ mod tests {
         let typedef = Statement::from(Typedef {
             ty: Function {
                 parameters: vec![FunctionParameter {
-                    ty: ConcreteType::int(),
+                    ty: IncompleteType::int(),
                     name: Some(Identifier::new("x")?),
                 }],
-                return_ty: ConcreteType::Void,
+                return_ty: IncompleteType::Void,
             }
             .into(),
             alias: Identifier::new("func_type")?,
@@ -192,10 +194,10 @@ mod tests {
             ty: Pointer {
                 pointer_ty: Function {
                     parameters: vec![FunctionParameter {
-                        ty: ConcreteType::int(),
+                        ty: IncompleteType::int(),
                         name: Some(Identifier::new("x")?),
                     }],
-                    return_ty: ConcreteType::Void,
+                    return_ty: IncompleteType::Void,
                 }
                 .into(),
                 is_const: false,

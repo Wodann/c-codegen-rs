@@ -15,11 +15,17 @@ pub mod value;
 pub mod variable;
 
 pub use self::{
-    block::Block, error::Error, expression::Expression, file::CFileBuilder,
-    function::Declaration as FunctionDeclaration, function::Definition as FunctionDefinition,
-    identifier::Identifier, r#type::ConcreteType, statement::Statement,
-    storage_class::StorageClass, value::Value, variable::Declaration as VariableDeclaration,
-    variable::Variable,
+    block::Block,
+    error::Error,
+    expression::Expression,
+    file::CFileBuilder,
+    function::{Declaration as FunctionDeclaration, Definition as FunctionDefinition},
+    identifier::Identifier,
+    r#type::IncompleteType,
+    statement::{Statement, Typedef},
+    storage_class::StorageClass,
+    value::Value,
+    variable::{Declaration as VariableDeclaration, Variable},
 };
 
 pub type Result<T> = std::result::Result<T, Error>;

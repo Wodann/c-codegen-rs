@@ -1,10 +1,10 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, ConcreteType};
+use crate::{pretty::impl_display_via_pretty, IncompleteType};
 
 use super::OpaqueType;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Pointer {
     pub pointer_ty: OpaqueType,
     pub is_const: bool,
@@ -14,7 +14,7 @@ impl Pointer {
     pub fn base_type(&self) -> OpaqueType {
         // TODO: Handle array
         match &self.pointer_ty {
-            OpaqueType::ConcreteType(ConcreteType::Pointer(pointer)) => pointer.base_type(),
+            OpaqueType::IncompleteType(IncompleteType::Pointer(pointer)) => pointer.base_type(),
             ty => ty.clone(),
         }
     }
@@ -23,7 +23,7 @@ impl Pointer {
     pub fn flatten_pointers(&self) -> Vec<bool> {
         let mut flattened = vec![self.is_const];
 
-        if let OpaqueType::ConcreteType(ConcreteType::Pointer(pointer)) = &self.pointer_ty {
+        if let OpaqueType::IncompleteType(IncompleteType::Pointer(pointer)) = &self.pointer_ty {
             flattened.extend(pointer.flatten_pointers());
         }
 
@@ -33,7 +33,7 @@ impl Pointer {
     /// Whether the pointer needs a trailing whitespace.
     /// This is the case when the last pointer is constant.
     pub(crate) fn needs_trailing_whitespace(&self) -> bool {
-        if let OpaqueType::ConcreteType(ConcreteType::Pointer(pointer)) = &self.pointer_ty {
+        if let OpaqueType::IncompleteType(IncompleteType::Pointer(pointer)) = &self.pointer_ty {
             pointer.needs_trailing_whitespace()
         } else {
             self.is_const
@@ -78,7 +78,7 @@ where
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         match self.base_type() {
-            OpaqueType::ConcreteType(base_type) => base_type
+            OpaqueType::IncompleteType(base_type) => base_type
                 .pretty(allocator)
                 .append(allocator.space())
                 .append(self.pretty_pointers(allocator)),
@@ -106,7 +106,7 @@ mod tests {
     #[test]
     fn const_pointer() -> anyhow::Result<()> {
         let pointer = Pointer {
-            pointer_ty: ConcreteType::Void.into(),
+            pointer_ty: IncompleteType::Void.into(),
             is_const: true,
         }
         .to_string();
@@ -119,7 +119,7 @@ mod tests {
     fn const_pointer_to_pointer() -> anyhow::Result<()> {
         let pointer = Pointer {
             pointer_ty: Pointer {
-                pointer_ty: ConcreteType::Void.into(),
+                pointer_ty: IncompleteType::Void.into(),
                 is_const: false,
             }
             .into(),
@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn pointer() -> anyhow::Result<()> {
         let pointer = Pointer {
-            pointer_ty: ConcreteType::Void.into(),
+            pointer_ty: IncompleteType::Void.into(),
             is_const: false,
         }
         .to_string();

@@ -2,8 +2,9 @@ use core::fmt;
 use std::io;
 
 use crate::{
-    macros::impl_froms, r#type, statement::Include, FunctionDeclaration, FunctionDefinition,
-    VariableDeclaration,
+    macros::impl_froms, r#type::Declaration as TypeDeclaration,
+    r#type::Definition as TypeDefinition, statement::Include, FunctionDeclaration,
+    FunctionDefinition, VariableDeclaration,
 };
 
 #[derive(Clone, Debug)]
@@ -11,17 +12,12 @@ pub enum FileLevelStatement {
     FunctionDeclaration(FunctionDeclaration),
     FunctionDefinition(FunctionDefinition),
     Include(Include),
-    TypeDefinition(r#type::Definition),
+    TypeDeclaration(TypeDeclaration),
+    TypeDefinition(TypeDefinition),
     VariableDeclaration(VariableDeclaration),
 }
 
-impl_froms!(FileLevelStatement: FunctionDeclaration, FunctionDefinition, Include, VariableDeclaration);
-
-impl From<r#type::Definition> for FileLevelStatement {
-    fn from(value: r#type::Definition) -> Self {
-        FileLevelStatement::TypeDefinition(value)
-    }
-}
+impl_froms!(FileLevelStatement: FunctionDeclaration, FunctionDefinition, Include, TypeDefinition, VariableDeclaration);
 
 impl fmt::Display for FileLevelStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -29,6 +25,7 @@ impl fmt::Display for FileLevelStatement {
             FileLevelStatement::FunctionDeclaration(declaration) => write!(f, "{declaration}"),
             FileLevelStatement::FunctionDefinition(definition) => write!(f, "{definition}"),
             FileLevelStatement::Include(include) => write!(f, "{include}"),
+            FileLevelStatement::TypeDeclaration(declaration) => write!(f, "{declaration}"),
             FileLevelStatement::TypeDefinition(definition) => write!(f, "{definition}"),
             FileLevelStatement::VariableDeclaration(declaration) => write!(f, "{declaration}"),
         }

@@ -1,14 +1,14 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, ConcreteType};
+use crate::{pretty::impl_display_via_pretty, IncompleteType};
 
 use super::OpaqueType;
 
 /// Represents a C array type with its base type and size
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Array {
     /// The base type of the array elements
-    pub element_type: Box<ConcreteType>,
+    pub element_type: Box<IncompleteType>,
     /// The size of the array (optional for flexible arrays)
     pub size: Option<usize>,
 }
@@ -22,18 +22,18 @@ impl Array {
     /// - For `void (*)(int, int)`, it returns `void (int, int)`.
     pub fn base_type(&self) -> OpaqueType {
         match self.element_type.as_ref() {
-            ConcreteType::Array(array) => array.base_type(),
-            ConcreteType::Pointer(pointer) => pointer.base_type(),
-            ty => OpaqueType::ConcreteType(ty.clone()),
+            IncompleteType::Array(array) => array.base_type(),
+            IncompleteType::Pointer(pointer) => pointer.base_type(),
+            ty => OpaqueType::IncompleteType(ty.clone()),
         }
     }
 
     /// Returns the innermost element type of the array.
     /// This is useful for determining the type of elements in a multi-dimensional array.
     /// For example, for `int[3][4]`, it returns `int`.
-    pub fn innermost_element_type(&self) -> ConcreteType {
+    pub fn innermost_element_type(&self) -> IncompleteType {
         match self.element_type.as_ref() {
-            ConcreteType::Array(array) => array.innermost_element_type(),
+            IncompleteType::Array(array) => array.innermost_element_type(),
             ty => ty.clone(),
         }
     }
@@ -41,7 +41,7 @@ impl Array {
     pub fn dimensions(&self) -> Vec<Option<usize>> {
         let mut dimensions = vec![self.size];
 
-        if let ConcreteType::Array(array) = self.element_type.as_ref() {
+        if let IncompleteType::Array(array) = self.element_type.as_ref() {
             dimensions.extend(array.dimensions());
         }
 
@@ -91,7 +91,7 @@ mod tests {
     use super::*;
     use crate::{
         operator::{ArraySubscript, Assignment},
-        r#type::{member::MemberAccess, structure::Struct, union::Union, InitializerList},
+        r#type::{member::MemberAccess, structure::Declaration as Struct, InitializerList},
         variable, Identifier, Statement, Value, Variable,
     };
 
@@ -100,7 +100,7 @@ mod tests {
         let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(ConcreteType::int()),
+                element_type: Box::new(IncompleteType::int()),
                 size: Some(10),
             }
             .into(),
@@ -112,7 +112,7 @@ mod tests {
         let initialization = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(ConcreteType::int()),
+                element_type: Box::new(IncompleteType::int()),
                 size: Some(10),
             }
             .into(),
@@ -141,7 +141,7 @@ mod tests {
         let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(ConcreteType::int()),
+                element_type: Box::new(IncompleteType::int()),
                 size: None,
             }
             .into(),
@@ -153,7 +153,7 @@ mod tests {
         let initialization = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(ConcreteType::int()),
+                element_type: Box::new(IncompleteType::int()),
                 size: None,
             }
             .into(),
@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn two_dimensional() -> anyhow::Result<()> {
         let inner_array = Array {
-            element_type: Box::new(ConcreteType::int()),
+            element_type: Box::new(IncompleteType::int()),
             size: Some(5),
         };
 
@@ -234,7 +234,7 @@ mod tests {
     #[test]
     fn three_dimensional() -> anyhow::Result<()> {
         let inner_array = Array {
-            element_type: Box::new(ConcreteType::int()),
+            element_type: Box::new(IncompleteType::int()),
             size: Some(4),
         };
 
@@ -327,7 +327,7 @@ mod tests {
         let definition = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(ConcreteType::Char),
+                element_type: Box::new(IncompleteType::Char),
                 size: Some(26),
             }
             .into(),
@@ -339,7 +339,7 @@ mod tests {
         let fixed_char = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(ConcreteType::Char),
+                element_type: Box::new(IncompleteType::Char),
                 size: Some(26),
             }
             .into(),
@@ -362,7 +362,7 @@ mod tests {
         let fixed_string = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(ConcreteType::Char),
+                element_type: Box::new(IncompleteType::Char),
                 size: Some(26),
             }
             .into(),
@@ -374,7 +374,7 @@ mod tests {
         let flexible_char = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(ConcreteType::Char),
+                element_type: Box::new(IncompleteType::Char),
                 size: None,
             }
             .into(),
@@ -397,7 +397,7 @@ mod tests {
         let flexible_string = Statement::from(variable::Declaration {
             storage_class: None,
             ty: Array {
-                element_type: Box::new(ConcreteType::Char),
+                element_type: Box::new(IncompleteType::Char),
                 size: None,
             }
             .into(),
@@ -415,7 +415,7 @@ mod tests {
             storage_class: None,
             ty: Array {
                 element_type: Box::new(
-                    Struct::Tag {
+                    Struct {
                         name: Identifier::new("point")?,
                     }
                     .into(),
@@ -433,7 +433,7 @@ mod tests {
             storage_class: None,
             ty: Array {
                 element_type: Box::new(
-                    Struct::Tag {
+                    Struct {
                         name: Identifier::new("point")?,
                     }
                     .into(),
@@ -485,7 +485,7 @@ mod tests {
             storage_class: None,
             ty: Array {
                 element_type: Box::new(
-                    Union::Tag {
+                    Struct {
                         name: Identifier::new("numbers")?,
                     }
                     .into(),
@@ -502,7 +502,7 @@ mod tests {
             storage_class: None,
             ty: Array {
                 element_type: Box::new(
-                    Union::Tag {
+                    Struct {
                         name: Identifier::new("numbers")?,
                     }
                     .into(),

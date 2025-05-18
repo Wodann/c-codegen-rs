@@ -1,6 +1,8 @@
 use pretty::Pretty;
 
-use crate::{pretty::impl_display_via_pretty, ConcreteType, Expression, Identifier, StorageClass};
+use crate::{
+    pretty::impl_display_via_pretty, r#type::CompleteType, Expression, Identifier, StorageClass,
+};
 
 pub type Variable = Identifier;
 
@@ -14,7 +16,7 @@ pub type Variable = Identifier;
 #[derive(Clone, Debug)]
 pub struct Declaration {
     pub storage_class: Option<StorageClass>,
-    pub ty: ConcreteType,
+    pub ty: CompleteType,
     pub identifier: Identifier,
     pub initializer: Option<Expression>,
 }
@@ -66,7 +68,7 @@ mod tests {
         let generated = Statement::from(Declaration {
             storage_class: None,
             ty: Pointer {
-                pointer_ty: ConcreteType::int().into(),
+                pointer_ty: IncompleteType::int().into(),
                 is_const: true,
             }
             .into(),
@@ -87,15 +89,15 @@ mod tests {
                 pointer_ty: Function {
                     parameters: vec![
                         FunctionParameter {
-                            ty: ConcreteType::int(),
+                            ty: IncompleteType::int(),
                             name: None,
                         },
                         FunctionParameter {
-                            ty: ConcreteType::int(),
+                            ty: IncompleteType::int(),
                             name: None,
                         },
                     ],
-                    return_ty: ConcreteType::int(),
+                    return_ty: IncompleteType::int(),
                 }
                 .into(),
                 is_const: true,
@@ -113,15 +115,15 @@ mod tests {
                 pointer_ty: Function {
                     parameters: vec![
                         FunctionParameter {
-                            ty: ConcreteType::int(),
+                            ty: IncompleteType::int(),
                             name: None,
                         },
                         FunctionParameter {
-                            ty: ConcreteType::int(),
+                            ty: IncompleteType::int(),
                             name: None,
                         },
                     ],
-                    return_ty: ConcreteType::int(),
+                    return_ty: IncompleteType::int(),
                 }
                 .into(),
                 is_const: false,
@@ -140,7 +142,7 @@ mod tests {
     fn initializer() -> anyhow::Result<()> {
         let multiple = Statement::from(Declaration {
             storage_class: None,
-            ty: ConcreteType::int(),
+            ty: IncompleteType::int(),
             identifier: Identifier::new("x")?,
             initializer: Some(Value::int(5).into()),
         })
@@ -155,7 +157,7 @@ mod tests {
         let generated = Statement::from(Declaration {
             storage_class: None,
             ty: Pointer {
-                pointer_ty: ConcreteType::int().into(),
+                pointer_ty: IncompleteType::int().into(),
                 is_const: false,
             }
             .into(),

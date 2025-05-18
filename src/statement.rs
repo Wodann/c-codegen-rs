@@ -24,7 +24,7 @@ pub use self::{
     typedef::Typedef,
 };
 use crate::{
-    macros::impl_froms, pretty::impl_display_via_pretty, Block, ConcreteType, Expression,
+    macros::impl_froms, pretty::impl_display_via_pretty, Block, IncompleteType, Expression,
     Identifier, Value, VariableDeclaration,
 };
 
@@ -49,19 +49,19 @@ pub enum Statement {
     Typedef(Typedef),
     VariableDeclaration(VariableDeclaration),
     FunctionDeclaration {
-        return_type: ConcreteType,
+        return_type: IncompleteType,
         name: Identifier,
-        parameters: Vec<(ConcreteType, Option<Identifier>)>,
+        parameters: Vec<(IncompleteType, Option<Identifier>)>,
     },
     FunctionDefinition {
-        return_type: ConcreteType,
+        return_type: IncompleteType,
         name: Identifier,
-        parameters: Vec<(ConcreteType, Option<Identifier>)>,
+        parameters: Vec<(IncompleteType, Option<Identifier>)>,
         body: Vec<Statement>,
     },
     StructDeclaration {
         name: Identifier,
-        fields: Vec<(ConcreteType, Identifier)>,
+        fields: Vec<(IncompleteType, Identifier)>,
     },
     EnumDeclaration {
         name: Identifier,

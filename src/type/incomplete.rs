@@ -1,16 +1,17 @@
 use pretty::Pretty;
 
-use crate::{macros::impl_froms, pretty::impl_display_via_pretty, Identifier};
+use crate::{macros::impl_froms, pretty::impl_display_via_pretty, Identifier, Typedef};
 
 use super::{
-    Array, Enum, Integer, IntegerKind, OpaqueType, Pointer, Real, StrongInt, Struct, Typedef, Union,
+    enumeration::Declaration as Enum, structure::Declaration as Struct,
+    union::Declaration as Union, Array, Integer, IntegerKind, OpaqueType, Pointer, Real, StrongInt,
 };
 
 /// Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Data-Types
-#[derive(Clone, Debug)]
-pub enum ConcreteType {
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum IncompleteType {
     Array(Array),
     Char,
     Enum(Enum),
@@ -25,9 +26,9 @@ pub enum ConcreteType {
     Void,
 }
 
-impl_froms!(ConcreteType: Array, Enum, Integer, box Pointer, Real, Struct, StrongInt, box Typedef, Union);
+impl_froms!(IncompleteType: Array, Enum, Integer, box Pointer, Real, Struct, StrongInt, box Typedef, Union);
 
-impl ConcreteType {
+impl IncompleteType {
     pub const fn float() -> Self {
         Self::Real(Real::Float)
     }
@@ -65,9 +66,9 @@ impl ConcreteType {
     /// - For `void (*)(int, int)`, it returns `void (int, int)`.
     pub fn base_type(&self) -> OpaqueType {
         match self {
-            ConcreteType::Array(array) => array.base_type(),
-            ConcreteType::Pointer(pointer) => pointer.base_type(),
-            ty => OpaqueType::ConcreteType(ty.clone()),
+            Self::Array(array) => array.base_type(),
+            Self::Pointer(pointer) => pointer.base_type(),
+            ty => OpaqueType::IncompleteType(ty.clone()),
         }
     }
 
@@ -79,9 +80,9 @@ impl ConcreteType {
     /// - For `int`, it returns `int`.
     /// - For `int[3][4]`, it returns `int`.
     ///
-    pub fn innermost_element_type(&self) -> ConcreteType {
+    pub fn innermost_element_type(&self) -> IncompleteType {
         match self {
-            ConcreteType::Array(array) => array.innermost_element_type(),
+            IncompleteType::Array(array) => array.innermost_element_type(),
             ty => ty.clone(),
         }
     }
@@ -92,7 +93,7 @@ impl ConcreteType {
     /// - non-pointer types (e.g. `int x;`)
     /// - pointers for which the last pointer is constant (e.g. `int *const x;`)
     pub(crate) fn needs_trailing_whitespace(&self) -> bool {
-        if let ConcreteType::Pointer(pointer) = self {
+        if let IncompleteType::Pointer(pointer) = self {
             pointer.needs_trailing_whitespace()
         } else {
             true
@@ -111,7 +112,7 @@ impl ConcreteType {
     {
         let base_type = self.base_type();
         match self {
-            ConcreteType::Array(array) => {
+            IncompleteType::Array(array) => {
                 let alias = allocator
                     .text(alias)
                     .append(array.pretty_dimensions(allocator));
@@ -119,7 +120,7 @@ impl ConcreteType {
                 if let OpaqueType::Function(function) = base_type {
                     let mut builder = function.pretty_signature_start(allocator);
 
-                    if let ConcreteType::Pointer(pointer) = *array.element_type {
+                    if let IncompleteType::Pointer(pointer) = *array.element_type {
                         builder = builder.append(pointer.pretty_pointers(allocator));
                     }
 
@@ -134,7 +135,7 @@ impl ConcreteType {
                         .append(alias)
                 }
             }
-            ConcreteType::Pointer(pointer) => {
+            IncompleteType::Pointer(pointer) => {
                 let needs_trailing_whitespace = pointer.needs_trailing_whitespace();
 
                 if let OpaqueType::Function(function) = base_type {
@@ -169,26 +170,9 @@ impl ConcreteType {
                 .append(allocator.text(alias)),
         }
     }
-
-    /// Pretty prints the dimensions of the array type, if it is an array.
-    pub(crate) fn pretty_dimensions<'a, AllocatorT, AnnotationT>(
-        &self,
-        allocator: &'a AllocatorT,
-    ) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT>
-    where
-        AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
-        AllocatorT::Doc: Clone,
-        AnnotationT: Clone + 'a,
-    {
-        if let ConcreteType::Array(array) = self {
-            array.pretty_dimensions(allocator)
-        } else {
-            allocator.nil()
-        }
-    }
 }
 
-impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for ConcreteType
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for IncompleteType
 where
     AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
     AllocatorT::Doc: Clone,
@@ -196,20 +180,20 @@ where
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         match self {
-            ConcreteType::Array(array) => array.pretty(allocator),
-            ConcreteType::Char => allocator.text("char"),
-            ConcreteType::Enum(enumeration) => enumeration.pretty(allocator),
-            ConcreteType::Integer(integer) => allocator.text(integer.to_string()),
-            ConcreteType::Pointer(pointer) => allocator.text(pointer.to_string()),
-            ConcreteType::Real(ty) => allocator.text(ty.to_string()),
-            ConcreteType::Size => allocator.text("size_t"),
-            ConcreteType::StrongInt(integer) => allocator.text(integer.to_string()),
-            ConcreteType::Struct(structure) => structure.pretty(allocator),
-            ConcreteType::Typedef(typedef) => allocator.text(typedef.alias),
-            ConcreteType::Union(union) => union.pretty(allocator),
-            ConcreteType::Void => allocator.text("void"),
+            IncompleteType::Array(array) => array.pretty(allocator),
+            IncompleteType::Char => allocator.text("char"),
+            IncompleteType::Enum(enumeration) => enumeration.pretty(allocator),
+            IncompleteType::Integer(integer) => allocator.text(integer.to_string()),
+            IncompleteType::Pointer(pointer) => allocator.text(pointer.to_string()),
+            IncompleteType::Real(ty) => allocator.text(ty.to_string()),
+            IncompleteType::Size => allocator.text("size_t"),
+            IncompleteType::StrongInt(integer) => allocator.text(integer.to_string()),
+            IncompleteType::Struct(structure) => structure.pretty(allocator),
+            IncompleteType::Typedef(typedef) => allocator.text(typedef.alias),
+            IncompleteType::Union(union) => union.pretty(allocator),
+            IncompleteType::Void => allocator.text("void"),
         }
     }
 }
 
-impl_display_via_pretty!(ConcreteType, 80);
+impl_display_via_pretty!(IncompleteType, 80);

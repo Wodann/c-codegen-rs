@@ -2,7 +2,7 @@ use pretty::Pretty;
 
 use crate::{Expression, Identifier};
 
-use super::ConcreteType;
+use super::IncompleteType;
 
 #[derive(Clone, Debug)]
 pub struct IndirectMemberAccess {
@@ -46,7 +46,7 @@ where
 
 #[derive(Clone, Debug)]
 pub struct Member {
-    pub ty: ConcreteType,
+    pub ty: IncompleteType,
     pub name: Identifier,
     pub bit_field_size: Option<usize>,
 }

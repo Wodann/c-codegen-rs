@@ -24,7 +24,7 @@ impl fmt::Display for StorageClass {
 
 #[cfg(test)]
 mod tests {
-    use crate::{variable, ConcreteType, Identifier, Statement, Value};
+    use crate::{variable, IncompleteType, Identifier, Statement, Value};
 
     use super::*;
 
@@ -34,7 +34,7 @@ mod tests {
     fn with_storage_class_extern() -> anyhow::Result<()> {
         let generated = Statement::from(variable::Declaration {
             storage_class: Some(StorageClass::Extern),
-            ty: ConcreteType::int(),
+            ty: IncompleteType::int(),
             identifier: Identifier::new("numberOfClients")?,
             initializer: None,
         })
@@ -44,7 +44,7 @@ mod tests {
 
         let generated = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: ConcreteType::int(),
+            ty: IncompleteType::int(),
             identifier: Identifier::new("numberOfClients")?,
             initializer: Some(Value::int(0).into()),
         })

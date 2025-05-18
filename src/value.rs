@@ -2,14 +2,14 @@ use core::fmt;
 
 use crate::{
     r#type::{IntegerKind, Real},
-    ConcreteType,
+    IncompleteType,
 };
 
 #[derive(Clone, Debug)]
 pub enum Value {
     Array {
         values: Vec<Value>,
-        base_type: ConcreteType,
+        base_type: IncompleteType,
     },
     Char {
         value: char,

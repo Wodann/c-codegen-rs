@@ -48,7 +48,7 @@ impl_display_via_pretty!(Label, 80);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{function, Block, ConcreteType, Value};
+    use crate::{function, Block, IncompleteType, Value};
 
     #[test]
     fn generation() -> anyhow::Result<()> {
@@ -56,7 +56,7 @@ mod tests {
             is_static: false,
             name: Identifier::new("main")?,
             parameters: Vec::new(),
-            return_ty: ConcreteType::Void,
+            return_ty: IncompleteType::Void,
             body: Block {
                 statements: vec![Label {
                     identifier: Identifier::new("loop_start")?,
@@ -84,7 +84,7 @@ loop_start:
             is_static: false,
             name: Identifier::new("main")?,
             parameters: Vec::new(),
-            return_ty: ConcreteType::Void,
+            return_ty: IncompleteType::Void,
             body: Block {
                 statements: vec![Block {
                     statements: vec![Label {
@@ -117,7 +117,7 @@ loop_start:
             is_static: false,
             name: Identifier::new("main")?,
             parameters: Vec::new(),
-            return_ty: ConcreteType::Void,
+            return_ty: IncompleteType::Void,
             body: Block {
                 statements: vec![Block {
                     statements: vec![
@@ -159,7 +159,7 @@ loop_start2:
             is_static: false,
             name: Identifier::new("main")?,
             parameters: Vec::new(),
-            return_ty: ConcreteType::Void,
+            return_ty: IncompleteType::Void,
             body: Block {
                 statements: vec![Block {
                     statements: vec![

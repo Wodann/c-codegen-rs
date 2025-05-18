@@ -4,17 +4,33 @@ use crate::{non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Identif
 
 use super::member::Member;
 
-#[derive(Clone, Debug)]
-pub enum Union {
-    Definition {
-        name: Option<Identifier>,
-        members: NonEmptyVec<Member>,
-    },
-    /// An incomplete union type, only useable as pointer type. Requires a complete definiton elsewhere.
-    Tag { name: Identifier },
+/// An incomplete union type, only useable in a declaration and as pointer type. Requires a complete definiton elsewhere.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Declaration {
+    pub name: Identifier,
 }
 
-impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Union
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Declaration
+where
+    AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
+    AllocatorT::Doc: Clone,
+    AnnotationT: Clone + 'a,
+{
+    fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
+        allocator
+            .text("union")
+            .append(allocator.space())
+            .append(allocator.text(self.name.to_string()))
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Definition {
+    pub name: Option<Identifier>,
+    pub members: NonEmptyVec<Member>,
+}
+
+impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for Definition
 where
     AllocatorT: pretty::DocAllocator<'a, AnnotationT>,
     AllocatorT::Doc: Clone,
@@ -23,60 +39,55 @@ where
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
         let builder = allocator.text("union").append(allocator.space());
 
-        match self {
-            Union::Definition { name, members } => {
-                let builder = if let Some(name) = name {
-                    builder
-                        .append(allocator.text(name.to_string()))
-                        .append(allocator.space())
-                } else {
-                    builder
-                };
+        let builder = if let Some(name) = self.name {
+            builder
+                .append(allocator.text(name.to_string()))
+                .append(allocator.space())
+        } else {
+            builder
+        };
 
-                builder
-                    .append(allocator.text("{"))
-                    .append(allocator.hardline())
-                    .append(
-                        allocator.intersperse(
-                            members.into_iter().map(|member| {
-                                allocator.text("  ").append(member.pretty(allocator))
-                            }),
-                            allocator.hardline(),
-                        ),
-                    )
-                    .append(allocator.hardline())
-                    .append(allocator.text("}"))
-            }
-            Union::Tag { name } => builder.append(allocator.text(name.to_string())),
-        }
+        builder
+            .append(allocator.text("{"))
+            .append(allocator.hardline())
+            .append(
+                allocator.intersperse(
+                    self.members
+                        .into_iter()
+                        .map(|member| allocator.text("  ").append(member.pretty(allocator))),
+                    allocator.hardline(),
+                ),
+            )
+            .append(allocator.hardline())
+            .append(allocator.text("}"))
     }
 }
 
-impl_display_via_pretty!(Union, 80);
+impl_display_via_pretty!(Definition, 80);
 
 #[cfg(test)]
 mod tests {
     use core::f64;
 
     use crate::{
-        r#type::{Definition, InitializerList},
-        variable, ConcreteType, Statement, Value,
+        r#type::{self, InitializerList},
+        variable, IncompleteType, Statement, Value,
     };
 
     use super::*;
 
     #[test]
     fn complete_definitions() -> anyhow::Result<()> {
-        let multi_line = Definition::from(Union::Definition {
+        let multi_line = r#type::Definition::from(Definition {
             name: Some(Identifier::new("numbers")?),
             members: vec![
                 Member {
-                    ty: ConcreteType::int(),
+                    ty: IncompleteType::int(),
                     name: Identifier::new("i")?,
                     bit_field_size: None,
                 },
                 Member {
-                    ty: ConcreteType::float(),
+                    ty: IncompleteType::float(),
                     name: Identifier::new("f")?,
                     bit_field_size: None,
                 },
@@ -97,7 +108,7 @@ mod tests {
 
     #[test]
     fn incomplete_definition() -> anyhow::Result<()> {
-        let generated = Definition::from(Union::Tag {
+        let generated = r#type::Declaration::from(Declaration {
             name: Identifier::new("numbers")?,
         })
         .to_string();
@@ -111,16 +122,16 @@ mod tests {
         // Test inline declaration
         let inline = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: Union::Definition {
+            ty: Definition {
                 name: Some(Identifier::new("numbers")?),
                 members: vec![
                     Member {
-                        ty: ConcreteType::int(),
+                        ty: IncompleteType::int(),
                         name: Identifier::new("i")?,
                         bit_field_size: None,
                     },
                     Member {
-                        ty: ConcreteType::float(),
+                        ty: IncompleteType::float(),
                         name: Identifier::new("f")?,
                         bit_field_size: None,
                     },
@@ -142,7 +153,7 @@ mod tests {
 
         let tag = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: Union::Tag {
+            ty: Declaration {
                 name: Identifier::new("numbers")?,
             }
             .into(),
@@ -159,7 +170,7 @@ mod tests {
     fn initializers() -> anyhow::Result<()> {
         let ordered = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: Union::Tag {
+            ty: Declaration {
                 name: Identifier::new("numbers")?,
             }
             .into(),
@@ -171,7 +182,7 @@ mod tests {
 
         let named = Statement::from(variable::Declaration {
             storage_class: None,
-            ty: Union::Tag {
+            ty: Declaration {
                 name: Identifier::new("numbers")?,
             }
             .into(),
@@ -195,16 +206,16 @@ mod tests {
 
     #[test]
     fn bit_fields() -> anyhow::Result<()> {
-        let multi_line = Definition::from(Union::Definition {
+        let multi_line = r#type::Definition::from(Definition {
             name: Some(Identifier::new("numbers")?),
             members: vec![
                 Member {
-                    ty: ConcreteType::unsigned_int(),
+                    ty: IncompleteType::unsigned_int(),
                     name: Identifier::new("ui")?,
                     bit_field_size: Some(2),
                 },
                 Member {
-                    ty: ConcreteType::int(),
+                    ty: IncompleteType::int(),
                     name: Identifier::new("i")?,
                     bit_field_size: Some(4),
                 },

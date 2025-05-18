@@ -1,10 +1,10 @@
-use crate::{pretty::impl_display_via_pretty, ConcreteType, Expression};
+use crate::{pretty::impl_display_via_pretty, IncompleteType, Expression};
 use pretty::Pretty;
 
 #[derive(Clone, Debug)]
 pub enum SizeOf {
     Expression(Expression),
-    Type(ConcreteType),
+    Type(IncompleteType),
 }
 
 impl<'a, AllocatorT, AnnotationT> Pretty<'a, AllocatorT, AnnotationT> for SizeOf
@@ -41,7 +41,7 @@ mod test {
     fn sizeof_operator() -> anyhow::Result<()> {
         // Test sizeof with a type
         let sizeof_type =
-            Statement::Expression(SizeOf::Type(ConcreteType::int()).into()).to_string();
+            Statement::Expression(SizeOf::Type(IncompleteType::int()).into()).to_string();
 
         assert_eq!(sizeof_type, "sizeof (int);");
 
