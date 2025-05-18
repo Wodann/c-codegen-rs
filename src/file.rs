@@ -6,6 +6,7 @@ use crate::{
     VariableDeclaration,
 };
 
+#[derive(Clone, Debug)]
 pub enum FileLevelStatement {
     FunctionDeclaration(FunctionDeclaration),
     FunctionDefinition(FunctionDefinition),
@@ -34,7 +35,7 @@ impl fmt::Display for FileLevelStatement {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Debug, Default)]
 pub struct CFileBuilder {
     statements: Vec<FileLevelStatement>,
 }

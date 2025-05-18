@@ -4,7 +4,7 @@ use super::{
     Array, ConcreteType, Enum, Function, Integer, Pointer, Real, StrongInt, Struct, Union,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum OpaqueType {
     ConcreteType(ConcreteType),
     Function(Function),

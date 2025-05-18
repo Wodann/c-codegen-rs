@@ -5,7 +5,7 @@ use crate::{pretty::impl_display_via_pretty, ConcreteType};
 use super::OpaqueType;
 
 /// Represents a C array type with its base type and size
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Array {
     /// The base type of the array elements
     pub element_type: Box<ConcreteType>,

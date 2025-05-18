@@ -4,7 +4,7 @@ use crate::Identifier;
 
 use super::impl_display_via_pretty;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Goto {
     pub label: Identifier,
 }

@@ -9,7 +9,7 @@ use std::fmt;
 /// - negative (-x)
 /// - address-of (&x)
 /// - indirection (*x)
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PrefixOperator {
     pub operand: Expression,
     pub operator: PrefixOperatorKind,
@@ -30,7 +30,7 @@ where
 
 impl_display_via_pretty!(PrefixOperator, 80);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum PrefixOperatorKind {
     Increment,   // ++x
     Decrement,   // --x

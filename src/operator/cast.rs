@@ -2,7 +2,7 @@ use pretty::Pretty;
 
 use crate::{r#type::Scalar, Expression};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Cast {
     pub new_ty: Scalar,
     pub expression: Expression,

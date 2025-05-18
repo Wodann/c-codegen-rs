@@ -2,7 +2,7 @@ use pretty::Pretty;
 
 use crate::{non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Expression, Identifier};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Enum {
     Definition {
         name: Option<Identifier>,

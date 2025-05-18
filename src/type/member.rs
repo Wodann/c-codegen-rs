@@ -4,7 +4,7 @@ use crate::{Expression, Identifier};
 
 use super::ConcreteType;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IndirectMemberAccess {
     pub left: Expression,
     pub member: Identifier,
@@ -24,7 +24,7 @@ where
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MemberAccess {
     pub left: Expression,
     pub member: Identifier,
@@ -44,7 +44,7 @@ where
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Member {
     pub ty: ConcreteType,
     pub name: Identifier,

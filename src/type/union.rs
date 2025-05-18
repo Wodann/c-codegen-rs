@@ -4,7 +4,7 @@ use crate::{non_empty_vec::NonEmptyVec, pretty::impl_display_via_pretty, Identif
 
 use super::member::Member;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Union {
     Definition {
         name: Option<Identifier>,

@@ -15,7 +15,7 @@ use crate::{
     ConcreteType, Value, Variable,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Expression {
     AlignOf(ConcreteType),
     ArraySubscript(Box<ArraySubscript>),

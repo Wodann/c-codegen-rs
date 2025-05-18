@@ -4,7 +4,7 @@ use crate::{Expression, VariableDeclaration};
 
 use super::{impl_display_via_pretty, impl_froms, Statement};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ForDeclaration {
     Expression(Expression),
     VariableDeclaration(VariableDeclaration),
@@ -26,7 +26,7 @@ where
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct For {
     pub init: Option<ForDeclaration>,
     pub condition: Expression,

@@ -2,7 +2,7 @@ use core::fmt;
 
 use super::{integer::Integer, IntegerKind, Pointer, Real, StrongInt};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Scalar {
     Char,
     Integer(Integer),

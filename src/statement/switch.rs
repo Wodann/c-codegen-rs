@@ -4,7 +4,7 @@ use crate::Expression;
 
 use super::{impl_display_via_pretty, Statement};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Switch {
     pub condition: Expression,
     pub cases: Vec<(Expression, Vec<Statement>)>,

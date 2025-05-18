@@ -1,7 +1,7 @@
 use crate::{pretty::impl_display_via_pretty, Expression};
 use pretty::Pretty;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Conditional {
     pub condition: Expression,
     pub then_branch: Expression,

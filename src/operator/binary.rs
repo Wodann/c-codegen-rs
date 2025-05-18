@@ -3,7 +3,7 @@ use pretty::Pretty;
 
 use crate::{pretty::impl_display_via_pretty, Expression};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BinaryOperator {
     pub left: Expression,
     pub operator: BinaryOperatorKind,
@@ -28,7 +28,7 @@ where
 
 impl_display_via_pretty!(BinaryOperator, 80);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum BinaryOperatorKind {
     Add,    // +
     Sub,    // -

@@ -2,13 +2,13 @@ use pretty::Pretty;
 
 use crate::pretty::impl_display_via_pretty;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Style {
     AngleBrackets,
     Quotes,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Include {
     pub path: String,
     pub style: Style,

@@ -4,7 +4,7 @@ use crate::Identifier;
 
 use super::{impl_display_via_pretty, Statement};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Label {
     pub identifier: Identifier,
     pub statement: Option<Statement>,

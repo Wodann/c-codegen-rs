@@ -5,7 +5,7 @@ use crate::{
     ConcreteType,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Value {
     Array {
         values: Vec<Value>,
