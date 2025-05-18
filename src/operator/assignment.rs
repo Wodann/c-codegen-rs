@@ -4,7 +4,7 @@ use pretty::Pretty;
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Assignment-Operators
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Assignment {
     pub left: Expression, // This should be an l-value
     pub right: Expression,

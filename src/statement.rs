@@ -31,7 +31,7 @@ use crate::{
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Statements
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Statement {
     Expression(Expression),
     Label(Box<Label>),

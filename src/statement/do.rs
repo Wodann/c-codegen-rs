@@ -1,7 +1,7 @@
 use crate::{pretty::impl_display_via_pretty, Expression, Statement};
 use pretty::Pretty;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Do {
     pub body: Statement,
     pub condition: Expression,

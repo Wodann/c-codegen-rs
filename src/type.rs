@@ -31,7 +31,7 @@ pub use self::{
     union::Union,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Definition {
     Enum(Enum),
     Struct(Struct),

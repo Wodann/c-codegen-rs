@@ -3,7 +3,7 @@ use pretty::Pretty;
 use std::fmt;
 
 /// Represents postfix increment (x++) and decrement (x--) operations
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PostfixOperator {
     pub operand: Expression,
     pub operator: PostfixOperatorKind,
@@ -24,7 +24,7 @@ where
 
 impl_display_via_pretty!(PostfixOperator, 80);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum PostfixOperatorKind {
     Increment, // x++
     Decrement, // x--

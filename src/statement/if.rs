@@ -4,7 +4,7 @@ use crate::Expression;
 
 use super::{impl_display_via_pretty, Statement};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct If {
     pub condition: Expression,
     pub then_statement: Statement,

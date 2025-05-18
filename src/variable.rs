@@ -11,7 +11,7 @@ pub type Variable = Identifier;
 /// ```c
 /// int test = 1, test2[2] = {1, 2};
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Declaration {
     pub storage_class: Option<StorageClass>,
     pub ty: ConcreteType,

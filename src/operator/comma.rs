@@ -1,7 +1,7 @@
 use crate::Expression;
 use pretty::Pretty;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CommaOperator {
     pub left: Expression,
     pub right: Expression,

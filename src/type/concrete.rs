@@ -9,7 +9,7 @@ use super::{
 /// Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Data-Types
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ConcreteType {
     Array(Array),
     Char,

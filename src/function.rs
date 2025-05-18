@@ -4,7 +4,7 @@ use crate::{
     pretty::impl_display_via_pretty, r#type::Function, Block, ConcreteType, Expression, Identifier,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FunctionCall {
     pub name: Identifier,
     pub arguments: Vec<Expression>,
@@ -28,7 +28,7 @@ where
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FunctionParameter {
     pub ty: ConcreteType,
     pub name: Option<Identifier>,
@@ -55,7 +55,7 @@ where
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Function-Declarations
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Declaration {
     pub is_static: bool,
     pub name: Identifier,
@@ -92,7 +92,7 @@ impl_display_via_pretty!(Declaration, 80);
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Function-Definitions
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Definition {
     pub is_static: bool,
     pub name: Identifier,

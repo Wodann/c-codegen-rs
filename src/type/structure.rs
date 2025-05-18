@@ -4,7 +4,7 @@ use crate::{pretty::impl_display_via_pretty, Identifier};
 
 use super::member::Member;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Struct {
     Definition {
         name: Option<Identifier>,

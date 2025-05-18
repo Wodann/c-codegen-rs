@@ -1,7 +1,7 @@
 use crate::Expression;
 use pretty::Pretty;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Return {
     pub expression: Option<Expression>,
 }
@@ -32,7 +32,7 @@ mod tests {
     use crate::{
         function,
         operator::{BinaryOperator, BinaryOperatorKind},
-        Block, Identifier, ConcreteType, Variable,
+        Block, ConcreteType, Identifier, Variable,
     };
 
     #[test]

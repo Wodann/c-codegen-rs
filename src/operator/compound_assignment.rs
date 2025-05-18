@@ -5,7 +5,7 @@ use std::fmt;
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Assignment-Operators
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CompoundAssignment {
     pub left: Expression,
     pub operator: CompoundAssignmentOperator,
@@ -30,7 +30,7 @@ where
 
 impl_display_via_pretty!(CompoundAssignment, 80);
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum CompoundAssignmentOperator {
     Add, // +=
     Sub, // -=

@@ -4,7 +4,7 @@ use crate::function::FunctionParameter;
 
 use super::ConcreteType;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Function {
     pub parameters: Vec<FunctionParameter>,
     pub return_ty: ConcreteType,

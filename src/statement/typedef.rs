@@ -1,7 +1,7 @@
 use crate::{r#type::OpaqueType, Identifier};
 use pretty::Pretty;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Typedef {
     pub ty: OpaqueType,
     pub alias: Identifier,

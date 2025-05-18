@@ -3,7 +3,7 @@ use core::fmt;
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Storage-Class-Specifiers
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum StorageClass {
     Auto,
     Extern,

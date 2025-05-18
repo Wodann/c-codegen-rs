@@ -2,7 +2,7 @@ use pretty::Pretty;
 
 use crate::Expression;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ArraySubscript {
     pub array: Expression,
     pub index: Expression,

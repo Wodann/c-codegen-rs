@@ -2,7 +2,7 @@ use pretty::Pretty;
 
 use crate::{Expression, Identifier};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum InitializerList {
     // TODO: Use a map that maintains insertion order to avoid duplication
     Named(Vec<(Identifier, Expression)>),

@@ -4,7 +4,7 @@ use crate::{pretty::impl_display_via_pretty, ConcreteType};
 
 use super::OpaqueType;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Pointer {
     pub pointer_ty: OpaqueType,
     pub is_const: bool,
