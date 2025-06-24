@@ -86,7 +86,7 @@ mod tests {
             condition: Variable::new("x")?.into(),
             cases: vec![
                 (
-                    Value::int(0).into(),
+                    Value::signed_integer(0).into(),
                     vec![Expression::FunctionCall(Box::new(FunctionCall {
                         callee: Identifier::new("puts")?.into(),
                         arguments: vec![Value::String("x is 0".to_string()).into()],
@@ -94,7 +94,7 @@ mod tests {
                     .into()],
                 ),
                 (
-                    Value::int(1).into(),
+                    Value::signed_integer(1).into(),
                     vec![Expression::FunctionCall(Box::new(FunctionCall {
                         callee: Identifier::new("puts")?.into(),
                         arguments: vec![Value::String("x is 1".to_string()).into()],
@@ -131,9 +131,9 @@ mod tests {
         let generated = Switch {
             condition: Variable::new("x")?.into(),
             cases: vec![
-                (Value::int(0).into(), Vec::new()),
+                (Value::signed_integer(0).into(), Vec::new()),
                 (
-                    Value::int(1).into(),
+                    Value::signed_integer(1).into(),
                     vec![Expression::FunctionCall(Box::new(FunctionCall {
                         callee: Identifier::new("puts")?.into(),
                         arguments: vec![Value::String("x is 0 or x is 1".to_string()).into()],

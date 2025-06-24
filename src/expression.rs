@@ -113,7 +113,7 @@ mod tests {
         let generated = Statement::Expression(
             FunctionCall {
                 callee: Identifier::new("foo")?.into(),
-                arguments: vec![Value::int(5).into()],
+                arguments: vec![Value::signed_integer(5).into()],
             }
             .into(),
         )
@@ -131,9 +131,9 @@ mod tests {
         // First inner group (3 + 10)
         let inner_sum = Expression::Parentheses(Box::new(
             BinaryOperator {
-                left: Value::int(3).into(),
+                left: Value::signed_integer(3).into(),
                 operator: BinaryOperatorKind::Add,
-                right: Value::int(10).into(),
+                right: Value::signed_integer(10).into(),
             }
             .into(),
         ));
@@ -141,9 +141,9 @@ mod tests {
         // Second inner group (2 * 6)
         let inner_product = Expression::Parentheses(Box::new(
             BinaryOperator {
-                left: Value::int(2).into(),
+                left: Value::signed_integer(2).into(),
                 operator: BinaryOperatorKind::Mul,
-                right: Value::int(6).into(),
+                right: Value::signed_integer(6).into(),
             }
             .into(),
         ));
@@ -161,7 +161,7 @@ mod tests {
         // Final expression: (2 * ((3 + 10) - (2 * 6)))
         let expr = Expression::Parentheses(Box::new(
             BinaryOperator {
-                left: Value::int(2).into(),
+                left: Value::signed_integer(2).into(),
                 operator: BinaryOperatorKind::Mul,
                 right: middle_diff,
             }

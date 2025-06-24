@@ -18,20 +18,16 @@ pub enum Value {
         value: i32,
         name: String,
     },
-    IntegerSigned {
-        value: i64,
-        kind: IntegerKind,
-    },
-    IntegerUnsigned {
-        value: u64,
-        kind: IntegerKind,
-    },
     Pointer {
         address: usize,
     },
     Real {
         value: f64,
-        kind: Real,
+        kind: Option<Real>,
+    },
+    SignedInteger {
+        value: i64,
+        kind: Option<IntegerKind>,
     },
     Size {
         value: usize,
@@ -40,21 +36,51 @@ pub enum Value {
     Struct {
         fields: Vec<(String, Value)>,
     },
+    UnsignedInteger {
+        value: u64,
+        kind: Option<IntegerKind>,
+    },
 }
 
 impl Value {
+    pub const fn double(value: f64) -> Self {
+        Self::Real {
+            value,
+            kind: Some(Real::Double),
+        }
+    }
+
     pub const fn float(value: f64) -> Self {
         Self::Real {
             value,
-            kind: Real::Float,
+            kind: Some(Real::Float),
         }
     }
 
     pub const fn int(value: i64) -> Self {
-        Self::IntegerSigned {
+        Self::SignedInteger {
             value,
-            kind: IntegerKind::Int,
+            kind: Some(IntegerKind::Int),
         }
+    }
+
+    pub const fn long_double(value: f64) -> Self {
+        Self::Real {
+            value,
+            kind: Some(Real::LongDouble),
+        }
+    }
+
+    pub const fn real(value: f64) -> Self {
+        Self::Real { value, kind: None }
+    }
+
+    pub const fn signed_integer(value: i64) -> Self {
+        Self::SignedInteger { value, kind: None }
+    }
+
+    pub const fn unsigned_integer(value: u64) -> Self {
+        Self::UnsignedInteger { value, kind: None }
     }
 }
 
@@ -73,11 +99,18 @@ impl fmt::Display for Value {
                 write!(f, "'{value}'")
             }
             Value::Enum { value, name } => write!(f, "enum {} = {}", name, value),
-            Value::Real { value, kind: ty } => write!(f, "{value}"),
-            Value::IntegerSigned { value, kind: ty } => write!(f, "{value}"),
-            Value::IntegerUnsigned { value, kind: ty } => write!(f, "{value}"),
+            Value::Real { value, kind } => {
+                write!(f, "{value}{suffix}", suffix = kind.map_or("", Real::suffix))
+            }
             Value::Pointer { address } => {
                 write!(f, "{address:#x}")
+            }
+            Value::SignedInteger { value, kind } => {
+                write!(
+                    f,
+                    "{value}{suffix}",
+                    suffix = kind.map_or("", IntegerKind::suffix)
+                )
             }
             Value::Size { value } => write!(f, "{value}"),
             Value::String(val) => write!(f, "\"{}\"", val),
@@ -88,6 +121,13 @@ impl fmt::Display for Value {
                     .collect::<Vec<_>>()
                     .join(", ");
                 write!(f, "{{ {} }}", field_str)
+            }
+            Value::UnsignedInteger { value, kind } => {
+                write!(
+                    f,
+                    "{value}u{suffix}",
+                    suffix = kind.map_or("", IntegerKind::suffix)
+                )
             }
         }
     }

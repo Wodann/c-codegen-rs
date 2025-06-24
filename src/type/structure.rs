@@ -162,7 +162,8 @@ mod tests {
             .into(),
             identifier: Identifier::new("first_point")?,
             initializer: Some(
-                InitializerList::Ordered(vec![Value::int(5).into(), Value::int(10).into()]).into(),
+                InitializerList::Ordered(vec![Value::signed_integer(5).into(), Value::signed_integer(10).into()])
+                    .into(),
             ),
         })
         .to_string();
@@ -177,8 +178,8 @@ mod tests {
             identifier: Identifier::new("first_point")?,
             initializer: Some(
                 InitializerList::Named(vec![
-                    (Identifier::new("y")?, Value::int(10).into()),
-                    (Identifier::new("x")?, Value::int(5).into()),
+                    (Identifier::new("y")?, Value::signed_integer(10).into()),
+                    (Identifier::new("x")?, Value::signed_integer(5).into()),
                 ])
                 .into(),
             ),
@@ -195,10 +196,16 @@ mod tests {
             identifier: Identifier::new("my_rectangle")?,
             initializer: Some(
                 InitializerList::Ordered(vec![
-                    InitializerList::Ordered(vec![Value::int(0).into(), Value::int(5).into()])
-                        .into(),
-                    InitializerList::Ordered(vec![Value::int(10).into(), Value::int(0).into()])
-                        .into(),
+                    InitializerList::Ordered(vec![
+                        Value::signed_integer(0).into(),
+                        Value::signed_integer(5).into(),
+                    ])
+                    .into(),
+                    InitializerList::Ordered(vec![
+                        Value::signed_integer(10).into(),
+                        Value::signed_integer(0).into(),
+                    ])
+                    .into(),
                 ])
                 .into(),
             ),

@@ -3,11 +3,21 @@ use std::fmt;
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Real-Number-Types
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum Real {
     Float,
     Double,
     LongDouble,
+}
+
+impl Real {
+    pub const fn suffix(self) -> &'static str {
+        match self {
+            Real::Float => "f",
+            Real::Double => "",
+            Real::LongDouble => "l",
+        }
+    }
 }
 
 impl fmt::Display for Real {

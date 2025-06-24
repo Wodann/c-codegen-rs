@@ -45,7 +45,7 @@ mod tests {
     fn do_statement() -> anyhow::Result<()> {
         let single_statement = Do {
             body: Expression::Variable(Variable::new("x")?).into(),
-            condition: Value::int(1).into(),
+            condition: Value::signed_integer(1).into(),
         };
         assert_eq!(
             single_statement.to_string(),
@@ -59,7 +59,7 @@ while (1);"#
                 statements: vec![Expression::Variable(Variable::new("x")?).into()],
             }
             .into(),
-            condition: Value::int(1).into(),
+            condition: Value::signed_integer(1).into(),
         };
         assert_eq!(
             block.to_string(),

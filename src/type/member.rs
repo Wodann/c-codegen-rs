@@ -91,7 +91,7 @@ mod tests {
                     member: Identifier::new("i")?,
                 }
                 .into(),
-                right: Value::int(5).into(),
+                right: Value::signed_integer(5).into(),
             }
             .into(),
         )
@@ -110,7 +110,7 @@ mod tests {
                     member: Identifier::new("i")?,
                 }
                 .into(),
-                right: Value::int(5).into(),
+                right: Value::signed_integer(5).into(),
             }
             .into(),
         )
@@ -127,7 +127,7 @@ mod tests {
                     member: Identifier::new("i")?,
                 }
                 .into(),
-                right: Value::int(5).into(),
+                right: Value::signed_integer(5).into(),
             }
             .into(),
         )

@@ -142,7 +142,7 @@ mod tests {
             storage_class: None,
             ty: ConcreteType::int(),
             identifier: Identifier::new("x")?,
-            initializer: Some(Value::int(5).into()),
+            initializer: Some(Value::signed_integer(5).into()),
         })
         .to_string();
         assert_eq!(multiple, "int x = 5;");

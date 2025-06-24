@@ -37,7 +37,7 @@ mod tests {
         let array_access =
             Statement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
                 array: Variable::new("my_array")?.into(),
-                index: Value::int(0).into(),
+                index: Value::signed_integer(0).into(),
             })));
 
         assert_eq!(array_access.to_string(), "my_array[0];");
@@ -54,7 +54,7 @@ mod tests {
                     arguments: vec![],
                 }
                 .into(),
-                index: Value::int(0).into(),
+                index: Value::signed_integer(0).into(),
             })));
         assert_eq!(function_array_access.to_string(), "get_array()[0];");
 
@@ -68,7 +68,7 @@ mod tests {
                     right: Expression::BinaryOperator(Box::new(BinaryOperator {
                         left: Variable::new("j")?.into(),
                         operator: BinaryOperatorKind::Mul,
-                        right: Value::int(2).into(),
+                        right: Value::signed_integer(2).into(),
                     })),
                 })),
             })));

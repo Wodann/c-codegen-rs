@@ -88,7 +88,7 @@ mod tests {
             condition: BinaryOperator {
                 left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Eq,
-                right: Value::int(10).into(),
+                right: Value::signed_integer(10).into(),
             }
             .into(),
             then_statement: Expression::FunctionCall(Box::new(FunctionCall {
@@ -123,7 +123,7 @@ else
             condition: BinaryOperator {
                 left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Eq,
-                right: Value::int(10).into(),
+                right: Value::signed_integer(10).into(),
             }
             .into(),
             then_statement: Expression::FunctionCall(Box::new(FunctionCall {
@@ -136,7 +136,7 @@ else
                     condition: BinaryOperator {
                         left: Variable::new("x")?.into(),
                         operator: BinaryOperatorKind::Gt,
-                        right: Value::int(10).into(),
+                        right: Value::signed_integer(10).into(),
                     }
                     .into(),
                     then_statement: Expression::FunctionCall(Box::new(FunctionCall {
@@ -177,7 +177,7 @@ else
             condition: BinaryOperator {
                 left: Variable::new("x")?.into(),
                 operator: BinaryOperatorKind::Eq,
-                right: Value::int(10).into(),
+                right: Value::signed_integer(10).into(),
             }
             .into(),
             then_statement: Block {

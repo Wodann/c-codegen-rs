@@ -86,7 +86,7 @@ mod tests {
         let specified_value = Definition::from(Enum::Definition {
             name: Some(Identifier::new("more_fruit")?),
             values: vec![
-                (Identifier::new("banana")?, Some(Value::int(-17).into())),
+                (Identifier::new("banana")?, Some(Value::signed_integer(-17).into())),
                 (Identifier::new("apple")?, None),
                 (Identifier::new("blueberry")?, None),
                 (Identifier::new("mango")?, None),
@@ -111,7 +111,7 @@ mod tests {
                         BinaryOperator {
                             left: Variable::new("peach")?.into(),
                             operator: BinaryOperatorKind::Add,
-                            right: Value::int(2).into(),
+                            right: Value::signed_integer(2).into(),
                         }
                         .into(),
                     ),
