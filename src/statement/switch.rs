@@ -87,25 +87,25 @@ mod tests {
             cases: vec![
                 (
                     Value::int(0).into(),
-                    vec![Expression::FunctionCall(FunctionCall {
-                        name: Identifier::new("puts")?,
+                    vec![Expression::FunctionCall(Box::new(FunctionCall {
+                        callee: Identifier::new("puts")?.into(),
                         arguments: vec![Value::String("x is 0".to_string()).into()],
-                    })
+                    }))
                     .into()],
                 ),
                 (
                     Value::int(1).into(),
-                    vec![Expression::FunctionCall(FunctionCall {
-                        name: Identifier::new("puts")?,
+                    vec![Expression::FunctionCall(Box::new(FunctionCall {
+                        callee: Identifier::new("puts")?.into(),
                         arguments: vec![Value::String("x is 1".to_string()).into()],
-                    })
+                    }))
                     .into()],
                 ),
             ],
-            default: Some(vec![Expression::FunctionCall(FunctionCall {
-                name: Identifier::new("puts")?,
+            default: Some(vec![Expression::FunctionCall(Box::new(FunctionCall {
+                callee: Identifier::new("puts")?.into(),
                 arguments: vec![Value::String("x is something else".to_string()).into()],
-            })
+            }))
             .into()]),
         }
         .to_string();
@@ -134,17 +134,17 @@ mod tests {
                 (Value::int(0).into(), Vec::new()),
                 (
                     Value::int(1).into(),
-                    vec![Expression::FunctionCall(FunctionCall {
-                        name: Identifier::new("puts")?,
+                    vec![Expression::FunctionCall(Box::new(FunctionCall {
+                        callee: Identifier::new("puts")?.into(),
                         arguments: vec![Value::String("x is 0 or x is 1".to_string()).into()],
-                    })
+                    }))
                     .into()],
                 ),
             ],
-            default: Some(vec![Expression::FunctionCall(FunctionCall {
-                name: Identifier::new("puts")?,
+            default: Some(vec![Expression::FunctionCall(Box::new(FunctionCall {
+                callee: Identifier::new("puts")?.into(),
                 arguments: vec![Value::String("x is something else".to_string()).into()],
-            })
+            }))
             .into()]),
         }
         .to_string();
@@ -169,10 +169,10 @@ mod tests {
         let generated = Switch {
             condition: Variable::new("x")?.into(),
             cases: Vec::new(),
-            default: Some(vec![Expression::FunctionCall(FunctionCall {
-                name: Identifier::new("puts")?,
+            default: Some(vec![Expression::FunctionCall(Box::new(FunctionCall {
+                callee: Identifier::new("puts")?.into(),
                 arguments: vec![Value::String("x is something else".to_string()).into()],
-            })
+            }))
             .into()]),
         }
         .to_string();

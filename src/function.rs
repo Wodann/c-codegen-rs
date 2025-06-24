@@ -6,7 +6,7 @@ use crate::{
 
 #[derive(Clone, Debug)]
 pub struct FunctionCall {
-    pub name: Identifier,
+    pub callee: Expression,
     pub arguments: Vec<Expression>,
 }
 
@@ -17,8 +17,8 @@ where
     AnnotationT: Clone + 'a,
 {
     fn pretty(self, allocator: &'a AllocatorT) -> pretty::DocBuilder<'a, AllocatorT, AnnotationT> {
-        allocator
-            .text(self.name)
+        self.callee
+            .pretty(allocator)
             .append(allocator.text("("))
             .append(allocator.intersperse(
                 self.arguments.into_iter().map(|arg| arg.pretty(allocator)),
@@ -140,7 +140,7 @@ impl_display_via_pretty!(Definition, 80);
 #[cfg(test)]
 mod tests {
     use crate::{
-        operator::{BinaryOperator, BinaryOperatorKind},
+        operator::{ArraySubscript, BinaryOperator, BinaryOperatorKind},
         statement::Return,
         Value, Variable,
     };
@@ -270,6 +270,31 @@ foo (int x) {
   return x + 42;
 }"#
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn function_call() -> anyhow::Result<()> {
+        let function_name = Expression::FunctionCall(Box::new(FunctionCall {
+            callee: Variable::new("calculate_sum")?.into(),
+            arguments: vec![Value::int(5).into(), Value::int(10).into()],
+        }))
+        .to_string();
+
+        assert_eq!(function_name, "calculate_sum(5, 10)");
+
+        let expression = Expression::FunctionCall(Box::new(FunctionCall {
+            callee: ArraySubscript {
+                array: Variable::new("my_array")?.into(),
+                index: Value::int(0).into(),
+            }
+            .into(),
+            arguments: vec![Value::int(5).into(), Value::int(10).into()],
+        }))
+        .to_string();
+
+        assert_eq!(expression, "my_array[0](5, 10)");
 
         Ok(())
     }

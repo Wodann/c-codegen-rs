@@ -50,7 +50,7 @@ mod tests {
         let function_array_access =
             Statement::Expression(Expression::ArraySubscript(Box::new(ArraySubscript {
                 array: FunctionCall {
-                    name: Identifier::new("get_array")?,
+                    callee: Identifier::new("get_array")?.into(),
                     arguments: vec![],
                 }
                 .into(),
