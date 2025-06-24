@@ -91,16 +91,16 @@ mod tests {
                 right: Value::int(10).into(),
             }
             .into(),
-            then_statement: Expression::FunctionCall(FunctionCall {
-                name: Identifier::new("puts")?,
+            then_statement: Expression::FunctionCall(Box::new(FunctionCall {
+                callee: Identifier::new("puts")?.into(),
                 arguments: vec![Value::String("x is 10".to_string()).into()],
-            })
+            }))
             .into(),
             else_statement: Some(
-                Expression::FunctionCall(FunctionCall {
-                    name: Identifier::new("puts")?,
+                Expression::FunctionCall(Box::new(FunctionCall {
+                    callee: Identifier::new("puts")?.into(),
                     arguments: vec![Value::String("x is not 10".to_string()).into()],
-                })
+                }))
                 .into(),
             ),
         }
@@ -126,10 +126,10 @@ else
                 right: Value::int(10).into(),
             }
             .into(),
-            then_statement: Expression::FunctionCall(FunctionCall {
-                name: Identifier::new("puts")?,
+            then_statement: Expression::FunctionCall(Box::new(FunctionCall {
+                callee: Identifier::new("puts")?.into(),
                 arguments: vec![Value::String("x is 10".to_string()).into()],
-            })
+            }))
             .into(),
             else_statement: Some(
                 If {
@@ -139,16 +139,16 @@ else
                         right: Value::int(10).into(),
                     }
                     .into(),
-                    then_statement: Expression::FunctionCall(FunctionCall {
-                        name: Identifier::new("puts")?,
+                    then_statement: Expression::FunctionCall(Box::new(FunctionCall {
+                        callee: Identifier::new("puts")?.into(),
                         arguments: vec![Value::String("x is greater than 10".to_string()).into()],
-                    })
+                    }))
                     .into(),
                     else_statement: Some(
-                        Expression::FunctionCall(FunctionCall {
-                            name: Identifier::new("puts")?,
+                        Expression::FunctionCall(Box::new(FunctionCall {
+                            callee: Identifier::new("puts")?.into(),
                             arguments: vec![Value::String("x is less than 10".to_string()).into()],
-                        })
+                        }))
                         .into(),
                     ),
                 }
@@ -181,19 +181,19 @@ else
             }
             .into(),
             then_statement: Block {
-                statements: vec![Expression::FunctionCall(FunctionCall {
-                    name: Identifier::new("puts")?,
+                statements: vec![Expression::FunctionCall(Box::new(FunctionCall {
+                    callee: Identifier::new("puts")?.into(),
                     arguments: vec![Value::String("x is 10".to_string()).into()],
-                })
+                }))
                 .into()],
             }
             .into(),
             else_statement: Some(
                 Block {
-                    statements: vec![Expression::FunctionCall(FunctionCall {
-                        name: Identifier::new("puts")?,
+                    statements: vec![Expression::FunctionCall(Box::new(FunctionCall {
+                        callee: Identifier::new("puts")?.into(),
                         arguments: vec![Value::String("x is not 10".to_string()).into()],
-                    })
+                    }))
                     .into()],
                 }
                 .into(),

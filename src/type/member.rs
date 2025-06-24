@@ -120,7 +120,7 @@ mod tests {
             operator::Assignment {
                 left: IndirectMemberAccess {
                     left: FunctionCall {
-                        name: Identifier::new("get_struct")?,
+                        callee: Identifier::new("get_struct")?.into(),
                         arguments: Vec::new(),
                     }
                     .into(),

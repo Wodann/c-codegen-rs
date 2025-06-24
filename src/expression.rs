@@ -25,7 +25,7 @@ pub enum Expression {
     CommaOperator(Box<CommaOperator>),
     CompoundAssignment(Box<CompoundAssignment>),
     Conditional(Box<Conditional>),
-    FunctionCall(FunctionCall),
+    FunctionCall(Box<FunctionCall>),
     IndirectMemberAccess(Box<IndirectMemberAccess>),
     InitializerList(InitializerList),
     MemberAccess(Box<MemberAccess>),
@@ -45,7 +45,7 @@ impl_froms!(Expression:
     box CommaOperator,
     box CompoundAssignment,
     box Conditional,
-    FunctionCall,
+    box FunctionCall,
     box IndirectMemberAccess,
     InitializerList,
     box MemberAccess,
@@ -112,7 +112,7 @@ mod tests {
     fn function_call() -> anyhow::Result<()> {
         let generated = Statement::Expression(
             FunctionCall {
-                name: Identifier::new("foo")?,
+                callee: Identifier::new("foo")?.into(),
                 arguments: vec![Value::int(5).into()],
             }
             .into(),

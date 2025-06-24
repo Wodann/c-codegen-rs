@@ -219,7 +219,7 @@ mod tests {
 
         // Create printf statement
         let printf_call = FunctionCall {
-            name: Identifier::new("printf")?,
+            callee: Identifier::new("printf")?.into(),
             arguments: vec![
                 Value::String("%d %d\\n".to_string()).into(),
                 Variable::new("x")?.into(),
