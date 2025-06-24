@@ -46,7 +46,7 @@ mod tests {
             storage_class: None,
             ty: ConcreteType::int(),
             identifier: Identifier::new("numberOfClients")?,
-            initializer: Some(Value::int(0).into()),
+            initializer: Some(Value::signed_integer(0).into()),
         })
         .to_string();
 

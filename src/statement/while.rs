@@ -47,7 +47,7 @@ mod tests {
     #[test]
     fn single_statement() -> anyhow::Result<()> {
         let generated = While {
-            condition: Value::int(1).into(),
+            condition: Value::signed_integer(1).into(),
             body: Expression::Variable(Variable::new("x")?).into(),
         }
         .to_string();
@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn block() -> anyhow::Result<()> {
         let generated = While {
-            condition: Value::int(1).into(),
+            condition: Value::signed_integer(1).into(),
             body: Block {
                 statements: vec![Expression::Variable(Variable::new("x")?).into()],
             }
@@ -84,7 +84,7 @@ mod tests {
     #[test]
     fn block_in_block() -> anyhow::Result<()> {
         let generated = While {
-            condition: Value::int(1).into(),
+            condition: Value::signed_integer(1).into(),
             body: Block {
                 statements: vec![Block {
                     statements: vec![Expression::Variable(Variable::new("x")?).into()],

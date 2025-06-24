@@ -119,11 +119,11 @@ mod tests {
             identifier: Identifier::new("my_array")?,
             initializer: Some(
                 InitializerList::Ordered(vec![
-                    Value::int(0).into(),
-                    Value::int(1).into(),
-                    Value::int(2).into(),
-                    Value::int(3).into(),
-                    Value::int(4).into(),
+                    Value::signed_integer(0).into(),
+                    Value::signed_integer(1).into(),
+                    Value::signed_integer(2).into(),
+                    Value::signed_integer(3).into(),
+                    Value::signed_integer(4).into(),
                 ])
                 .into(),
             ),
@@ -160,11 +160,11 @@ mod tests {
             identifier: Identifier::new("flex")?,
             initializer: Some(
                 InitializerList::Ordered(vec![
-                    Value::int(0).into(),
-                    Value::int(1).into(),
-                    Value::int(2).into(),
-                    Value::int(3).into(),
-                    Value::int(4).into(),
+                    Value::signed_integer(0).into(),
+                    Value::signed_integer(1).into(),
+                    Value::signed_integer(2).into(),
+                    Value::signed_integer(3).into(),
+                    Value::signed_integer(4).into(),
                 ])
                 .into(),
             ),
@@ -204,19 +204,19 @@ mod tests {
             initializer: Some(
                 InitializerList::Ordered(vec![
                     InitializerList::Ordered(vec![
-                        Value::int(1).into(),
-                        Value::int(2).into(),
-                        Value::int(3).into(),
-                        Value::int(4).into(),
-                        Value::int(5).into(),
+                        Value::signed_integer(1).into(),
+                        Value::signed_integer(2).into(),
+                        Value::signed_integer(3).into(),
+                        Value::signed_integer(4).into(),
+                        Value::signed_integer(5).into(),
                     ])
                     .into(),
                     InitializerList::Ordered(vec![
-                        Value::int(6).into(),
-                        Value::int(7).into(),
-                        Value::int(8).into(),
-                        Value::int(9).into(),
-                        Value::int(10).into(),
+                        Value::signed_integer(6).into(),
+                        Value::signed_integer(7).into(),
+                        Value::signed_integer(8).into(),
+                        Value::signed_integer(9).into(),
+                        Value::signed_integer(10).into(),
                     ])
                     .into(),
                 ])
@@ -264,48 +264,48 @@ mod tests {
                 InitializerList::Ordered(vec![
                     InitializerList::Ordered(vec![
                         InitializerList::Ordered(vec![
-                            Value::int(1).into(),
-                            Value::int(2).into(),
-                            Value::int(3).into(),
-                            Value::int(4).into(),
+                            Value::signed_integer(1).into(),
+                            Value::signed_integer(2).into(),
+                            Value::signed_integer(3).into(),
+                            Value::signed_integer(4).into(),
                         ])
                         .into(),
                         InitializerList::Ordered(vec![
-                            Value::int(5).into(),
-                            Value::int(6).into(),
-                            Value::int(7).into(),
-                            Value::int(8).into(),
+                            Value::signed_integer(5).into(),
+                            Value::signed_integer(6).into(),
+                            Value::signed_integer(7).into(),
+                            Value::signed_integer(8).into(),
                         ])
                         .into(),
                         InitializerList::Ordered(vec![
-                            Value::int(9).into(),
-                            Value::int(10).into(),
-                            Value::int(11).into(),
-                            Value::int(12).into(),
+                            Value::signed_integer(9).into(),
+                            Value::signed_integer(10).into(),
+                            Value::signed_integer(11).into(),
+                            Value::signed_integer(12).into(),
                         ])
                         .into(),
                     ])
                     .into(),
                     InitializerList::Ordered(vec![
                         InitializerList::Ordered(vec![
-                            Value::int(13).into(),
-                            Value::int(14).into(),
-                            Value::int(15).into(),
-                            Value::int(16).into(),
+                            Value::signed_integer(13).into(),
+                            Value::signed_integer(14).into(),
+                            Value::signed_integer(15).into(),
+                            Value::signed_integer(16).into(),
                         ])
                         .into(),
                         InitializerList::Ordered(vec![
-                            Value::int(17).into(),
-                            Value::int(18).into(),
-                            Value::int(19).into(),
-                            Value::int(20).into(),
+                            Value::signed_integer(17).into(),
+                            Value::signed_integer(18).into(),
+                            Value::signed_integer(19).into(),
+                            Value::signed_integer(20).into(),
                         ])
                         .into(),
                         InitializerList::Ordered(vec![
-                            Value::int(21).into(),
-                            Value::int(22).into(),
-                            Value::int(23).into(),
-                            Value::int(24).into(),
+                            Value::signed_integer(21).into(),
+                            Value::signed_integer(22).into(),
+                            Value::signed_integer(23).into(),
+                            Value::signed_integer(24).into(),
                         ])
                         .into(),
                     ])
@@ -444,11 +444,11 @@ mod tests {
             identifier: Identifier::new("point_array")?,
             initializer: Some(
                 InitializerList::Ordered(vec![
-                    InitializerList::Ordered(vec![Value::int(2).into(), Value::int(3).into()])
+                    InitializerList::Ordered(vec![Value::signed_integer(2).into(), Value::signed_integer(3).into()])
                         .into(),
-                    InitializerList::Ordered(vec![Value::int(4).into(), Value::int(5).into()])
+                    InitializerList::Ordered(vec![Value::signed_integer(4).into(), Value::signed_integer(5).into()])
                         .into(),
-                    InitializerList::Ordered(vec![Value::int(6).into(), Value::int(7).into()])
+                    InitializerList::Ordered(vec![Value::signed_integer(6).into(), Value::signed_integer(7).into()])
                         .into(),
                 ])
                 .into(),
@@ -464,13 +464,13 @@ mod tests {
                 left: MemberAccess {
                     left: ArraySubscript {
                         array: Variable::new("point_array")?.into(),
-                        index: Value::int(0).into(),
+                        index: Value::signed_integer(0).into(),
                     }
                     .into(),
                     member: Identifier::new("x")?,
                 }
                 .into(),
-                right: Value::int(2).into(),
+                right: Value::signed_integer(2).into(),
             }
             .into(),
         );
@@ -513,9 +513,9 @@ mod tests {
             identifier: Identifier::new("number_array")?,
             initializer: Some(
                 InitializerList::Ordered(vec![
-                    InitializerList::Ordered(vec![Value::int(3).into()]).into(),
-                    InitializerList::Ordered(vec![Value::int(4).into()]).into(),
-                    InitializerList::Ordered(vec![Value::int(5).into()]).into(),
+                    InitializerList::Ordered(vec![Value::signed_integer(3).into()]).into(),
+                    InitializerList::Ordered(vec![Value::signed_integer(4).into()]).into(),
+                    InitializerList::Ordered(vec![Value::signed_integer(5).into()]).into(),
                 ])
                 .into(),
             ),
@@ -530,14 +530,14 @@ mod tests {
                 left: MemberAccess {
                     left: ArraySubscript {
                         array: Variable::new("number_array")?.into(),
-                        index: Value::int(0).into(),
+                        index: Value::signed_integer(0).into(),
                     }
                     .into(),
                     member: Identifier::new("i")?,
                 }
                 .into(),
 
-                right: Value::int(2).into(),
+                right: Value::signed_integer(2).into(),
             }
             .into(),
         );

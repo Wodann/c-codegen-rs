@@ -43,7 +43,7 @@ mod tests {
     #[test]
     fn single_line_block_indentation() -> anyhow::Result<()> {
         let block = Block {
-            statements: vec![Statement::Expression(Value::int(42).into())],
+            statements: vec![Statement::Expression(Value::signed_integer(42).into())],
         };
         assert_eq!(
             block.to_string(),
@@ -58,9 +58,9 @@ mod tests {
     fn multi_line_block_indentation() -> anyhow::Result<()> {
         let block = Block {
             statements: vec![
-                Statement::Expression(Value::int(1).into()),
-                Statement::Expression(Value::int(2).into()),
-                Statement::Expression(Value::int(3).into()),
+                Statement::Expression(Value::signed_integer(1).into()),
+                Statement::Expression(Value::signed_integer(2).into()),
+                Statement::Expression(Value::signed_integer(3).into()),
             ],
         };
         assert_eq!(
@@ -77,13 +77,13 @@ mod tests {
     #[test]
     fn nested_block_indentation() -> anyhow::Result<()> {
         let inner_block = Block {
-            statements: vec![Statement::Expression(Value::int(42).into())],
+            statements: vec![Statement::Expression(Value::signed_integer(42).into())],
         };
         let outer_block = Block {
             statements: vec![
-                Statement::Expression(Value::int(1).into()),
+                Statement::Expression(Value::signed_integer(1).into()),
                 Statement::Block(inner_block),
-                Statement::Expression(Value::int(2).into()),
+                Statement::Expression(Value::signed_integer(2).into()),
             ],
         };
         assert_eq!(

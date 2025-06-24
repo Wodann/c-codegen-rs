@@ -97,7 +97,7 @@ mod tests {
     fn single_statement() -> anyhow::Result<()> {
         let generated = For {
             init: Some(Expression::Variable(Variable::new("i")?).into()),
-            condition: Value::int(1).into(),
+            condition: Value::signed_integer(1).into(),
             step: Some(Variable::new("i")?.into()),
             body: Expression::Variable(Variable::new("x")?).into(),
         }
@@ -115,7 +115,7 @@ mod tests {
     fn block() -> anyhow::Result<()> {
         let generated = For {
             init: Some(Expression::Variable(Variable::new("i")?).into()),
-            condition: Value::int(1).into(),
+            condition: Value::signed_integer(1).into(),
             step: Some(Variable::new("i")?.into()),
             body: Block {
                 statements: vec![Expression::Variable(Variable::new("x")?).into()],
@@ -141,12 +141,12 @@ mod tests {
                 storage_class: None,
                 ty: ConcreteType::Size,
                 identifier: Identifier::new("i")?,
-                initializer: Some(Value::int(0).into()),
+                initializer: Some(Value::signed_integer(0).into()),
             })),
             condition: BinaryOperator {
                 left: Variable::new("i")?.into(),
                 operator: BinaryOperatorKind::Lt,
-                right: Value::int(5).into(),
+                right: Value::signed_integer(5).into(),
             }
             .into(),
             step: Some(
@@ -173,11 +173,11 @@ mod tests {
         // Create initialization expressions x = 1, y = 10
         let x_init = Assignment {
             left: Variable::new("x")?.into(),
-            right: Value::int(1).into(),
+            right: Value::signed_integer(1).into(),
         };
         let y_init = Assignment {
             left: Variable::new("y")?.into(),
-            right: Value::int(10).into(),
+            right: Value::signed_integer(10).into(),
         };
         let init = CommaOperator {
             left: x_init.into(),
@@ -188,12 +188,12 @@ mod tests {
         let x_cond = BinaryOperator {
             left: Variable::new("x")?.into(),
             operator: BinaryOperatorKind::Le,
-            right: Value::int(10).into(),
+            right: Value::signed_integer(10).into(),
         };
         let y_cond = BinaryOperator {
             left: Variable::new("y")?.into(),
             operator: BinaryOperatorKind::Ge,
-            right: Value::int(1).into(),
+            right: Value::signed_integer(1).into(),
         };
         let condition = BinaryOperator {
             left: x_cond.into(),
@@ -205,7 +205,7 @@ mod tests {
         let x_inc = CompoundAssignment {
             left: Variable::new("x")?.into(),
             operator: CompoundAssignmentOperator::Add,
-            right: Value::int(2).into(),
+            right: Value::signed_integer(2).into(),
         };
         let y_dec = PrefixOperator {
             operand: Variable::new("y")?.into(),

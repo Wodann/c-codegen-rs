@@ -164,7 +164,7 @@ mod tests {
             }
             .into(),
             identifier: Identifier::new("first_number")?,
-            initializer: Some(InitializerList::Ordered(vec![Value::int(5).into()]).into()),
+            initializer: Some(InitializerList::Ordered(vec![Value::signed_integer(5).into()]).into()),
         })
         .to_string();
         assert_eq!(ordered, "union numbers first_number = { 5 };");
@@ -179,7 +179,7 @@ mod tests {
             initializer: Some(
                 InitializerList::Named(vec![(
                     Identifier::new("f")?,
-                    Value::float(f64::consts::PI).into(),
+                    Value::real(f64::consts::PI).into(),
                 )])
                 .into(),
             ),

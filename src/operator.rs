@@ -32,7 +32,7 @@ mod tests {
         let assignment = Statement::Expression(
             Assignment {
                 left: Variable::new("x")?.into(),
-                right: Value::int(42).into(),
+                right: Value::signed_integer(42).into(),
             }
             .into(),
         );

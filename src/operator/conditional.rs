@@ -45,7 +45,7 @@ mod tests {
                 BinaryOperator {
                     left: Variable::new("x")?.into(),
                     operator: BinaryOperatorKind::Eq,
-                    right: Value::int(5).into(),
+                    right: Value::signed_integer(5).into(),
                 }
                 .into(),
             )),
@@ -65,7 +65,7 @@ mod tests {
                 BinaryOperator {
                     left: Variable::new("x")?.into(),
                     operator: BinaryOperatorKind::Eq,
-                    right: Value::int(5).into(),
+                    right: Value::signed_integer(5).into(),
                 }
                 .into(),
             )),
@@ -74,16 +74,16 @@ mod tests {
                     condition: BinaryOperator {
                         left: Variable::new("y")?.into(),
                         operator: BinaryOperatorKind::Gt,
-                        right: Value::int(10).into(),
+                        right: Value::signed_integer(10).into(),
                     }
                     .into(),
 
-                    then_branch: Value::int(1).into(),
-                    else_branch: Value::int(2).into(),
+                    then_branch: Value::signed_integer(1).into(),
+                    else_branch: Value::signed_integer(2).into(),
                 }
                 .into(),
             )),
-            else_branch: Value::int(3).into(),
+            else_branch: Value::signed_integer(3).into(),
         };
 
         assert_eq!(conditional.to_string(), "(x == 5) ? (y > 10 ? 1 : 2) : 3");

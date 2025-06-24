@@ -23,13 +23,25 @@ impl fmt::Display for Integer {
 /// # Source
 ///
 /// https://www.gnu.org/software/gnu-c-manual/gnu-c-manual.html#Integer-Types
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum IntegerKind {
     Char,
     Short,
     Int,
     Long,
     LongLong,
+}
+
+impl IntegerKind {
+    pub const fn suffix(self) -> &'static str {
+        match self {
+            IntegerKind::Char => "",
+            IntegerKind::Short => "",
+            IntegerKind::Int => "",
+            IntegerKind::Long => "l",
+            IntegerKind::LongLong => "ll",
+        }
+    }
 }
 
 impl fmt::Display for IntegerKind {

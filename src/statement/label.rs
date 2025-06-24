@@ -60,7 +60,7 @@ mod tests {
             body: Block {
                 statements: vec![Label {
                     identifier: Identifier::new("loop_start")?,
-                    statement: Some(Statement::Expression(Value::int(42).into())),
+                    statement: Some(Statement::Expression(Value::signed_integer(42).into())),
                 }
                 .into()],
             },
@@ -89,7 +89,7 @@ loop_start:
                 statements: vec![Block {
                     statements: vec![Label {
                         identifier: Identifier::new("loop_start")?,
-                        statement: Some(Statement::Expression(Value::int(42).into())),
+                        statement: Some(Statement::Expression(Value::signed_integer(42).into())),
                     }
                     .into()],
                 }
@@ -131,7 +131,7 @@ loop_start:
                             statement: None,
                         }
                         .into(),
-                        Statement::Expression(Value::int(42).into()),
+                        Statement::Expression(Value::signed_integer(42).into()),
                     ],
                 }
                 .into()],
@@ -174,7 +174,7 @@ loop_start2:
                             ),
                         }
                         .into(),
-                        Statement::Expression(Value::int(42).into()),
+                        Statement::Expression(Value::signed_integer(42).into()),
                     ],
                 }
                 .into()],

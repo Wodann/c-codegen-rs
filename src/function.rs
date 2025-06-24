@@ -253,7 +253,7 @@ add_values (int x, int y) {
                         BinaryOperator {
                             left: Variable::new("x")?.into(),
                             operator: BinaryOperatorKind::Add,
-                            right: Value::int(42).into(),
+                            right: Value::signed_integer(42).into(),
                         }
                         .into(),
                     ),
@@ -278,7 +278,10 @@ foo (int x) {
     fn function_call() -> anyhow::Result<()> {
         let function_name = Expression::FunctionCall(Box::new(FunctionCall {
             callee: Variable::new("calculate_sum")?.into(),
-            arguments: vec![Value::int(5).into(), Value::int(10).into()],
+            arguments: vec![
+                Value::signed_integer(5).into(),
+                Value::signed_integer(10).into(),
+            ],
         }))
         .to_string();
 
@@ -287,10 +290,13 @@ foo (int x) {
         let expression = Expression::FunctionCall(Box::new(FunctionCall {
             callee: ArraySubscript {
                 array: Variable::new("my_array")?.into(),
-                index: Value::int(0).into(),
+                index: Value::signed_integer(0).into(),
             }
             .into(),
-            arguments: vec![Value::int(5).into(), Value::int(10).into()],
+            arguments: vec![
+                Value::signed_integer(5).into(),
+                Value::signed_integer(10).into(),
+            ],
         }))
         .to_string();
 
