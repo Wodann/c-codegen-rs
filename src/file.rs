@@ -2,8 +2,10 @@ use core::fmt;
 use std::io;
 
 use crate::{
-    macros::impl_froms, r#type, statement::Include, FunctionDeclaration, FunctionDefinition,
-    VariableDeclaration,
+    macros::impl_froms,
+    r#type::{Definition as TypeDefinition, Enum, Struct, Union},
+    statement::Include,
+    FunctionDeclaration, FunctionDefinition, VariableDeclaration,
 };
 
 #[derive(Clone, Debug)]
@@ -11,17 +13,11 @@ pub enum FileLevelStatement {
     FunctionDeclaration(FunctionDeclaration),
     FunctionDefinition(FunctionDefinition),
     Include(Include),
-    TypeDefinition(r#type::Definition),
+    TypeDefinition(TypeDefinition),
     VariableDeclaration(VariableDeclaration),
 }
 
-impl_froms!(FileLevelStatement: FunctionDeclaration, FunctionDefinition, Include, VariableDeclaration);
-
-impl From<r#type::Definition> for FileLevelStatement {
-    fn from(value: r#type::Definition) -> Self {
-        FileLevelStatement::TypeDefinition(value)
-    }
-}
+impl_froms!(FileLevelStatement: FunctionDeclaration, FunctionDefinition, Include, TypeDefinition(Enum, Struct, Union), VariableDeclaration);
 
 impl fmt::Display for FileLevelStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
