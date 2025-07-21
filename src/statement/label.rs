@@ -48,15 +48,17 @@ impl_display_via_pretty!(Label, 80);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{function, Block, ConcreteType, Value};
+    use crate::{function, r#type::Function, Block, ConcreteType, Value};
 
     #[test]
     fn generation() -> anyhow::Result<()> {
         let generated = function::Definition {
             is_static: false,
             name: Identifier::new("main")?,
-            parameters: Vec::new(),
-            return_ty: ConcreteType::Void,
+            ty: Function {
+                parameters: Vec::new(),
+                return_ty: ConcreteType::Void,
+            },
             body: Block {
                 statements: vec![Label {
                     identifier: Identifier::new("loop_start")?,
@@ -68,8 +70,7 @@ mod tests {
         .to_string();
         assert_eq!(
             generated,
-            r#"void
-main () {
+            r#"void main () {
 loop_start:
   42;
 }"#
@@ -83,8 +84,10 @@ loop_start:
         let generated = function::Definition {
             is_static: false,
             name: Identifier::new("main")?,
-            parameters: Vec::new(),
-            return_ty: ConcreteType::Void,
+            ty: Function {
+                parameters: Vec::new(),
+                return_ty: ConcreteType::Void,
+            },
             body: Block {
                 statements: vec![Block {
                     statements: vec![Label {
@@ -99,8 +102,7 @@ loop_start:
         .to_string();
         assert_eq!(
             generated,
-            r#"void
-main () {
+            r#"void main () {
   {
 loop_start:
     42;
@@ -116,8 +118,10 @@ loop_start:
         let generated = function::Definition {
             is_static: false,
             name: Identifier::new("main")?,
-            parameters: Vec::new(),
-            return_ty: ConcreteType::Void,
+            ty: Function {
+                parameters: Vec::new(),
+                return_ty: ConcreteType::Void,
+            },
             body: Block {
                 statements: vec![Block {
                     statements: vec![
@@ -140,8 +144,7 @@ loop_start:
         .to_string();
         assert_eq!(
             generated,
-            r#"void
-main () {
+            r#"void main () {
   {
 loop_start:
 loop_start2:
@@ -158,8 +161,10 @@ loop_start2:
         let generated = function::Definition {
             is_static: false,
             name: Identifier::new("main")?,
-            parameters: Vec::new(),
-            return_ty: ConcreteType::Void,
+            ty: Function {
+                parameters: Vec::new(),
+                return_ty: ConcreteType::Void,
+            },
             body: Block {
                 statements: vec![Block {
                     statements: vec![
@@ -183,8 +188,7 @@ loop_start2:
         .to_string();
         assert_eq!(
             generated,
-            r#"void
-main () {
+            r#"void main () {
   {
 loop_start:
 loop_start2:

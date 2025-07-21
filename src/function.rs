@@ -96,8 +96,7 @@ impl_display_via_pretty!(Declaration, 80);
 pub struct Definition {
     pub is_static: bool,
     pub name: Identifier,
-    pub parameters: Vec<(ConcreteType, Identifier)>,
-    pub return_ty: ConcreteType,
+    pub ty: Function,
     pub body: Block,
 }
 
@@ -114,22 +113,14 @@ where
             allocator.nil()
         };
 
+        let return_type = self.ty.pretty_return_type(allocator);
+        let parameters = self.ty.pretty_parameters(allocator);
+
         builder
-            .append(allocator.text(self.return_ty.to_string()))
-            .append(allocator.hardline())
+            .append(return_type)
             .append(allocator.text(self.name))
             .append(allocator.space())
-            .append(allocator.text("("))
-            .append(allocator.intersperse(
-                self.parameters.into_iter().map(|(ty, name)| {
-                    allocator
-                        .text(ty.to_string())
-                        .append(allocator.space())
-                        .append(allocator.text(name))
-                }),
-                allocator.text(",").append(allocator.space()),
-            ))
-            .append(allocator.text(")"))
+            .append(parameters)
             .append(allocator.space())
             .append(self.body.pretty(allocator))
     }
@@ -207,11 +198,19 @@ mod tests {
         let generated = Definition {
             is_static: false,
             name: Identifier::new("add_values")?,
-            return_ty: ConcreteType::int(),
-            parameters: vec![
-                (ConcreteType::int(), Identifier::new("x")?),
-                (ConcreteType::int(), Identifier::new("y")?),
-            ],
+            ty: Function {
+                parameters: vec![
+                    FunctionParameter {
+                        ty: ConcreteType::int(),
+                        name: Some(Identifier::new("x")?),
+                    },
+                    FunctionParameter {
+                        ty: ConcreteType::int(),
+                        name: Some(Identifier::new("y")?),
+                    },
+                ],
+                return_ty: ConcreteType::int(),
+            },
             body: Block {
                 statements: vec![Return {
                     expression: Some(
@@ -230,8 +229,7 @@ mod tests {
 
         assert_eq!(
             generated,
-            r#"int
-add_values (int x, int y) {
+            r#"int add_values (int x, int y) {
   return x + y;
 }"#
         );
@@ -245,8 +243,13 @@ add_values (int x, int y) {
         let generated = Definition {
             is_static: true,
             name: Identifier::new("foo")?,
-            return_ty: ConcreteType::int(),
-            parameters: vec![(ConcreteType::int(), Identifier::new("x")?)],
+            ty: Function {
+                parameters: vec![FunctionParameter {
+                    ty: ConcreteType::int(),
+                    name: Some(Identifier::new("x")?),
+                }],
+                return_ty: ConcreteType::int(),
+            },
             body: Block {
                 statements: vec![Return {
                     expression: Some(
@@ -265,8 +268,7 @@ add_values (int x, int y) {
 
         assert_eq!(
             generated,
-            r#"static int
-foo (int x) {
+            r#"static int foo (int x) {
   return x + 42;
 }"#
         );

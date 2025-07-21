@@ -30,8 +30,9 @@ where
 mod tests {
     use super::*;
     use crate::{
-        function,
+        function::{self, FunctionParameter},
         operator::{BinaryOperator, BinaryOperatorKind},
+        r#type::Function,
         Block, ConcreteType, Identifier, Variable,
     };
 
@@ -40,8 +41,13 @@ mod tests {
         let generated = function::Definition {
             is_static: false,
             name: Identifier::new("print_plus_five")?,
-            parameters: vec![(ConcreteType::int(), Identifier::new("x")?)],
-            return_ty: ConcreteType::Void,
+            ty: Function {
+                parameters: vec![FunctionParameter {
+                    ty: ConcreteType::int(),
+                    name: Some(Identifier::new("x")?),
+                }],
+                return_ty: ConcreteType::Void,
+            },
             body: Block {
                 statements: vec![Return { expression: None }.into()],
             },
@@ -49,8 +55,7 @@ mod tests {
         .to_string();
         assert_eq!(
             generated,
-            r#"void
-print_plus_five (int x) {
+            r#"void print_plus_five (int x) {
   return;
 }"#
         );
@@ -63,8 +68,13 @@ print_plus_five (int x) {
         let generated = function::Definition {
             is_static: false,
             name: Identifier::new("square_value")?,
-            parameters: vec![(ConcreteType::int(), Identifier::new("x")?)],
-            return_ty: ConcreteType::int(),
+            ty: Function {
+                parameters: vec![FunctionParameter {
+                    ty: ConcreteType::int(),
+                    name: Some(Identifier::new("x")?),
+                }],
+                return_ty: ConcreteType::int(),
+            },
             body: Block {
                 statements: vec![Return {
                     expression: Some(
@@ -82,8 +92,7 @@ print_plus_five (int x) {
         .to_string();
         assert_eq!(
             generated,
-            r#"int
-square_value (int x) {
+            r#"int square_value (int x) {
   return x * x;
 }"#
         );
