@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::{
     r#type::{IntegerKind, Real},
-    ConcreteType,
+    ConcreteType, Expression, Identifier,
 };
 
 #[derive(Clone, Debug)]
@@ -34,7 +34,7 @@ pub enum Value {
     },
     String(String),
     Struct {
-        fields: Vec<(String, Value)>,
+        fields: Vec<(Identifier, Expression)>,
     },
     UnsignedInteger {
         value: u64,
